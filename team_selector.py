@@ -9,6 +9,8 @@ MAX_PER_TEAM = 3
 class TeamSelector:
   def __init__(self, data):
     self.data = self.set_data(data)
+    self.best_result = 0
+    self.concurrently_worse = 0
 
   def set_data(self, data):
     columns_to_extract = ['id', 'team', 'element_type', 'total_points', 'now_cost']
@@ -16,9 +18,13 @@ class TeamSelector:
     column_indices = [np.where(column_names == col)[0][0] for col in columns_to_extract]
     reduced_data = data[1:, column_indices].astype(int)
     return reduced_data
+  
+  def get_best_team(self):
+    teams = self.set_initial_population()
+
+    return self.evaluate_teams(teams)
 
   # -------- Initial Population -------- 
-
   # - Generates initial population
   #   * Encode individuals
   #   * If individual doesn't meet FPL criteria (max players per pos. & team, budget, etc.) re-generate
@@ -40,39 +46,82 @@ class TeamSelector:
       return team
     else:
       return self.set_initial_team()
-    
-  # -------- Fitness Function --------
 
+  # -------- Team Evaluation --------
+  def evaluate_teams(self, teams):
+    team_values = [self.calc_team_value(team) for team in teams]
+
+    # Sorts the team values from best to worst
+    sorted_indices = np.argsort(team_values)[::-1]
+    ranked_teams = [teams[i] for i in sorted_indices]
+    
+    if self.check_satisfiability(ranked_teams[0]):
+      return ranked_teams[0]
+    else:
+      return self.set_new_team_generation(teams)
+    
+  # -------- Team Value --------
   # - Defines the fitness function
   #   * Based on how much the team would score
   #   * Fitness value: total score
-  def fitness_function(self, team):
+  def calc_team_value(self, team):
     selected_players = np.where(team == 1)
     reduced_players_data = self.data[selected_players]
 
     fitness_value = 0
     for player in reduced_players_data:
       fitness_value += player[3]
-
+  
     return fitness_value
-    
-
+  
+  # -------- Check Satisfiability --------
   # - Does it satisfy condition?
-  #   * TBD
-  def check_satisfiability(self) -> bool:
-    return True
+  #   * TBD - Currently checking if improvements on last 10 iterations
+  def check_satisfiability(self, team) -> bool:    
+    team_value = self.calc_team_value(team)
+
+    if self.best_result <= team_value:
+      self.concurrently_worse = 0
+      self.best_result = team_value
+    else:
+      self.concurrently_worse += 1
+
+
+    return False if self.concurrently_worse < 10 else True
+  
+  # -------- Generates new generation --------
+  # * Selects & mates parents
+  # * Does spring crossover & mutation
+  def set_new_team_generation(self, teams):
+
+    self.select_parent_teams()
+    new_teams = np.array([])
+
+    while len(teams) > 0:
+      # Randomly select two teams, remove them from the list and breed them
+      random_teams = np.random.choice(len(teams), size=2, replace=False)
+      parent_teams = teams[random_teams]
+      teams = np.delete(teams, random_teams)
+      
+      # Add the removed item to the new array
+      child_teams = self.breed_teams(parent_teams)
+      new_teams = np.concatenate((new_teams, child_teams))
+
+    return new_teams
   
   # - Defines selection of individuals
   #   * Two options
   #   * Elitist: pick the parents with highest fitness value
   #   * Fitness-Proportionate Selection: selects parents with a probability proportional to their fitness (probably this one)
   #   * NOTES: Multiple parents are selected, generating two child each
-  def select_parents(self):
+  def select_parent_teams(self):
     print('here')
 
   # - Mate parents
   #   * Apply crossover and mutation on parents
-  def mate_parents(self, parent_1, parent_2):
+  def breed_teams(self, parent_teams):
+    self.team_crossover
+    self.team_mutation
     print('here')
 
   # - Define the crossover:
@@ -81,13 +130,13 @@ class TeamSelector:
   #   * Uniform crossover: selecting genes on equal probability
   #   * Heuristic approach?
   #   * If individual doesn't meet FPL criteria (max players per pos. & team, budget, etc.) re-generate
-  def offspring_crossover(self):
+  def team_crossover(self):
     print('here')
 
   # - Define the mutation:
   #   * Pick a selected player at random (maybe weighted probablity) and replace it with another (at complete random?)
   #   * If individual doesn't meet FPL criteria (max players per pos. & team, budget, etc.) re-generate
-  def offspring_mutation(self):
+  def team_mutation(self):
     print('here')
 
   # - Define the generation of the new population
@@ -113,7 +162,8 @@ class TeamSelector:
       position_count = MAX_POSITIONS[position]
       team_cost += player_data[3]
       
-      if (selected_teams[player_data[1]] > MAX_PER_TEAM) or (selected_positions[player_data[2]] > position_count) or (team_cost > 100):
+      # Checks for the three fpl rules
+      if (selected_teams[player_data[1]] > MAX_PER_TEAM) or (selected_positions[player_data[2]] > position_count) or (team_cost > 1000):
         return False
     
     return True
