@@ -1,9 +1,10 @@
+import random
 import numpy as np
 
 BUDGET = 1000
-PLAYERS = 16
+PLAYERS = 11
 POSITIONS = {1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD'}
-MAX_POSITIONS = {"FWD": 4, "MID": 5, "DEF": 6, "GK": 2}
+MAX_POSITIONS = {"FWD": 3, "MID": 4, "DEF": 3, "GK": 1}
 MAX_PER_TEAM = 3
 
 class TeamSelector:
@@ -17,12 +18,19 @@ class TeamSelector:
     column_names = data[0, :]
     column_indices = [np.where(column_names == col)[0][0] for col in columns_to_extract]
     reduced_data = data[1:, column_indices].astype(int)
+
+    indices_to_remove = np.where(reduced_data[:, 3] == 0)
+    reduced_data = np.delete(reduced_data, indices_to_remove, axis=0)
+    
     return reduced_data
   
   def get_best_team(self):
     teams = self.set_initial_population()
+    self.evaluate_teams(teams)
 
-    return self.evaluate_teams(teams)
+    print(self.data[np.where(self.best_team == 1)])
+    
+    return self.best_result
 
   # -------- Initial Population -------- 
   # - Generates initial population
@@ -56,102 +64,121 @@ class TeamSelector:
     ranked_teams = [teams[i] for i in sorted_indices]
     
     if self.check_satisfiability(ranked_teams[0]):
-      return ranked_teams[0]
+      return
     else:
-      return self.set_new_team_generation(teams)
-    
-  # -------- Team Value --------
-  # - Defines the fitness function
-  #   * Based on how much the team would score
-  #   * Fitness value: total score
-  def calc_team_value(self, team):
-    selected_players = np.where(team == 1)
-    reduced_players_data = self.data[selected_players]
-
-    fitness_value = 0
-    for player in reduced_players_data:
-      fitness_value += player[3]
-  
-    return fitness_value
+      new_teams = self.set_new_team_generation(np.array(teams))
+      return self.evaluate_teams(new_teams)
   
   # -------- Check Satisfiability --------
   # - Does it satisfy condition?
   #   * TBD - Currently checking if improvements on last 10 iterations
   def check_satisfiability(self, team) -> bool:    
     team_value = self.calc_team_value(team)
-
-    if self.best_result <= team_value:
+    
+    if self.best_result < team_value:
       self.concurrently_worse = 0
       self.best_result = team_value
+      self.best_team = team
+
+      print(self.best_result)
     else:
       self.concurrently_worse += 1
 
-
-    return False if self.concurrently_worse < 10 else True
+    return False if self.concurrently_worse < 100 else True
   
   # -------- Generates new generation --------
-  # * Selects & mates parents
-  # * Does spring crossover & mutation
+
+  # - Define the generation of the new population
+  #   * NOTES: The selection of which individuals from the current generation to replace can be based on various strategies 
+  #     such as generational replacement, steady-state replacement, or other techniques.
+  #   * Selects & mates parents
+  #   * Does spring crossover & mutation
   def set_new_team_generation(self, teams):
-
-    self.select_parent_teams()
-    new_teams = np.array([])
-
-    while len(teams) > 0:
+    # self.select_parent_teams()
+    new_teams = np.empty((0, teams.shape[1])) 
+    
+    while teams.shape[0] - 1 > 0:
       # Randomly select two teams, remove them from the list and breed them
-      random_teams = np.random.choice(len(teams), size=2, replace=False)
-      parent_teams = teams[random_teams]
-      teams = np.delete(teams, random_teams)
+      values = [self.calc_team_value(team) for team in teams]
+      weights = 1 / np.array(values)
+      weights /= weights.sum()
+
+      random_teams = np.random.choice(teams.shape[0], size=2, replace=False, p=weights)
+      selected_parent_teams = [teams[i] for i in random_teams]
+      teams = np.delete(teams, random_teams, axis=0)
       
       # Add the removed item to the new array
-      child_teams = self.breed_teams(parent_teams)
-      new_teams = np.concatenate((new_teams, child_teams))
+      child_teams = self.breed_teams(selected_parent_teams)
+      new_teams = np.append(new_teams, child_teams, axis=0)
 
     return new_teams
   
-  # - Defines selection of individuals
-  #   * Two options
-  #   * Elitist: pick the parents with highest fitness value
-  #   * Fitness-Proportionate Selection: selects parents with a probability proportional to their fitness (probably this one)
-  #   * NOTES: Multiple parents are selected, generating two child each
-  def select_parent_teams(self):
-    print('here')
-
   # - Mate parents
   #   * Apply crossover and mutation on parents
   def breed_teams(self, parent_teams):
-    self.team_crossover
-    self.team_mutation
-    print('here')
+    child_teams = []
+    for i in range(2):
+      child_team = self.team_crossover(parent_teams)
+      # child_team = self.team_mutation(child_team)
+      child_teams.append(child_team)
 
+    return child_teams
+    
   # - Define the crossover:
   #   * TBD
   #   * One points crossover: pick a random crossover point
   #   * Uniform crossover: selecting genes on equal probability
   #   * Heuristic approach?
   #   * If individual doesn't meet FPL criteria (max players per pos. & team, budget, etc.) re-generate
-  def team_crossover(self):
-    print('here')
+  def team_crossover(self, parent_teams):
+    genes = self.randomize_genes(parent_teams)
+    child_team = np.zeros(len(self.data))
+    child_team[genes] = 1
+
+    if self.check_fpl_requirements(child_team):
+      return child_team
+    else:
+      return self.team_crossover(parent_teams)
+  
+  # Concats the players from both teams and selects 11 genes at random
+  # Genes are selected by weighted probability
+  def randomize_genes(self, parent_teams):
+    players_1 = np.where(parent_teams[0] == 1)[0]
+    players_2 = np.where(parent_teams[1] == 1)[0]
+    players_indexes = np.concatenate((players_1, players_2), axis=0)
+    players_indexes = np.unique(players_indexes)
+
+    players = self.data[players_indexes]
+    points = [player[3] for player in players]
+    weights = 1 / np.array(points)
+    weights /= weights.sum()
+
+    indexes = np.random.choice(players.shape[0], size=11, replace=False, p=weights)
+    genes = np.array([players_indexes[i] for i in indexes])
+
+    return genes
 
   # - Define the mutation:
   #   * Pick a selected player at random (maybe weighted probablity) and replace it with another (at complete random?)
   #   * If individual doesn't meet FPL criteria (max players per pos. & team, budget, etc.) re-generate
-  def team_mutation(self):
-    print('here')
+  def team_mutation(self, child_team):
+    mutations = random.randint(0, 4)
+    child_team[child_team == 1][:mutations] = 0
+    child_team[child_team == 0][:mutations] = 1
 
-  # - Define the generation of the new population
-  #   * NOTES: The selection of which individuals from the current generation to replace can be based on various strategies 
-  #     such as generational replacement, steady-state replacement, or other techniques.
-  def set_new_population(self):
-    print('here')
+    if self.check_fpl_requirements(child_team):
+      return child_team
+    else: 
+      return self.team_mutation(child_team)
   
   # -------- Utils --------
+  # Recursion error
   def check_fpl_requirements(self, team) -> bool:
     selected_teams = {key: 0 for key in range(1, 21)}
     selected_positions = {key: 0 for key in range(1, 5)}
     team_cost = 0
         
-    selected_players = np.where(team == 1)
+    selected_players = np.where(team == 1)[0]
     reduced_players_data = self.data[selected_players]
     
     for player_data in reduced_players_data:
@@ -163,7 +190,39 @@ class TeamSelector:
       team_cost += player_data[3]
       
       # Checks for the three fpl rules
-      if (selected_teams[player_data[1]] > MAX_PER_TEAM) or (selected_positions[player_data[2]] > position_count) or (team_cost > 1000):
+      if selected_teams[player_data[1]] > MAX_PER_TEAM:
+        # print("Condition 1: selected_teams[player_data[1]] > MAX_PER_TEAM")
+        return False
+
+      if selected_positions[player_data[2]] > position_count:
+        # print("Condition 2: selected_positions[player_data[2]] > position_count")
+        return False
+
+      if team_cost > BUDGET:
+        # print("Condition 3: team_cost > BUDGET")
+        return False
+
+      if len(team[team == 1]) != PLAYERS:
+        # print("Condition 4: len(team[team == 1]) != PLAYERS")
+        return False
+    
+    if not all(value >= 1 for value in selected_positions.values()):
+        # print(selected_positions)
+        # print("Condition 5: At least one of each")
         return False
     
     return True
+
+  # -------- Team Value --------
+  # - Defines the fitness function
+  #   * Based on how much the team would score
+  #   * Fitness value: total score
+  def calc_team_value(self, team):
+    selected_players = np.where(team == 1)[0]
+    reduced_players_data = self.data[selected_players]
+
+    fitness_value = 0
+    for player in reduced_players_data:
+      fitness_value += player[3]
+  
+    return fitness_value
