@@ -10,9 +10,6 @@ class DataLoader():
   def __init__(self, season):  
     self.season = season
 
-    # self.id_dict = self.get_id_dict()
-
-
   ### FULL SEASON ###
   """
   Gets and formats the data for a full season
@@ -27,26 +24,38 @@ class DataLoader():
     return data
 
   """
-  Sanitizes the season data by filtering the relevant columns provided by the COL constants
+  Sanitizes the season data by filtering the relevant columns provided by the DATA_COLUMNS constants.
+
+  Params:
+    data_df: DataFrame with the raw data
 
   Returns:
-    Sanitized data frame of data
+    pd.DataFrame: Sanitized DataFrame of data.
   """
-  def sanitize_season_data(self, data):
-    # Create DataFrame from data, where first row is the header
-    data_df = pd.DataFrame(data[1:], columns=data[0])
+  def sanitize_season_data(self, data_df):
+    # Ensure data_df is in DataFrame format (if not already)
+    if not isinstance(data_df, pd.DataFrame):
+        data_df = pd.DataFrame(data_df[1:], columns=data_df[0])  # Adjust if raw data isn't already a DataFrame
 
+    # Convert DataFrame values to numeric where possible
     data_df = self.convert_df_to_numeric(data_df)
-    
+
     # Select only the columns that are in DATA_COLUMNS
     sanitized_df = data_df.loc[:, data_df.columns.intersection(DATA_COLUMNS)]
-    
-    # Set 'id' column as the index
-    sanitized_df.set_index('id', inplace=True)
-    sanitized_df.sort_index(inplace=True)
-    
+
+    # Set 'id' column as the index and sort the DataFrame
+    if 'id' in sanitized_df.columns:
+        sanitized_df.set_index('id', inplace=True)
+        sanitized_df.sort_index(inplace=True)
+
     return sanitized_df
-      
+
+  ### ID Dict ###
+  def get_id_dict_data(self):
+    raw_data = self.get_id_dict()
+    ids_df = pd.DataFrame(raw_data)
+
+    return ids_df      
 
   ### FETCH DATA ###
   def get_players_raw(self):
@@ -60,7 +69,11 @@ class DataLoader():
   # Returns the csv data in a np array
   def get_csv_data(self, url):
     response = requests.get(f"{BASE_URL}{url}")
-    return self.csv_to_array(response.text)
+    response.raise_for_status()
+
+    df = pd.read_csv(io.StringIO(response.text))
+
+    return df
 
   ### UTILS ###
   def csv_to_array(self, data):

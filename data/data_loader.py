@@ -6,3 +6,10 @@ class DataLoader:
     data = data_loader.get_full_season_data()
 
     return data
+
+  def get_id_dict_data(self, season):
+    data_loader = Vaastav(season)
+    data = data_loader.get_id_dict_data()
+
+    return data
+

@@ -1,0 +1,33 @@
+General,General,General,General,General,General,Tackles,Tackles,Tackles,Tackles,Tackles,Challenges,Challenges,Challenges,Challenges,Blocks,Blocks,Blocks,General,General,General,General
+Player,Nation,Pos,Age,Born,90s,Tkl,Tklw,Def 3rd,Mid 3rd,Att 3rd,Tkl,Att,Tkl%,Lost,Blocks,Sh,Pass,Int,Tkl+int,Clr,Err
+Alessio Cragno,ITA,GK,28,1994,1.0,0,0,0,0,0,0,1,0.0,1,0,0,0,0,0,0,0
+Andrea Barberis,ITA,MF,28,1993,3.8,7,2,4,3,0,5,11,45.5,6,0,0,0,8,15,1,0
+Andrea Carboni,ITA,DF,21,2001,1.9,3,2,2,0,1,2,5,40.0,3,3,2,1,3,6,2,1
+Andrea Colpani,ITA,MF,23,1999,10.5,14,9,6,5,3,8,12,66.7,4,14,2,12,3,17,6,0
+Andrea Petagna,ITA,FW,27,1995,18.5,7,5,2,3,2,3,6,50.0,3,16,4,12,3,10,18,0
+Andrea Ranocchia,ITA,DF,34,1988,0.5,3,1,1,2,0,3,4,75.0,1,5,5,0,0,3,7,0
+Armando Izzo,ITA,DF,30,1992,27.4,73,50,44,27,2,29,45,64.4,16,29,17,12,50,123,87,1
+Carlos Augusto,BRA,DF,23,1999,34.3,73,38,42,23,8,33,54,61.1,21,24,6,18,24,97,85,1
+Christian Gytkjær,DEN,"FW,MF",32,1990,6.2,6,2,1,4,1,2,5,40.0,3,6,1,5,0,6,2,0
+Dany Mota,POR,"FW,MF",24,1998,21.2,8,7,1,3,4,2,10,20.0,8,5,1,4,6,14,25,0
+Filippo Ranocchia,ITA,MF,21,2001,5.9,11,6,5,4,2,4,12,33.3,8,5,1,4,4,15,7,0
+Franco Carboni,ITA,"DF,FW",19,2003,0.7,1,1,1,0,0,0,2,0.0,2,3,0,3,1,2,0,0
+Gianluca Caprari,ITA,"MF,FW",29,1993,27.1,16,6,3,11,2,8,26,30.8,18,22,1,21,8,24,3,0
+Giulio Donati,ITA,DF,32,1990,4.7,4,1,1,1,2,3,6,50.0,3,3,1,2,4,8,11,0
+Luca Caldirola,ITA,DF,31,1991,26.1,26,14,19,4,3,13,26,50.0,13,32,18,14,25,51,66,1
+Luca Marrone,ITA,DF,32,1990,1.5,0,0,0,0,0,0,2,0.0,2,2,2,0,0,0,4,1
+Marco D'Alessandro,ITA,"DF,FW",31,1991,3.2,4,4,3,1,0,2,5,40.0,3,2,0,2,1,5,3,0
+Marlon,BRA,DF,26,1995,17.7,35,21,20,14,1,15,29,51.7,14,13,4,9,18,53,50,0
+Matteo Pessina,ITA,MF,25,1997,32.6,57,36,28,21,8,26,62,41.9,36,50,15,35,37,94,33,1
+Mattia Valoti,ITA,"MF,FW",28,1993,5.0,17,10,7,9,1,5,16,31.3,11,13,3,10,3,20,6,0
+Michele Di Gregorio,ITA,GK,25,1997,37.0,0,0,0,0,0,0,3,0.0,3,1,0,1,4,4,18,3
+Nicolò Rovella,ITA,MF,20,2001,19.3,45,29,22,21,2,13,36,36.1,23,20,1,19,40,85,17,0
+Pablo Marí,ESP,DF,28,1993,27.6,37,19,29,7,1,17,26,65.4,9,22,14,8,31,68,111,3
+Patrick Ciurria,ITA,"DF,MF",27,1995,30.6,31,18,20,10,1,17,33,51.5,16,24,2,22,7,38,32,0
+Pepín,EQG,MF,25,1996,12.5,28,19,10,11,7,9,27,33.3,18,14,3,11,13,41,17,0
+Salvatore Molina,ITA,DF,30,1992,2.5,6,5,2,4,0,4,5,80.0,1,4,2,2,1,7,2,0
+Samuele Birindelli,ITA,DF,23,1999,15.6,35,19,21,10,4,18,29,62.1,11,28,8,20,16,51,30,0
+Samuele Vignato,ITA,"MF,FW",18,2004,0.7,0,0,0,0,0,0,0,,0,1,0,1,0,0,0,0
+Stefano Sensi,ITA,MF,26,1995,18.0,41,26,25,13,3,18,48,37.5,30,13,3,10,20,61,4,0
+Valentin Antov,BUL,DF,21,2000,3.4,6,5,3,3,0,1,5,20.0,4,5,4,1,4,10,14,1
+Warren Bondo,FRA,MF,18,2003,0.7,1,0,1,0,0,0,0,,0,1,0,1,0,1,0,0

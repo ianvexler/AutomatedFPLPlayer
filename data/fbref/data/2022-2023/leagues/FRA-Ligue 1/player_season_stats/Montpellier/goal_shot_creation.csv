@@ -1,0 +1,33 @@
+General,General,General,General,General,General,Sca,Sca,Sca types,Sca types,Sca types,Sca types,Sca types,Sca types,Gca,Gca,Gca types,Gca types,Gca types,Gca types,Gca types,Gca types
+Player,Nation,Pos,Age,Born,90s,Sca,Sca90,Passlive,Passdead,To,Sh,Fld,Def,Gca,Gca90,Passlive,Passdead,To,Sh,Fld,Def
+Arnaud Nordin,FRA,FW,24,1998,26.7,63,2.36,41,1,3,6,11,1,10,0.37,7,0,1,0,2,0
+Arnaud Souquet,FRA,"DF,FW",30,1992,4.0,5,1.25,5,0,0,0,0,0,0,0.0,0,0,0,0,0,0
+Axel Gueguin,FRA,"FW,MF",17,2005,0.3,0,0.0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0
+Benjamin Lecomte,FRA,GK,31,1991,19.0,5,0.26,5,0,0,0,0,0,1,0.05,1,0,0,0,0,0
+Bingourou Kamara,SEN,GK,25,1996,4.5,0,0.0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0
+Boubakar Kouyaté,MLI,DF,25,1997,14.0,11,0.79,10,0,0,1,0,0,0,0.0,0,0,0,0,0,0
+Béni Makouana,CGO,"FW,MF",19,2002,2.2,2,0.9,1,0,0,0,1,0,1,0.45,0,0,0,0,1,0
+Cheikh Faye,SEN,FW,23,1999,0.4,0,0.0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0
+Christopher Jullien,FRA,DF,29,1993,29.9,19,0.63,16,1,0,2,0,0,4,0.13,3,0,0,1,0,0
+Elye Wahi,FRA,FW,19,2003,27.9,51,1.83,29,0,5,8,8,1,12,0.43,4,0,2,4,2,0
+Enzo Tchato,CMR,DF,19,2002,12.2,21,1.72,18,0,1,0,1,1,2,0.16,2,0,0,0,0,0
+Faitout Maouassa,FRA,"FW,DF",24,1998,21.4,57,2.66,39,6,5,4,2,1,10,0.47,10,0,0,0,0,0
+Falaye Sacko,MLI,DF,27,1995,28.7,38,1.33,33,2,2,0,0,1,7,0.24,6,0,0,0,0,1
+Issiaga Sylla,GUI,DF,28,1994,14.5,42,2.9,37,2,1,2,0,0,4,0.28,3,0,0,1,0,0
+Jonas Omlin,SUI,GK,28,1994,13.0,1,0.08,1,0,0,0,0,0,0,0.0,0,0,0,0,0,0
+Jordan Ferri,FRA,MF,30,1992,30.4,71,2.33,65,1,2,1,2,0,7,0.23,6,1,0,0,0,0
+Joris Chotard,FRA,MF,20,2001,27.3,40,1.46,30,4,1,1,1,3,8,0.29,8,0,0,0,0,0
+Khalil Fayad,FRA,MF,18,2004,8.0,19,2.38,15,2,1,1,0,0,5,0.63,4,0,0,1,0,0
+Léo Leroy,FRA,MF,22,2000,13.2,31,2.34,24,0,1,4,1,1,7,0.53,7,0,0,0,0,0
+Mamadou Sakho,FRA,DF,32,1990,8.5,4,0.47,2,0,0,1,0,1,0,0.0,0,0,0,0,0,0
+Matis Carvalho,POR,GK,23,1999,1.5,0,0.0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0
+Maxime Estève,FRA,DF,20,2002,18.3,7,0.38,5,1,0,1,0,0,0,0.0,0,0,0,0,0,0
+Nicolas Cozza,FRA,DF,23,1999,14.2,18,1.27,15,0,1,1,1,0,2,0.14,2,0,0,0,0,0
+Pedro Mendes,POR,DF,31,1990,0.1,0,0.0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0
+Sacha Delaye,FRA,"FW,MF",20,2002,0.2,2,9.0,0,1,0,1,0,0,0,0.0,0,0,0,0,0,0
+Stephy Mavididi,ENG,FW,24,1998,14.3,44,3.08,22,0,8,7,5,2,4,0.28,3,0,1,0,0,0
+Thibault Tamas,FRA,DF,21,2001,0.1,0,0.0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0
+Théo Sainte-Luce,FRA,DF,23,1998,5.9,11,1.86,7,4,0,0,0,0,1,0.17,1,0,0,0,0,0
+Téji Savanier,FRA,MF,30,1991,28.3,130,4.6,63,41,11,1,14,0,11,0.39,6,4,0,0,1,0
+Valère Germain,FRA,"FW,MF",32,1990,7.6,14,1.83,11,0,0,2,1,0,3,0.39,1,0,0,1,1,0
+Wahbi Khazri,TUN,"FW,MF",31,1991,18.2,42,2.31,21,8,3,5,4,1,7,0.39,3,0,0,3,1,0

@@ -1,0 +1,36 @@
+General,General,General,General,General,General,Tackles,Tackles,Tackles,Tackles,Tackles,Challenges,Challenges,Challenges,Challenges,Blocks,Blocks,Blocks,General,General,General,General
+Player,Nation,Pos,Age,Born,90s,Tkl,Tklw,Def 3rd,Mid 3rd,Att 3rd,Tkl,Att,Tkl%,Lost,Blocks,Sh,Pass,Int,Tkl+int,Clr,Err
+Aaron Zehnter,GER,DF,17,2004,0.0,0,0,0,0,0,0,1,0.0,1,0,0,0,1,1,0,0
+André Hahn,GER,"FW,MF",31,1990,4.3,9,5,4,4,1,8,12,66.7,4,9,2,7,4,13,14,0
+Arne Engels,BEL,MF,18,2003,16.0,20,9,9,10,1,8,19,42.1,11,17,5,12,15,35,12,1
+Arne Maier,GER,MF,23,1999,21.8,31,22,17,11,3,10,18,55.6,8,21,0,21,15,46,22,0
+Carlos Gruezo,ECU,MF,27,1995,10.7,21,12,12,9,0,9,16,56.3,7,13,4,9,10,31,15,0
+Daniel Caligiuri,ITA,"DF,MF",34,1988,3.2,8,5,5,3,0,4,5,80.0,1,3,2,1,3,11,2,0
+David Čolina,CRO,"DF,FW",22,2000,1.8,4,1,1,1,2,2,2,100.0,0,8,0,8,4,8,3,0
+Dion Drena Beljo,CRO,FW,20,2002,12.5,7,6,3,2,2,2,13,15.4,11,15,2,13,1,8,14,0
+Elvis Rexhbeçaj,GER,MF,24,1997,28.0,51,30,18,24,9,29,59,49.2,30,39,12,27,17,68,40,0
+Ermedin Demirović,BIH,"FW,MF",24,1998,26.3,31,14,9,12,10,9,22,40.9,13,31,4,27,14,45,37,0
+Florian Niederlechner,GER,"FW,MF",31,1990,10.1,10,5,5,4,1,4,7,57.1,3,16,2,14,1,11,9,0
+Frederik Winther,DEN,DF,21,2001,1.0,2,2,1,1,0,0,2,0.0,2,1,1,0,0,2,7,0
+Fredrik Jensen,FIN,"FW,MF",24,1997,10.3,15,10,8,3,4,5,10,50.0,5,12,5,7,4,19,12,0
+Iago,BRA,"DF,MF",25,1997,17.8,34,16,20,10,4,11,29,37.9,18,18,5,13,17,51,53,0
+Irvin Cardona,FRA,"MF,FW",24,1997,3.5,1,1,1,0,0,1,5,20.0,4,3,0,3,4,5,8,0
+Jeffrey Gouweleeuw,NED,DF,31,1991,31.1,42,27,19,17,6,24,49,49.0,25,41,23,18,50,92,141,2
+Julian Baumgartlinger,AUT,MF,34,1988,6.2,15,4,5,6,4,6,19,31.6,13,4,2,2,4,19,15,0
+Kelvin Yeboah,ITA,"FW,MF",22,2000,3.9,6,4,2,4,0,2,5,40.0,3,7,0,7,1,7,2,0
+Lukas Petkov,BUL,"MF,FW",21,2000,1.6,5,1,4,1,0,2,3,66.7,1,4,1,3,1,6,0,0
+Mads Pedersen,DEN,"DF,MF",25,1996,20.4,44,23,31,11,2,22,33,66.7,11,32,9,23,20,64,41,1
+Maximilian Bauer,GER,DF,22,2000,20.5,31,17,18,12,1,17,34,50.0,17,25,9,16,23,54,79,1
+Mergim Berisha,GER,FW,24,1998,18.7,11,6,4,3,4,4,14,28.6,10,16,1,15,0,11,19,0
+Nathanael Mbuku,FRA,"MF,FW",20,2002,0.4,1,0,0,1,0,0,0,,0,0,0,0,0,1,0,0
+Niklas Dorsch,GER,MF,24,1998,5.4,21,12,8,11,2,9,16,56.3,7,9,3,6,6,27,9,0
+Noah Joel Sarenren Bazee,NGA,"MF,FW",25,1996,0.2,0,0,0,0,0,0,1,0.0,1,1,0,1,0,0,0,0
+Ohis Felix Uduokhai,GER,DF,24,1997,16.1,30,20,14,13,3,15,29,51.7,14,27,14,13,29,59,61,1
+Rafał Gikiewicz,POL,GK,34,1987,23.0,2,2,2,0,0,2,3,66.7,1,0,0,0,0,2,15,5
+Raphael Framberger,GER,"DF,FW",26,1995,2.0,10,6,6,4,0,3,5,60.0,2,2,1,1,2,12,5,0
+Reece Oxford,ENG,DF,23,1998,1.0,1,1,1,0,0,0,0,,0,4,3,1,1,2,5,0
+Renato Veiga,POR,DF,19,2003,7.1,9,6,4,3,2,7,9,77.8,2,20,6,14,7,16,29,1
+Ricardo Pepi,USA,FW,19,2003,1.1,1,1,1,0,0,1,1,100.0,0,1,0,1,0,1,1,0
+Robert Gumny,POL,DF,24,1998,22.4,34,24,13,15,6,11,27,40.7,16,21,7,14,26,60,62,1
+Ruben Vargas,SUI,"MF,FW",23,1998,12.6,15,7,6,7,2,5,11,45.5,6,8,2,6,6,21,16,1
+Tomáš Koubek,CZE,GK,29,1992,11.0,0,0,0,0,0,0,0,,0,0,0,0,0,0,7,0

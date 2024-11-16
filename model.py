@@ -1,44 +1,68 @@
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import AdaBoostRegressor
 import pandas as pd
-from evaluate import Evaluate
 from sklearn.metrics import mean_squared_error
 from utils.ModelTypes import ModelType
+from xgboost import XGBRegressor
 
 TARGET = 'total_points'
 
 class Model:
-  def __init__(self, data, model = ModelType.RANDOM_FOREST):
+  def __init__(self, data, train_data, model = ModelType.RANDOM_FOREST):
     self.data = data
-
-    self.evaluate = Evaluate()
+    self.train_data = train_data
 
     self.model = self.__set_model(model)
   
-  # TODO: add more models
   def __set_model(self, model: ModelType):
     match model:
       case ModelType.RANDOM_FOREST:
         return RandomForestRegressor()
+      case ModelType.ADABOOST:
+        return AdaBoostRegressor()
+      case ModelType.GRADIENT_BOOST:
+        return GradientBoostingRegressor()
+      case ModelType.XGBOOST:
+        # Change the parameters
+        return XGBRegressor(n_estimators=2, max_depth=2, learning_rate=1, objective='binary:logistic')
 
+  """
+  Trains the model on the training data and makes predictions on the full data,
+  using only the features that appear in both datasets.
+
+  Returns:
+    indexes: TODO
+    predictions: TODO
+    targets: TODO
+  """
   def predict(self):
-    x_train, x_test, y_train, y_test = self.get_train_test_data(self.data)
+    x_train, y_train = self.split_data(self.train_data)
 
+    x_full, y_full = self.split_data(self.data)
+
+    # Identify common features between training and full datasets
+    common_features = x_train.columns.intersection(x_full.columns)
+
+    # Filter both datasets to use only common features
+    x_train = x_train[common_features]
+    x_full = x_full[common_features]
+
+    # Fit the model using the filtered training data
     self.model.fit(x_train, y_train)
 
+    # Make predictions using the filtered full data
+    predictions = self.model.predict(x_full)
+
+    return x_full.index, predictions, y_full
+
+  def test_predict(self):
+    x_train, x_test, y_train, y_test = self.split_train_test_data(self.train_data)
+
+    self.model.fit(x_train, y_train)
     predictions = self.model.predict(x_test)
 
-    # Maybe move?
-    score = self.model.score(x_test, y_test)
-    mse = mean_squared_error(y_test, predictions)
-
-    print(f'R^2 score: {score}')
-    print(f'Mean Squared Error: {mse}')
-
-    test_indexes = x_test.index
-
-    results_df = self.evaluate.format_results(test_indexes, predictions, y_test)
-    return results_df
+    return x_test.index, predictions, y_test
 
   """
   Splits the data into training and testing data
@@ -52,10 +76,26 @@ class Model:
     y_train: Target training data
     y_test: Target test data
   """
-  def get_train_test_data(self, data_df: pd.DataFrame):
+  def split_train_test_data(self, data_df: pd.DataFrame):
     x = data_df.loc[:, data_df.columns != TARGET]
     y = data_df[TARGET]
     
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
 
     return x_train, x_test, y_train, y_test
+
+  """
+  Splits the data into features (X) and labels (y).
+
+  Params:
+    data_df: pandas DataFrame with the formatted data
+
+  Returns:
+    x: Features data
+    y: Target data
+  """
+  def split_data(self, data_df: pd.DataFrame):
+    x = data_df.loc[:, data_df.columns != TARGET]
+    y = data_df[TARGET]
+
+    return x, y

@@ -1,0 +1,31 @@
+General,General,General,General,General,General,Sca,Sca,Sca types,Sca types,Sca types,Sca types,Sca types,Sca types,Gca,Gca,Gca types,Gca types,Gca types,Gca types,Gca types,Gca types
+Player,Nation,Pos,Age,Born,90s,Sca,Sca90,Passlive,Passdead,To,Sh,Fld,Def,Gca,Gca90,Passlive,Passdead,To,Sh,Fld,Def
+Alexandre Lacazette,FRA,FW,31,1991,32.5,113,3.47,78,2,10,8,13,2,11,0.34,8,0,0,0,3,0
+Amin Sarr,SWE,FW,21,2001,6.0,9,1.51,7,0,0,0,2,0,2,0.33,2,0,0,0,0,0
+Anthony Lopes,POR,GK,31,1990,31.3,1,0.03,1,0,0,0,0,0,1,0.03,1,0,0,0,0,0
+Bradley Barcola,FRA,"FW,MF",19,2002,16.0,39,2.44,32,0,4,2,0,1,10,0.63,10,0,0,0,0,0
+Castello Lukeba,FRA,DF,19,2002,33.2,17,0.51,17,0,0,0,0,0,3,0.09,3,0,0,0,0,0
+Corentin Tolisso,FRA,MF,27,1994,22.6,83,3.67,67,4,0,7,4,1,8,0.35,6,0,0,2,0,0
+Damien Da Silva,FRA,DF,34,1988,3.8,1,0.27,1,0,0,0,0,0,0,0.0,0,0,0,0,0,0
+Dejan Lovren,CRO,DF,33,1989,16.2,10,0.62,6,0,0,4,0,0,0,0.0,0,0,0,0,0,0
+Henrique,BRA,"DF,FW",28,1994,4.0,3,0.76,2,0,0,0,1,0,1,0.25,1,0,0,0,0,0
+Houssem Aouar,ALG,MF,24,1998,5.8,15,2.57,9,0,3,3,0,0,2,0.34,2,0,0,0,0,0
+Jeff Reine-Adélaïde,FRA,MF,24,1998,3.7,20,5.36,16,1,1,1,0,1,2,0.54,2,0,0,0,0,0
+Jeffinho,BRA,FW,22,1999,5.0,19,3.83,12,0,3,0,4,0,3,0.61,2,0,0,0,1,0
+Johann Lepenant,FRA,MF,19,2002,21.5,35,1.63,26,0,0,4,3,2,4,0.19,2,0,0,1,1,0
+Jérôme Boateng,GER,DF,33,1988,4.8,2,0.42,2,0,0,0,0,0,0,0.0,0,0,0,0,0,0
+Karl Toko Ekambi,CMR,"FW,MF",29,1992,15.0,47,3.13,39,0,4,3,1,0,2,0.13,2,0,0,0,0,0
+Lucas Paquetá,BRA,MF,24,1997,1.8,9,5.09,5,0,1,1,0,2,1,0.57,0,0,0,1,0,0
+Malo Gusto,FRA,DF,19,2003,17.7,50,2.82,42,2,4,0,2,0,2,0.11,2,0,0,0,0,0
+Mamadou Sarr,FRA,MF,16,2005,0.1,0,0.0,0,0,0,0,0,0,0,0.0,0,0,0,0,0,0
+Maxence Caqueret,FRA,MF,22,2000,30.7,118,3.84,80,20,7,4,5,2,15,0.49,11,1,1,1,0,1
+Mohamed El Arouch,FRA,MF,18,2004,0.0,1,90.0,1,0,0,0,0,0,0,0.0,0,0,0,0,0,0
+Moussa Dembélé,FRA,"FW,MF",26,1996,9.7,14,1.44,12,0,1,0,0,1,2,0.21,2,0,0,0,0,0
+Nicolás Tagliafico,ARG,DF,29,1992,33.2,59,1.78,46,7,0,3,2,1,5,0.15,4,1,0,0,0,0
+Rayan Cherki,FRA,"MF,FW",18,2003,20.8,128,6.15,81,22,19,5,1,0,16,0.77,12,1,1,2,0,0
+Romain Faivre,FRA,MF,24,1998,3.3,13,3.87,10,3,0,0,0,0,1,0.3,0,1,0,0,0,0
+Rémy Riou,FRA,GK,34,1987,6.7,1,0.15,1,0,0,0,0,0,0,0.0,0,0,0,0,0,0
+Sael Kumbedi,FRA,DF,17,2005,14.7,24,1.64,20,1,1,1,0,1,5,0.34,4,1,0,0,0,0
+Sinaly Diomande,CIV,DF,21,2001,21.7,13,0.6,9,1,1,1,0,1,1,0.05,0,1,0,0,0,0
+Tetê,BRA,"FW,MF",22,2000,12.3,30,2.44,20,4,2,3,1,0,7,0.57,4,0,1,1,1,0
+Thiago Mendes,BRA,"MF,DF",30,1992,22.9,28,1.22,26,0,0,2,0,0,5,0.22,5,0,0,0,0,0
