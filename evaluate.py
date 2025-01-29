@@ -7,7 +7,7 @@ class Evaluate:
     self.ids_df = ids_df
 
   def evaulate_prediction(self, indexes, predictions, targets):
-    error, mse, accuracy = self.score_model(predictions, targets)
+    error, mse = self.score_model(predictions, targets)
     print(f'Mean Absolute Error: {error}')
     print(f'Mean Squared Error: {mse}')
 
