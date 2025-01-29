@@ -270,6 +270,7 @@ class LSTMModel:
     predictions_df.to_csv(file_path, index=False)
     print(f"{home_team} vs {away_team} saved to {file_path}\n")
 
+    
     return predictions
 
   def _format_and_save_predictions(self, aggregate_predictions):
