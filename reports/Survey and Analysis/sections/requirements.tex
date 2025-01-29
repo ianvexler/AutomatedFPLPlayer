@@ -1,0 +1,56 @@
+% NOTES ON THIS CHAPTER:
+% - UPDATE THE TENSE OF THE SECTIONS ONCE IMPLEMENTED
+\chapter{Analysis}
+
+This section investigates and analyses the machine learning and optimization techniques that will be employed throughout the project's development. By analysing historical data and real-time football statistics, and with the strategic use of chips, the aim is to create a reliable system for optimising FPL team selections.
+
+\section{Datasets}
+
+This project primarily uses publicly available data provided by the Premier League via its official API. For convenience, it uses the historical FPL data archive collected in Vaastav's popular GitHub repository \cite{vaastav_fantasy_2021}. This repository offers an organized dataset that spans multiple seasons, allowing for a historical analysis of player performance and game outcomes.
+
+In addition to the Premier League data, it will look to incorporate the latest statistics from FBref \cite{fbref}, a widely recognized platform for football analytics. FBref tracks metrics from more than 140 football competitions around the world, obtained from the leading data provider OPTA. Data scrapers will be used to gather statistics, which facilitates the integration of these metrics into the project.
+
+\section{Performance Prediction Models}
+
+To predict player performance over the course of a season, a selection of machine learning models will be developed and evaluated. The models considered will include a variety of techniques, such as Linear Regression, Random Forests, Gradient Boosting and Long Short-Term Memory Recurrent Neural Networks. A comparative analysis will be performed to identify the most suitable model for this task. To ensure a fair comparison, all models will be trained and tested using the same features obtained from pre-processed historical data, ensuring compatibility across models. Feature selection will be based on a combination of correlation analysis and domain knowledge. This will ensure that only the most relevant features are used, aiming to minimize overfitting. 
+
+% Additionally, regularization techniques such as Lasso and Ridge regression will be used to further reduce overfitting.
+
+A multi-layered approach will be used to optimise performance prediction. Different models will be used for each player position, each incorporating a different variety of features. This will help identify the combination of features that maximizes prediction accuracy for each position. The models will leverage both season statistics and data from the most recent Gameweeks to capture relevant trends. Different window sizes for past Gameweeks will be tested to determine the optimal number, allowing the model to make the most informed predictions. 
+
+Preprocessing steps such as feature scaling and selection will also be carefully analysed. Each preprocessing decision can influence accuracy, so these steps will be evaluated to ensure they improve rather than harm the results.
+
+\section{Team Selection}
+
+To maximize the total points in FPL, it is essential to make an optimised selection of players. This project will utilize a genetic algorithm for optimisation, ensuring that the player selection respects the game's strict rules. Various selection strategies will be tested, many of which are inspired by successful FPL managers and past winners. A comparative analysis of these strategies will be conducted to identify the most effective approach.
+
+Transfers play a crucial role in team optimisation, as strategic changes after each match week can significantly impact overall performance. The transfer process will prioritise removing the player with the lowest expected points for the upcoming Gameweek, provided a replacement is available. Suitable replacements will be players expected to generate higher points while staying within the available budget. Additionally, factors such as the upcoming fixture schedule for transfer candidates will be considered, ensuring that transfers not only improve the team in the short term but also align with long-term goals.
+
+\section{Chip Usage}
+The optimal use of FPL chips plays a critical role in maximizing points over the season. This section discusses the strategies for utilizing each chip based on historical data and model analysis.
+
+\subsection{Bench Boost}
+The Bench Boost chip is most effective during double Gameweeks, where players have two fixtures and a higher chance of scoring points. The analysis will evaluate strategies such as combining it with the Wildcard to enhance squad depth versus using it independently.
+
+\subsection{Free Hit}
+The Free Hit chip will be analysed to compare its effectiveness in blank Gameweeks against double Gameweeks. The focus will be on evaluating the overall impact and point differences in each scenario to determine the optimal timing for its deployment.
+
+\subsection{Triple Captain}
+The Triple Captain chip is planned for use during double Gameweeks, where the selected player has a greater scoring opportunity. The analysis will involve comparing conservative strategies (e.g. captaining the predicted highest-scoring player) against riskier approaches (e.g. captaining a midfielder for a higher points ceiling).
+
+\subsection{Wildcard}
+The Wildcard chip offers flexibility for major squad changes. The analysis will explore scenarios such as using the Wildcard when the team falls significantly behind the optimal line-up for restructuring or saving it for later use in combination with the Bench Boost during double Gameweeks to maximize performance.
+
+% \subsection{Mystery Chip}
+
+% Only available from January 2025, unknown at the time of writing this.
+
+\section{Performance Evaluation}
+
+In order to select the optimal predictive model, we need to first decide on an approach to evaluate and compare model performance. In this project, the evaluation will focus on both accuracy and consistency.
+
+A range of metrics will be used to assess accuracy in player performance forecasting. For the regression models, the primary metrics will be Mean Absolute Error (MAE) and Mean Squared Error (MSE). MAE provides an overall view of error magnitude, while MSE gives additional weight to larger errors. These metrics will allow for detailed comparisons across models, helping to determine if complex models offer an advantage and improve performance.
+
+To fully automate FPL, various team selection strategies will be applied to each model's predictions. These strategies will simulate different approaches FPL managers might take when selecting players based on the model’s output. The cumulative results across the season will be recorded and then ranked, comparing each model’s effectiveness in building a high-performing team. To draw accurate conclusions, the simulations will be performed multiple times to minimize the influence of random chance on the results. 
+
+To empirically evaluate the results, the outcomes will be compared to those of real managers, measuring their ability to replicate successful strategies. The project’s performance will also be benchmarked against the works of Tindal \cite{tindal2023fantasyfootball} and Pownall \cite{pownall2023fantasyfootball}, evaluating whether it builds upon and improves their methodologies. Total points scored will be used as the measurement of performance, providing a straightforward and objective metric for success.

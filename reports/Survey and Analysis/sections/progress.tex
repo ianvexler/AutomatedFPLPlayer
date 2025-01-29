@@ -1,0 +1,43 @@
+\chapter{Progress}
+
+This chapter outlines the initial progress achieved in the implementation of key components and algorithms that make this project. The work done so far serves as a strong foundation for the future stages of development and analysis. Specifically, progress has been made in three crucial areas: data handling, team optimisation and regression modelling.
+
+\section{Data Loader}
+
+The development of a reliable data loader is a fundamental component of this project, allowing the extraction of data from multiple sources. Central to this is the DataLoader class, a parent class designed to handle various datasets such as those from Vaastav and FBref. Each data source is processed through its own subclass, ensuring that data from different origins undergoes careful pre-processing to achieve compatibility.
+
+\subsection{Vaastav Integration}
+
+The integration of Vaastav’s dataset has proven straightforward, as its data is well-structured and already pre-processed. The dataset is stored in multiple files and in a variety of formats, each of which has different uses in the project.
+
+\subsection{FBref Integration}
+
+In contrast, importing data from FBref presents many challenges. Unlike Vaastav, FBref lacks extensive pre-processing and its naming conventions and notations differ significantly from FPL’s official dataset. To try and address this, the project utilises Soccerdata, a Python library that scrapes football data from a variety of popular platforms \cite{soccerdata}. An initial version of the FBref data loader has been implemented, featuring a function to scrape player data across Europe’s top five leagues for each Gameweek of a specified season.
+
+However, matching player statistics between FBref and the FPL dataset remains a major challenge due to naming discrepancies. For instance, FBref lists Arsenal midfielder Jorginho under such a nickname, while the FPL dataset uses his full name, “Jorge Luiz Frello Filho”. Addressing this requires the implementation of a name-matching algorithm, potentially leveraging techniques such as string similarity to ensure accurate mapping of player statistics.
+
+\subsection{Team Notation Discrepancies}
+
+Another significant challenge is the variation in team notations across data sources. For example, Tottenham Hotspur is referred to as “Spurs” in FPL but uses its full name in FBref. To resolve this, a dictionary-based approach has been adopted, mapping all known aliases to a unified representation for each team. This ensures consistency and prevents data conflicts.
+
+\subsection{Progress and Future Improvements}
+
+While the foundational data loader infrastructure is operational, several enhancements are planned. These include:
+
+\begin{itemize}
+    \item \textbf{Name Matching}: Designing an algorithm to effectively match player names across datasets, addressing discrepancies in formats and naming conventions.
+    \item \textbf{Error Handling and Validation}: Implementing checks to detect and resolve inconsistencies in the data, ensuring its quality and reliability for further analysis.
+    \item \textbf{Incorporating Additional Sources}: Leveraging the wide variety of data sources available in the SoccerData library. For example, ClubElo provides historical ELO ratings of European football clubs dating back to the 1950s \cite{clubelo}. This source can be used to contextualize the difficulty of opponents faced by players, not only in England but also across domestic and continental competitions in Europe.
+\end{itemize}
+
+This architecture is the baseline of a robust data handling pipeline, ensuring high-quality inputs for the regression models and analysis in the other stages of the project.
+
+\section{Optimal Team Selection}
+
+A baseline algorithm has been implemented to identify the optimal team by leveraging a genetic optimisation approach. Although still under development, the algorithm aims to find the best possible combination of players that maximizes total points while strictly adhering to FPL rules. Future iterations will incorporate additional factors, such as player popularity and form, to enable the evaluation of alternative team selection strategies.
+
+\section{Regression Algorithms}
+
+The development of regression algorithms for player performance forecasting is in progress, with the main focus going towards implementing an LSTM neural network. The first version of this model is close to completion and is designed to predict an entire FPL season. The model employs a multi-stream approach, utilising separate models for each player's position. However, its effectiveness is yet to be seen, as evaluation methods are yet to be developed.
+
+To support the implementation, a Feature Selector class has been designed to be used across all regression models. This class standardizes the selection of features specific to each position, ensuring consistency and enabling a single source of truth. Additionally, a Feature Scaler method is being developed to optimise predictions by scaling features appropriately. Currently, scaling is performed dynamically based on feature characteristics, but further changes are expected to improve performance and reliability.

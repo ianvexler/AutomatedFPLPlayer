@@ -1,0 +1,267 @@
+\chapter{Literature Survey}
+
+In recent years, data analysis and machine learning have transformed Fantasy Premier League, allowing managers to make more informed decisions and have greater success in their strategies.  This chapter begins with an overview of the rules and constraints of FPL, setting a foundation for automated strategies. The review then explores previous research on predictive modelling, relevant strategies and optimisation techniques. Finally, the chapter expands on the models to be used and their application in the context of this project.
+
+\section{Fantasy Premier League: rules and constraints}
+
+FPL rules define the game and add layers of complexity. From budget and transfer restrictions to squad selection, the rules shape strategy. These constraints force users to adapt and plan for short-term and long-term outcomes causing them to make crucial decisions under uncertainty.
+
+This section explores the fundamental rules and constraints of FPL, demonstrating how they affect possible outcomes. By understanding these, we can better appreciate the problem FPL automation faces and the obstacles it must overcome. The complete FPL rule set is publicly available at the official FPL website \cite{fpl}.
+
+\subsection{Team selection and management}
+
+Users must select a squad of real-life players. This squad must consist of:
+\begin{itemize}
+    \item 2 Goalkeepers
+    \item 5 Defenders
+    \item 5 Midfielders
+    \item 3 Forwards
+\end{itemize}
+
+In addition, these must fall within a strict budget of £100 million, and no more than three players from each team must be selected. Hence, a careful and optimised selection is needed.
+
+Each Gameweek, managers select 11 starters, with the remaining 4 benched. If one or more of the selected do not play, the system automatically substitutes them based on the bench order. Players are also restricted to choosing between 8 formations, requiring at least one goalkeeper, three defenders and one forward.
+
+\subsection{Captain and Vice-captain}
+
+From the starting 11, one can select a captain and vice-captain. The game awards the captain double the number of points. If the captain does not feature during a Gameweek, the vice-captain will receive the points.
+
+\subsection{Transfers}
+
+Transfers allow managers to buy and sell players after forming their initial squad. One free transfer is granted each Gameweek, which can be accumulated for up to five tokens (or two until the 2024/25 season). A four point penalty is given if any additional transfers are performed. Depending on their popularity in the transfer market, player prices change dynamically during a season.
+
+\subsection{Chips}
+
+Each Gameweek, chips can be used to improve performance further. Users are restricted to only one chip per Gameweek. The Chips available are:
+\begin{itemize}
+    \item \textbf{Bench Boost}: The points obtained by benched players also count toward the total score.
+    \item \textbf{Free Hit}: The user can make unlimited free transfers for a single Gameweek. After that, the team returns to the state before applying the chip. 
+    \item \textbf{Triple Captain}: The selected captain's points are tripled instead of doubled.
+    \item \textbf{Wildcard}: Allows to perform unlimited permanent transfers free of charge. Available twice a season. 
+    \item \textbf{Mystery Chip}: Only available from January 2025, unknown when writing this.
+\end{itemize}
+
+\subsection{Points system}
+
+% TODO: Reference table
+Players are allocated points according to their performance in real life. Table~\ref{tab:fpl_points} presents how players can earn these.
+
+\begin{longtable}{|>{\raggedright\arraybackslash}p{10cm}|c|}
+\hline
+\textbf{Action} & \textbf{Points} \\
+\hline
+For playing up to 60 minutes & 1 \\
+\hline
+For playing 60 minutes or more (excluding stoppage time) & 2 \\
+\hline
+For each goal scored by a goalkeeper & 10 \\
+\hline
+For each goal scored by a defender & 6 \\
+\hline
+For each goal scored by a midfielder & 5 \\
+\hline
+For each goal scored by a forward & 4 \\
+\hline
+For each goal assist & 3 \\
+\hline
+For a clean sheet by a goalkeeper or defender & 4 \\
+\hline
+For a clean sheet by a midfielder & 1 \\
+\hline
+For every 3 shots saved by a goalkeeper & 1 \\
+\hline
+For each penalty save & 5 \\
+\hline
+For each penalty miss & -2 \\
+\hline
+Bonus points for the best players in a match & 1-3 \\
+\hline
+For every 2 goals conceded by a goalkeeper or defender & -1 \\
+\hline
+For each yellow card & -1 \\
+\hline
+For each red card & -3 \\
+\hline
+For each own goal & -2 \\
+\hline
+\caption{Fantasy Premier League Points System \cite{fpl}}\label{tab:fpl_points} \\
+\end{longtable}
+
+\subsection{Conclusion}
+
+FPL's rules create an environment where managers must balance budget limits, squad selection and transfer restrictions. These challenges make success in FPL a complex optimisation task, requiring a careful combination of short and long-term planning. Now that we understand the rules in detail, we can look at some of the strategies used by top-performing managers. These strategies show ways to tackle the game’s challenges and provide valuable insights that could be replicated when automating FPL.
+
+% TODO
+% Players can also be awarded Bonus Points (BPS)
+
+\section{Popular FPL strategies}
+
+To perform amongst the top FPL players, one could first learn from them and their approaches. This section will highlight some of their differential strategies that could be translated into our current objectives.
+
+\subsection{Data-Driven Success}
+
+In the 2023/24 season, Jonas Sand Labakk became champion, attributing his success to a data-driven approach. Labakk heavily relied on analytics, utilising expected statistics to make informed player and captaincy selections. His method involved planning up to six Gameweeks ahead, allowing for well-informed decisions and minimising bias in judgment. Labakk explained, "Human decision-making can, however, be biased, and an analytical approach allows me to spot players I would otherwise miss." \cite{fantasyfootballhub_labakk_2024}.
+
+Labakk's strategy was focused on making decisions that minimised risk overall. For example, he favoured consistency when captaining over high-risk options. After an initial run of disappointing results, he went against popular trends to stabilise his team by adapting his chip usage and activating his Wildcard earlier than planned. Moreover, his usage of chips such as the Free Hit and Bench Boost was carefully timed to maximise point return, demonstrating his ability to balance low-risk decisions with opportunities for high returns \cite{premierleague_labakk_2024}.
+
+Labakk's approach highlights the importance of data-driven decisions and careful planning, acting as an example of effective FPL management.
+
+\subsection{First team selection}
+
+Ali Jahangirov, the 2022/23 FPL season winner, shared some of the key strategies behind his success in a series of articles published on the Premier League website. 
+
+When selecting his initial team, Jahangirov emphasised the role that flexibility and strategic planning played in his choices. He advised on having a balanced approach by investing in only two "premium" players, typically identified by their high cost and ownership rates. This strategy helps ensure the squad remains adaptable due to the high uncertainty in the season's early stages. Jahangirov also stressed the importance of analysing the upcoming fixture schedule, suggesting that managers should target players with favourable early fixtures \cite{fpl_jahangirov2023}. To minimise risk further, he recommended paying attention to ownership trends, as these figures reflect the strategies adopted by most FPL managers \cite{fpl_jahangirov2023_budget}.
+
+\subsection{Chip usage}
+
+In the 2022/23 FPL season, champion Ali Jahangirov had a strategic approach to chip usage that contributed to his success. For example, he favoured a delayed deployment of the first Wildcard, utilising it in Gameweek 12. This decision allowed him to restructure his team based on previous player performances and fixture schedules. Contrasting Labakk, Jahangirov emphasised the importance of resisting early temptations to activate the Wildcard, suggesting that patience enables better planning and adaptation.
+
+Additionally, Jahangirov saved other chips, such as the Bench Boost and Triple Captain, for double Gameweeks (where players have additional fixtures), aiming to capitalise on players having multiple fixtures within a single Gameweek for maximum point returns. The champion also adopted an unconventional strategy by not triple captaining Erling Haaland, something that 520,778 managers did. He instead opted to captain Marcus Rashford, arguing that midfielders have a higher ceiling, a risky approach that allowed him to maximise his chip usage.
+
+His approach to the Free Hit chip was similarly focused on leveraging double Gameweeks, where the potential for higher points is greater. Rather than following the popular strategy of using the Free Hit during blank Gameweeks (where several players may not have fixtures), he preferred to save them. Instead, he opted to use the chip during double Gameweeks for the potential of a greater outcome. This strategy complemented his use of the Bench Boost and Triple Captain chips, ensuring they were used during increased player activity \cite{fpl_jahangirov2023_chips}.
+
+Jahangirov's calculated and patient strategy in chip deployment highlights the value of timing and informed decisions in FPL management. His approach serves as a baseline for optimising chip usage to get an advantage.
+
+\subsection{Conclusion}
+
+The strategies used by top FPL managers show how important data-driven decisions, planning and effective strategy are. From Labakk’s analytical and low-risk approach to Jahangirov’s emphasis on flexibility and optimised usage of chips, these methods highlight how one can tackle the complexities of FPL.
+
+By studying these human strategies, we can get a solid foundation on techniques that can be used to optimise machine learning models. With this understanding, we now review how previous students tackled these challenges by exploring past projects focused on automating FPL.
+
+\section{Past Dissertations}
+
+Over the years, many students have attempted to address the challenges of automating Fantasy Premier League (FPL), producing a range of dissertations with varying levels of success. This section focuses on two of the most recent and notable projects, analysing their findings, methodologies and contributions to the field. By examining these works, this review aims to identifying gaps and opportunities for further research.
+
+Pownall conducted a complete study on automating FPL management using machine learning techniques. His results showed that Linear Regression outperformed more advanced techniques like Ridge and Lasso regression, suggesting that simpler models could achieve good results on this task. Pownall then integrated these models with an optimisation framework, where he evaluated team selection strategies for maximizing total points. By simulating different transfer strategies and chip decisions, his dissertation provided insight into how predictive modelling could be used along with optimisation techniques to automate FPL. Finally, he evaluates the impact of external factors, such as injuries or managerial changes, on his predictions, highlighting the need for an adaptive system \cite{pownall2023fantasyfootball}.
+
+Pownall's work, while providing a useful foundation, has some limitations. His choice to use simpler models, such as Linear Regression, might not be ideal for capturing complex relationships between player statistics and performance. Furthermore, he doesn’t seem to focus much on data preprocessing or feature engineering which could harm the predictive accuracy of the models. Finally, his analysis of external factors, while insightful, is mainly descriptive rather than integrated into the project, highlighting a challenge without offering a practical solution.
+
+Tindal, adopted a different approach, focusing on other techniques to predict player performance and optimise team selection. His project evaluated the effectiveness of several models, including Linear Regression, Random Forest, Multi-Layer Perceptron (MLP) and Gradient Boosting, in predicting player performances, with the latter being the most effective. Tindal's work on feature engineering identified key statistics such as player form, fixture difficulty and team performance metrics, which appeared to have the highest impact on the results. His analysis showed that careful data preprocessing and feature selection played crucial roles when evaluating model performance. Additionally, his project mentions the challenges of missing key data and the approaches he used to mitigate this though some gaps remained unresolved \cite{tindal2023fantasyfootball}.
+
+While Tindal’s work is valuable, it could be criticized for its focus on predictive accuracy without fully addressing the challenge of data scarcity. Additionally and in contrast with Pownall, Tindal’s analysis emphasizes feature engineering and the effects this has on predictive model accuracy. However, it does not explore in depth how these predictions could be used to experiment with and optimize different FPL strategies, such as team selection or chip usage. This gap provides an opportunity to investigate how predictive models can be combined with diverse strategic approaches in FPL management.
+
+These dissertations provide invaluable insights and a strong foundation for this project. Tindal’s work highlights the importance of model selection and the role of feature engineering in improving predictive accuracy. Pownall’s research demonstrates the potential of integrating predictive modelling with optimisation strategies to manage a team effectively.
+
+This dissertation aims to build on these projects and improve existing methods by exploring alternative machine learning models, feature engineering strategies and optimisation techniques. Additionally, this project aims to compare some of the regression techniques used in these studies, to determine the most effective approach.
+
+By using their methodologies as a baseline, we aim to progress on of automated FPL management and evaluate how new approaches can improve upon their findings. While the results from these studies are promising, it remains important to explore if alternative models could be better suited for this task.
+
+\section{Other Relevant Works}
+
+Researchers have made many attempts to automate Fantasy Football with varying levels of success. As a well-explored area, we can learn from previous works to make this project successful.
+
+\subsection{Innovative Regression Approaches}
+
+Taking a more innovative approach, Ramdas \cite{ramdas2023cnn} explores the use of Convolutional Neural Networks (CNNs) to predict player performance. Traditionally used in image and video analysis, CNNs prove to be surprisingly effective in this context, outperforming traditional regression models across all metrics. However, challenges remain, including the lack of publicly available spatio-temporal data in football and the significant preprocessing effort required for CNNs.
+
+\subsection{Multi-stream Analysis}
+
+Research has been conducted to enhance prediction accuracy by using multi-stream analytics models. For instance, Bonello compares statistical models with multi-stream models, where each stream represents a different position in the team. The results were mixed: while goalkeepers performed poorly under the multi-stream approach, forwards outperformed \cite{BonelloNicholas2019MDAf}. The findings can be explained by how different positions rely on team form versus individual skill. Similarly, Tindal applied a multi-stream approach with moderate success, arguing that positions have distinct scoring requirements \cite{tindal2023fantasyfootball}. A careful selection of features remains a key factor to achieve good results with this approach. By processing each position separately multi-stream models can better capture the characteristics of each, potentially improving the accuracy of player performance predictions.
+
+\subsection{Leveraging Historical Data}
+
+To address the limitations of traditional models, which lack temporal awareness, different approaches have been explored to represent player performance using both short-term and long-term features. In his study, Kotrba combines recent match statistics with aggregated averages from more extended periods, including the first half of the season and the last 5 or 10 games \cite{KotrbaVojtech2020Hifs}. This approach captures both immediate performance trends and season consistency. Similarly, research by Pownall represents player performance through accumulated statistics from the last five games, offering a perspective into recent form \cite{pownall2023fantasyfootball}. These adaptations make capturing temporal patterns in FPL predictions possible, where recent player performance can influence outcomes.
+
+% TODO: Maybe?
+Kristiansen introduced the idea of weighting long-term features to simulate temporal dependencies in FPL predictions better. His model incorporates factors such as opponent strength, player form and home advantage to adjust the weights of relevant statistics. By applying these weights, he aims to refine performance forecasting \cite{Kristiansen2024}.
+
+\subsection{Temporal Dependency Modeling}
+
+Adapting data to work with conventional machine learning models is a valid approach, but a more effective method may exist. Long Short-Term Memory (LSTM) Recurrent Neural Networks are particularly well-suited for handling sequential data such as natural language processing, speech recognition and time series forecasting \cite{jaff2023lstm}. These characteristics make them an excellent fit for this project as they can leverage the temporal dependencies in player Gameweek data, an advantage standard models lack.
+
+LSTM networks were first applied to Fantasy Football predictions by Gupta, who noted that they effectively capture non-linear patterns without relying on linear components \cite{GuptaAkhil2019TSMf}. However, unlike more traditional models, LSTMs require a larger amount of data to capture these dependencies accurately, which can be a potential limitation for some datasets.
+
+Further supporting the effectiveness of LSTMs, Lindberg and Söderberg  performed a comparison on a wide variety of popular models. LSTM networks outperformed other models in predicting player performance across all positions. Their results showed that LSTMs achieved the lowest mean squared error (MSE) in regression analysis, proving once again their strength in capturing complex time-dependent patterns \cite{lindberg2020comparison}.
+
+\subsection{Team Selection}
+
+To enhance team selection, it is essential to ensure that the chosen team has a broad range of player costs, as research on team diversity has shown. In his study, Gullholm emphasises the role of player cost diversity as a critical factor in building successful teams. He observes that player costs are often clustered, with approximately 33\% of players in a season sharing the same cost. When analysing the best-performing teams, he finds that 72\% fall into what he defines as "diverse" teams, meaning their player costs are more widely distributed. Gullholm suggests that this diversity may be directly linked to having players who contribute across multiple statistics such as goals, assists and clean sheets rather than relying on a few high-cost "luxury" players. His findings identify cost diversity as a feature commonly associated with high-performing teams \cite{GullholmJosef2022DiKF}.
+
+\subsection{Conclusion}
+
+These studies highlight different techniques and approaches aimed at improving regression predictions. From innovative applications of CNNs to temporal models like LSTMs, these works show the importance and use of machine learning techniques. Additionally, methods such as multi-stream analytics, the use of historical data and strategic team selection show strategies that could further allow us to maximise points. 
+
+\section{Machine Learning Models}
+
+This project aims to implement some of these techniques while combining them with ideas highlighted in previous sections of this chapter. To implement these, we need a solid understanding of the mathematical principles behind machine learning models, which will be explained in this section. 
+
+\subsection{Linear Regression}
+
+Linear Regression is a simple yet effective statistical method for predicting a target variable \( Y \) based on input features \( X_1, \ldots, X_i \), assuming a linear relationship between them. Its simplicity makes it a popular choice. However, linear regression may struggle to capture complex, non-linear patterns, raising some concerns about its fit for this project. The prediction formula is:
+
+\begin{equation}
+    \hat{y} = \beta_0 + \sum_{i=1}^{p} \beta_i x_i,
+\end{equation}
+
+where \( \beta_0 \) is the intercept and \( \beta_i \) are the coefficients of the input features.
+
+
+\subsection{Gradient Boosting}
+
+Gradient Boosting is an ensemble method that constructs decision trees sequentially, with each new tree correcting errors made by its predecessors. \cite{BentejacCandice2021Acao}. Gradient Boosting is well-suited for capturing complex non-linear relationships in data, making it effective for regression tasks.
+
+The prediction for Gradient Boosting is expressed as:
+
+\begin{equation}
+    \hat{y} = \sum_{m=1}^{M} \nu f_m(x),
+\end{equation}
+
+where \( f_m(x) \) is the \( m \)-th weak learner, \( \nu \) is the learning rate and \( M \) is the total number of learners. The residuals, which represent the errors, are calculated as:
+
+\begin{equation}
+    r_i = y_i - \hat{y}_i^{(m-1)},
+\end{equation}
+
+where \( r_i \) is the residual for observation \( i \).
+
+\subsection{Random Forest}
+Random Forest is another ensemble learning method that combines multiple decision trees to enhance predictive accuracy and reduce the risk of overfitting. Each tree is built using a random sample of training data and a random subset of features at each split, which reduces tree correlation and improves performance \cite{BentejacCandice2021Acao}.
+
+For regression, the final prediction is obtained by averaging the outputs of all the trees:
+
+\begin{equation} \hat{y} = \frac{1}{T} \sum_{t=1}^{T} \hat{y}_t, \end{equation}
+
+where \( T \) is the total number of trees.
+
+\subsection{Long Short-Term Memory (LSTM) Networks}
+LSTM networks are a type of Recurrent Neural Network designed to model temporal dependencies in sequential data \cite{KALA2024569}, such as player Gameweek data. LSTM networks address both long and short-term dependencies using an architecture that includes memory cells and three types of gates: forget, input and output.
+
+The forget gate in LSTM decides how much of the past information should be discarded, with its activation function:
+
+\begin{equation}
+    f_t = \sigma \left(W_f x_t + U_f y_{t-1} + b_f\right),
+\end{equation}
+
+where \( \sigma \) is the sigmoid function, \( W_f \) and \( U_f \) are weight matrices, and \( b_f \) is the bias. This process allows the LSTM to filter out irrelevant past information.
+
+The input gate incorporates new input into the cell state. It calculates a candidate update \( c'_t \) using:
+
+\begin{equation}
+    c'_t = \tanh \left(W_c x_t + U_c y_{t-1} + b_c\right),
+\end{equation}
+
+and updates the cell state \( c_t \):
+
+\begin{equation}
+    c_t = f_t \cdot c_{t-1} + i_t \cdot c'_t,
+\end{equation}
+
+where \( i_t \) is the input gate activation.
+
+Finally, the output gate generates the current output \( y_t \) by filtering the cell state:
+
+\begin{equation}
+    y_t = o_t \cdot \tanh(c_t),
+\end{equation}
+
+where \( o_t \) is the output gate activation. This mechanism allows LSTMs to balance long-term memory with new input.
+
+\subsection{Conclusion}
+
+This section has introduced the mathematical foundations of the machine learning models used in this project. Linear Regression offers a simple approach but may struggle when it comes to capturing the complexity of FPL data. Gradient Boosting and Random Forest introduce ensemble learning techniques and are better equipped to handle non-linear relationships. Meanwhile, Long Short-Term Memory (LSTM) networks stand out for their ability to model temporal dependencies, making them particularly well-suited for sequential data like Gameweek performances. Each model has strengths and limitations, and its performance will depend on the data and careful pre-processing.
+
+\section{Conclusion}
+
+This chapter has explored the key factors and approaches related to automating Fantasy Premier League. By understanding the game’s rules and constraints, we’ve gained a clear idea of the challenges that make FPL so complex. The strategies of top-performing managers offer valuable insights, serving as inspiration for developing automated solutions. Past dissertations and related works have shown the range of machine learning and optimisation techniques available, showcasing their strengths, limitations and potential. Finally, we introduced the mathematical foundations of the key models that will be part of this project.
+
+These insights present a baseline on which to build an automated system. With this knowledge, we can lay the groundwork for a system capable of offering a competitive advantage in FPL.

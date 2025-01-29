@@ -1,1 +1,1 @@
-# fantasy_pl
+# AutomatedFPLPlayer

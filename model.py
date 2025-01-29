@@ -3,8 +3,9 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble import AdaBoostRegressor
 import pandas as pd
 from sklearn.metrics import mean_squared_error
-from utils.ModelTypes import ModelType
-from xgboost import XGBRegressor
+from utils.model_types import ModelType
+# from xgboost import XGBRegressor
+from models.lstm_model import LSTMModel
 
 TARGET = 'total_points'
 
@@ -23,9 +24,10 @@ class Model:
         return AdaBoostRegressor()
       case ModelType.GRADIENT_BOOST:
         return GradientBoostingRegressor()
-      case ModelType.XGBOOST:
-        # Change the parameters
-        return XGBRegressor(n_estimators=2, max_depth=2, learning_rate=1, objective='binary:logistic')
+      # case ModelType.XGBOOST:
+      #   return XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=5, random_state=42)
+      case ModelType.LSTM():
+        return LSTMModel()
 
   """
   Trains the model on the training data and makes predictions on the full data,
