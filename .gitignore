@@ -132,3 +132,7 @@ dmypy.json
 
 bi_lstm_model.keras
 scaler.pkl
+
+# Ignore scalers and trained models
+models/lstm/scalers/
+models/trained/

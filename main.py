@@ -18,7 +18,7 @@ if __name__=='__main__':
 
   # Uses data from the previous season
   gw_data = data_loader.get_merged_gw_data('2022-23') 
-  season_data = data_loader.get_data('2022-23')
+  season_data = data_loader.get_season_data('2022-23')
   players_data = data_loader.get_players_data('2022-23')
 
   model = LSTMModel(

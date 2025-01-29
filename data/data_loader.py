@@ -1,8 +1,12 @@
 from data.vaastav.data_loader import DataLoader as Vaastav
 from data.sofascore.data_loader import DataLoader as Sofascore
+from utils.feature_selector import FeatureSelector
 
 class DataLoader:
-  def get_data(self, season):
+  def __init__(self):
+    self.feature_selector = FeatureSelector()
+
+  def get_season_data(self, season):
     data_loader = Vaastav(season)
     data = data_loader.get_full_season_data()
 
@@ -17,10 +21,12 @@ class DataLoader:
   def get_merged_gw_data(self, season):
     data_loader = Vaastav(season)
     gw_data = data_loader.get_merged_gw_data()
+    season_data = data_loader.get_full_season_data()
 
     teams_data = self.get_teams_data(season)
 
     data = self._add_teams_data_to_gw_data(gw_data, teams_data)
+    data = self._add_season_data_to_gw_data(data, season_data)
 
     return data
 
@@ -52,7 +58,18 @@ class DataLoader:
     # Move total_points to the first column
     gw_data.insert(0, 'total_points', gw_data.pop('total_points'))
 
-    gw_data.to_csv('test.csv')
+    return gw_data
+
+  def _add_season_data_to_gw_data(self, gw_data, season_data):
+    season_data = season_data[self.feature_selector.SEASON_FEATURES]
+    season_data = season_data.rename(columns=lambda x: f"season_{x}")
+
+    gw_data = gw_data.merge(
+      season_data,
+      how='left',
+      left_on='id',
+      right_on='season_id'
+    )
 
     return gw_data
 
