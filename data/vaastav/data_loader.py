@@ -250,7 +250,7 @@ GW_COLS = [
   "goals_scored", "ict_index", "influence", "minutes", 
   "own_goals", "penalties_missed", "penalties_saved", 
   "red_cards", "saves", "starts", "threat", "total_points",
-  "value", "was_home", "yellow_cards", "kickoff_time"
+  "value", "was_home", "yellow_cards", "kickoff_time", 'GW'
 ]
 
 TEAMS_COLUMNS = ['id', 'name', 'strength', 'strength_overall_home', 'strength_overall_away',	'strength_attack_home',	'strength_attack_away',	'strength_defence_home', 'strength_defence_away']

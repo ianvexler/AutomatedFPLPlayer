@@ -38,16 +38,15 @@ class FeatureSelector:
       'FWD': ['assists', 'goals_scored', 'expected_goals', 'total_points']
     }
 
+    self.TARGET = 'total_points'
+
   def get_features_for_position(self, position):
     features = self.features[position] + self.GW_TEAM_FEATURES + self.ADDITIONAL_FEATURES
 
     season_features = self.position_season_features(position)
     season_features = [f'season_{feature}' for feature in season_features]
 
-    return features + season_features
-
-  def get_targets_for_position(self, position):
-    return self.features[position]
+    return list(features + season_features)
     
   def position_season_features(self, position):
     match position:
