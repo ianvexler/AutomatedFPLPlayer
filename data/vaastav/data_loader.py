@@ -43,11 +43,6 @@ class DataLoader():
     # Select only the columns that are in DATA_COLUMNS
     sanitized_df = data_df.loc[:, data_df.columns.intersection(DATA_COLUMNS)]
 
-    # Set 'id' column as the index and sort the DataFrame
-    if 'id' in sanitized_df.columns:
-        sanitized_df.set_index('id', inplace=True)
-        sanitized_df.sort_index(inplace=True)
-
     return sanitized_df
 
   ### GWs Merged ###
@@ -140,7 +135,7 @@ class DataLoader():
 
     # Temp
     POSITIONS = {1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD'}
-    players_df = players_df.loc[:, players_df.columns.intersection(['id', 'element_type'])]
+    players_df = players_df.loc[:, players_df.columns.intersection(['id', 'element_type', 'team'])]
     players_df = players_df.rename(columns={'element_type': 'position'})
 
     players_df['position'] = players_df['position'].apply(lambda x: POSITIONS[x])
@@ -186,7 +181,7 @@ class DataLoader():
     df = df.map(lambda x: pd.to_numeric(x, errors='coerce'))
     return df
 
-COMMON_COLS = [
+DATA_COLUMNS = [
   "assists",
   "bonus",
   "bps",
@@ -209,72 +204,42 @@ COMMON_COLS = [
   "starts",
   "threat",
   "total_points",
-  "yellow_cards"
-]
-
-SEASON_UNIQUE_COLS = [
+  "yellow_cards",
   # "chance_of_playing_next_round", # TODO?
   # "chance_of_playing_this_round", # TODO?
   "clean_sheets_per_90",
-  # "code",
   # "corners_and_indirect_freekicks_order",
-  # "corners_and_indirect_freekicks_text",
   # "cost_change_event",
   # "cost_change_event_fall",
   # "cost_change_start",
   # "cost_change_start_fall",
-  # "creativity_rank", # TODO?
+  # "creativity_rank",
   # "creativity_rank_type",
   # "direct_freekicks_order",
-  # "direct_freekicks_text",
-  # "dreamteam_count",
   "element_type",
-  # "ep_next",
-  # "ep_this",
-  # "event_points",
   "expected_assists_per_90",
   "expected_goal_involvements_per_90",
   "expected_goals_conceded_per_90",
   "expected_goals_per_90",
-  # "first_name",
-  # "form", # TODO?
+  "form",
   # "form_rank",
   # "form_rank_type",
   "goals_conceded_per_90",
   # "ict_index_rank",
   # "ict_index_rank_type",
   "id",
-  # "in_dreamteam",
   # "influence_rank",
   # "influence_rank_type",
   # "news", # TODO?
   # "news_added", # TODO?
-  # "now_cost",
-  # "now_cost_rank",
-  # "now_cost_rank_type",
   # "penalties_order",
-  # "penalties_text",
-  # "photo",
   "points_per_game",
-  # "points_per_game_rank",
-  # "points_per_game_rank_type",
   "saves_per_90",
-  # "second_name",
-  # "selected_by_percent",
-  # "selected_rank",
-  # "selected_rank_type",
-  # "special",
-  # "squad_number",
-  # "starts_per_90",
+  "starts_per_90",
   # "status", # TODO?
   "team_code",
   # "threat_rank",
   # "threat_rank_type",
-  # "transfers_in_event",
-  # "transfers_out_event",
-  # "value_form",
-  # "value_season",
-  # "web_name"
 ]
 
 # Maybe include position?
@@ -285,10 +250,8 @@ GW_COLS = [
   "goals_scored", "ict_index", "influence", "minutes", 
   "own_goals", "penalties_missed", "penalties_saved", 
   "red_cards", "saves", "starts", "threat", "total_points",
-  "value", "was_home", "yellow_cards", "kickoff_time"
+  "value", "was_home", "yellow_cards", "kickoff_time", 'GW'
 ]
-
-DATA_COLUMNS = COMMON_COLS + SEASON_UNIQUE_COLS
 
 TEAMS_COLUMNS = ['id', 'name', 'strength', 'strength_overall_home', 'strength_overall_away',	'strength_attack_home',	'strength_attack_away',	'strength_defence_home', 'strength_defence_away']
 
