@@ -16,28 +16,42 @@ if __name__=='__main__':
 
   data_loader = DataLoader()
 
-  fixtures = data_loader.get_fixtures('2023-24')
+  fixtures_data = data_loader.get_fixtures('2023-24')
   teams_data = data_loader.get_teams_data('2023-24')
 
   # Uses data from the previous season
   players_data = data_loader.get_players_data('2023-24')
 
-  team_selector = Team(players_data)
-  initial_team = team_selector.initial_team()
-  print(initial_team)
+  gw_data = data_loader.get_merged_gw_data('2023-24', args.steps)
 
-  # gw_data = data_loader.get_merged_gw_data('2023-24', args.steps)
-
-  # model = LSTMModel(
-  #   gw_data=gw_data,
-  #   teams_data=teams_data,
-  #   fixtures=fixtures,
-  #   players_data=players_data,
-  #   season='2023-24',
-  #   train=args.train,
-  #   time_steps=args.steps)
+  model = LSTMModel(
+    gw_data=gw_data,
+    teams_data=teams_data,
+    fixtures=fixtures_data,
+    players_data=players_data,
+    season='2023-24',
+    train=args.train,
+    time_steps=args.steps)
   
-  # model.predict_season()
+  model.predict_season()
+
+  # team_selector_data = gw_data[(gw_data['GW'] == 2) & (gw_data['total_points'] > 0)]
+  # team_selector_data.to_csv('test_selector_data.csv')
+  # team_selector = Team(
+  #   team_selector_data,
+  #   teams_data,
+  #   fixtures_data
+  # )
+  # initial_team, team_cost = team_selector.initial_team()
+  # print(f"Initial team: {initial_team}")
+  
+  # transfers_available = 1
+  # transfers = team_selector.perform_transfers(
+  #   initial_team,
+  #   1000 - team_cost,
+  #   transfers_available
+  # )
+  # print(transfers)
 
 # if __name__=='__main__':
 #   data_loader = DataLoader()

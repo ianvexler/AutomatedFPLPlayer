@@ -68,10 +68,7 @@ class DataLoader():
       data_df = pd.DataFrame(data_df[1:], columns=data_df[0])  # Adjust if raw data isn't already a DataFrame
 
     # Select only the columns that are in GW_COLS
-    sanitized_df = data_df.loc[:, data_df.columns.intersection(GW_COLS)]
-
-    # Set 'element' column as the index and sort the DataFrame
-    sanitized_df = sanitized_df.rename(columns={'element': 'id'})
+    sanitized_df = data_df.rename(columns={'element': 'id', 'value': 'cost'})
 
     # Convert only the boolean columns to integers
     boolean_columns = sanitized_df.select_dtypes(include='bool').columns
@@ -240,17 +237,6 @@ DATA_COLUMNS = [
   "team_code",
   # "threat_rank",
   # "threat_rank_type",
-]
-
-# Maybe include position?
-GW_COLS = [
-  "team", "opponent_team", "assists", "clean_sheets", 
-  "creativity", "element", "expected_assists", "expected_goal_involvements", 
-  "expected_goals", "expected_goals_conceded", "goals_conceded", 
-  "goals_scored", "ict_index", "influence", "minutes", 
-  "own_goals", "penalties_missed", "penalties_saved", 
-  "red_cards", "saves", "starts", "threat", "total_points",
-  "value", "was_home", "yellow_cards", "kickoff_time", 'GW'
 ]
 
 TEAMS_COLUMNS = ['id', 'name', 'strength', 'strength_overall_home', 'strength_overall_away',	'strength_attack_home',	'strength_attack_away',	'strength_defence_home', 'strength_defence_away']

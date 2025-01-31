@@ -148,6 +148,7 @@ class LSTMModel:
   """
   def _filter_data_by_position(self, position):
     merged_data = self.gw_data.merge(self.players_data[['id', 'position']], on='id')
+    merged_data.to_csv('test_lol.csv')
     filtered_data = merged_data[merged_data['position'] == position]
     return filtered_data
 
