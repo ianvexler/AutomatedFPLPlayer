@@ -135,8 +135,8 @@ class DataLoader():
 
     # Temp
     POSITIONS = {1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD'}
-    players_df = players_df.loc[:, players_df.columns.intersection(['id', 'element_type', 'team'])]
-    players_df = players_df.rename(columns={'element_type': 'position'})
+    players_df = players_df.loc[:, players_df.columns.intersection(['id', 'element_type', 'team', 'now_cost', 'total_points'])]
+    players_df = players_df.rename(columns={'element_type': 'position', 'now_cost': 'cost'})
 
     players_df['position'] = players_df['position'].apply(lambda x: POSITIONS[x])
     

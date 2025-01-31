@@ -217,7 +217,7 @@ class LSTMModel:
       # Returns unscaled prediction
       prediction = self._predict_player_performance(combined_sequence, position)
 
-      predictions.setdefault(player_id, prediction)
+      predictions.setdefault(player_id, 0)
       predictions[player_id] += prediction
     
     return predictions
@@ -266,7 +266,7 @@ class LSTMModel:
     predictions_df = predictions_df.sort_values(by=['expected_points'], ascending=False)
     predictions_df = predictions_df.reset_index()
     predictions_df.columns = ['id', 'expected_points']
-    
+
     predictions_df.to_csv(file_path, index=False)
     print(f"{home_team} vs {away_team} saved to {file_path}\n")
 

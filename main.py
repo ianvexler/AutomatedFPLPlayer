@@ -5,6 +5,7 @@ from evaluate import Evaluate
 from utils.model_types import ModelType
 from models.lstm_model import LSTMModel
 import argparse
+from team import Team
 
 if __name__=='__main__':
   parser = argparse.ArgumentParser(description='Run the model with optional training.')
@@ -21,18 +22,22 @@ if __name__=='__main__':
   # Uses data from the previous season
   players_data = data_loader.get_players_data('2023-24')
 
-  gw_data = data_loader.get_merged_gw_data('2023-24', args.steps)
+  team_selector = Team(players_data)
+  initial_team = team_selector.initial_team()
+  print(initial_team)
 
-  model = LSTMModel(
-    gw_data=gw_data,
-    teams_data=teams_data,
-    fixtures=fixtures,
-    players_data=players_data,
-    season='2023-24',
-    train=args.train,
-    time_steps=args.steps)
+  # gw_data = data_loader.get_merged_gw_data('2023-24', args.steps)
+
+  # model = LSTMModel(
+  #   gw_data=gw_data,
+  #   teams_data=teams_data,
+  #   fixtures=fixtures,
+  #   players_data=players_data,
+  #   season='2023-24',
+  #   train=args.train,
+  #   time_steps=args.steps)
   
-  model.predict_season()
+  # model.predict_season()
 
 # if __name__=='__main__':
 #   data_loader = DataLoader()

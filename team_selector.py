@@ -13,22 +13,13 @@ class TeamSelector:
     self.best_result = 0
     self.concurrently_worse = 0
 
+  # TODO: Necessary pre-processing
   def set_data(self, data):
-    columns_to_extract = ['id', 'team', 'element_type', 'total_points', 'now_cost']
-    column_names = data[0, :]
-    column_indices = [np.where(column_names == col)[0][0] for col in columns_to_extract]
-    reduced_data = data[1:, column_indices].astype(int)
-
-    indices_to_remove = np.where(reduced_data[:, 3] == 0)
-    reduced_data = np.delete(reduced_data, indices_to_remove, axis=0)
-    
-    return reduced_data
+    return data
   
   def get_best_team(self):
     teams = self.set_initial_population()
     self.evaluate_teams(teams)
-
-    print(self.data[np.where(self.best_team == 1)])
     
     return self.best_result
 
@@ -170,6 +161,10 @@ class TeamSelector:
       return child_team
     else: 
       return self.team_mutation(child_team)
+
+  def testing_team(self):
+    selected_players = np.random.choice(len(self.data), PLAYERS, replace=False)
+    print(selected_players)
   
   # -------- Utils --------
   # Recursion error
