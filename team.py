@@ -1,4 +1,5 @@
 from itertools import chain
+import random
 
 class Team:
   def __init__(self, data):
@@ -34,22 +35,16 @@ class Team:
 
     budget = self.MAX_BUDGET
 
-    best_team, team_cost = self.get_best_team(budget)
+    best_team, team_cost, team_points = self.get_best_team(budget)
 
     print(f"Team Cost: {team_cost}")
+    print(f"Team Points: {team_points}")
 
     return best_team
 
   # Selects the initial team trying to optimize selection
   def get_best_team(self, budget):
     print('Selecting initial team')
-
-    best_team = {
-      'GK': [],
-      'DEF': [],
-      'MID': [],
-      'FWD': []
-    }
   
     # Max available to spend per position
     team_split = {
@@ -59,27 +54,45 @@ class Team:
       'FWD': 0.2
     }
 
-    team_cost = 0
+    pos_budgets = {}
+    best_team = {}
 
     for position in self.POSITIONS:
+      # Initializes dict with empty position
+      best_team[position] = []
+
+      # Initailizes budgets per position dict
+      pos_budgets[position] = budget * team_split[position]
+
+    team_cost = 0
+    team_points = 0
+    team_distribution = self.POS_DISTRIBUTION.copy()
+
+    while any(value > 0 for value in team_distribution.values()):
+      # Get only keys with non-zero values
+      available_keys = [key for key, value in team_distribution.items() if value > 0]
+      
+      if available_keys:
+        position = random.choice(available_keys)
+        team_distribution[position] -= 1
+
+      # Get best player of random position selected
       pos_min = self._pos_min_price(position)
-      pos_count = self.POS_DISTRIBUTION[position]
+      pos_count = team_distribution[position]
 
-      pos_budget = budget * team_split[position]
+      # How much can be spent in the next player
+      player_budget = pos_budgets[position] - (pos_min * pos_count)
+    
+      player_id, player_cost, player_points = self._get_best_player(position, player_budget, best_team)
+      # Adds player to best_team
+      best_team[position].append(player_id)
 
-      for n in range(pos_count, 0, -1):
-        # How much can be spent in the next player
-        player_budget = pos_budget - (pos_min * (n - 1))
+      # Updates total budget available for position
+      pos_budgets[position] -= player_cost
+      team_cost += player_cost
+      team_points += player_points
 
-        player_id, player_cost = self._get_best_player(position, player_budget, best_team)
-        # Adds player to best_team
-        best_team[position].append(player_id)
-
-        # Updates total budget available for position
-        pos_budget -= player_cost
-        team_cost += player_cost
-
-    return best_team, team_cost
+    return best_team, team_cost, team_points
 
   # TODO: Calculate team value
   def team_value():
@@ -119,7 +132,7 @@ class Team:
 
     best_player = players_available.iloc[0]
 
-    return best_player['id'], best_player['cost']
+    return best_player['id'], best_player['cost'], best_player['total_points']
 
   def _pos_min_price(self, position):
     """
