@@ -29,7 +29,7 @@ class FeatureSelector:
       "expected_goals_per_90", "form", "goals_conceded_per_90", "id", "points_per_game", "saves_per_90", "starts_per_90",
     ]
 
-    self.ADDITIONAL_FEATURES = ['was_home', 'value']
+    self.ADDITIONAL_FEATURES = ['was_home', 'cost']
 
     self.features = {
       'GK': ['saves', 'penalties_saved', 'clean_sheets', 'goals_conceded', 'expected_goals_conceded', 'total_points'],
@@ -46,7 +46,8 @@ class FeatureSelector:
     season_features = self.position_season_features(position)
     season_features = [f'season_{feature}' for feature in season_features]
 
-    return list(features + season_features)
+    return features
+    # return list(features + season_features)
     
   def position_season_features(self, position):
     match position:

@@ -23,7 +23,7 @@ class LSTMModel:
     self.time_steps = time_steps
 
     # Selelects the position for all features
-    for position in ['GK', 'DEF', 'MID', 'FWD']:
+    for position in ['GK', 'DEF', 'MID', 'FWD']:  
       position_gw_data = self._filter_data_by_position(position)
 
     self.models = {
@@ -147,10 +147,7 @@ class LSTMModel:
   pandas.DataFrame: A DataFrame containing only the rows where the player's position matches the specified position.
   """
   def _filter_data_by_position(self, position):
-    merged_data = self.gw_data.merge(self.players_data[['id', 'position']], on='id')
-    merged_data.to_csv('test_lol.csv')
-    filtered_data = merged_data[merged_data['position'] == position]
-    return filtered_data
+    return self.gw_data[self.gw_data['position'] == position]
 
   def predict_season(self):
     print(f"Started Season Prediction")
@@ -158,39 +155,43 @@ class LSTMModel:
     # Initialize a dictionary to accumulate predictions for each player
     player_aggregates = {}
 
-    for _, game in self.fixtures.sort_values(by=['GW']).iterrows():
-      current_gw = game['GW']
+    for gw, gw_group in self.fixtures.groupby('GW'):
+      current_gw = gw
+      current_data = self.gw_data[self.gw_data['GW'] <= current_gw]
+      
+      # TODO: To be removed
       if current_gw < 8:
         continue
 
-      current_data = self.gw_data[self.gw_data['GW'] < game['GW']]
+      gw_aggregates = {}
+      for _, game in gw_group.iterrows():
+        home_team_id = game['team_h']
+        away_team_id = game['team_a']
 
-      home_team_id = game['team_h']
-      away_team_id = game['team_a']
+        players_data = current_data[
+          ((current_data['team'] == away_team_id) | (current_data['team'] == away_team_id)) & 
+          (current_data['GW'] < current_gw)
+        ]
+        players_data.to_csv('player_data.csv')
+        # Predict and accumulate results for players in both teams
+        predictions = self._predict_players_game(players_data, current_gw)
 
-      if not (home_team_id == 11 or away_team_id == 11):
-        continue
+        players_gw_data = current_data[
+          ((current_data['team'] == away_team_id) | (current_data['team'] == away_team_id)) & 
+          (current_data['GW'] == current_gw)
+        ]
+        self._format_and_save_match_prediction(predictions, home_team_id, away_team_id, players_gw_data, current_gw)
 
-      home_players = current_data[
-        (current_data['team'] == home_team_id) &
-        (current_data['GW'] < game['GW'])
-      ]
-      away_players = current_data[
-        (current_data['team'] == away_team_id) & 
-        (current_data['GW'] < game['GW'])
-      ]
+        # Add to aggregate
+        for player_id, prediction in predictions.items():
+          player_aggregates.setdefault(player_id, 0)
+          player_aggregates[player_id] += prediction
 
-      # Predict and accumulate results for players in both teams
-      home_players_predictions = self._predict_players_game(home_players, current_gw)
-      away_players_predictions = self._predict_players_game(away_players, current_gw)
+          gw_aggregates.setdefault(player_id, 0)
+          gw_aggregates[player_id] += prediction
 
-      predictions = home_players_predictions | away_players_predictions
-
-      self._format_and_save_match_prediction(predictions, home_team_id, away_team_id, current_gw)
-
-      # Add to aggregate
-      player_aggregates.setdefault(player_id, prediction)
-      player_aggregates[player_id] += prediction
+      players_data = current_data[current_data['GW'] == current_gw]
+      self._format_and_save_gw_prediction(gw_aggregates, players_data, current_gw)
 
     # Convert the accumulated results to a DataFrame
     aggregate_predictions = []
@@ -212,7 +213,7 @@ class LSTMModel:
       position = self._get_player_position(player_id)
 
       player_sequence = self._get_player_sequence(player_data, position)
-  
+      
       combined_sequence = player_sequence[np.newaxis, :, :]
 
       # Returns unscaled prediction
@@ -226,7 +227,7 @@ class LSTMModel:
   # Returns total predicted points
   def _predict_player_performance(self, combined_sequence, position):
     prediction = self.models[position].predict(combined_sequence)    
-    prediction = np.maximum(prediction, 0) # Ensures that there are no negative numbers
+    prediction = np.maximum(prediction, 0)
 
     prediction_df = pd.DataFrame(prediction, columns=[self.target])
 
@@ -253,7 +254,7 @@ class LSTMModel:
 
     return position
   
-  def _format_and_save_match_prediction(self, predictions, home_team_id, away_team_id, current_gw):
+  def _format_and_save_match_prediction(self, predictions, home_team_id, away_team_id, gw_data, current_gw):
     directory = f"predictions/matches/{self.season}"
     os.makedirs(directory, exist_ok=True)
 
@@ -264,13 +265,24 @@ class LSTMModel:
 
     predictions_df = pd.DataFrame.from_dict(predictions, orient='index', columns=['expected_points'])
     
-    predictions_df = predictions_df.sort_values(by=['expected_points'], ascending=False)
-    predictions_df = predictions_df.reset_index()
-    predictions_df.columns = ['id', 'expected_points']
-
-    predictions_df.to_csv(file_path, index=False)
+    gw_predictions_df = gw_data.merge(predictions_df, left_on='id', right_index=True, how='left')
+    gw_predictions_df.to_csv(file_path, index=False)
     print(f"{home_team} vs {away_team} saved to {file_path}\n")
+    
+    return predictions
 
+  def _format_and_save_gw_prediction(self, predictions, gw_data, current_gw):
+    directory = f"predictions/gws/{self.season}"
+    os.makedirs(directory, exist_ok=True)
+
+    file_path = os.path.join(directory, f"GW{current_gw}.csv")
+
+    predictions_df = pd.DataFrame.from_dict(predictions, orient='index', columns=['expected_points'])
+
+    gw_predictions_df = gw_data.merge(predictions_df, left_on='id', right_index=True, how='left')
+    gw_predictions_df.to_csv(file_path, index=False)
+    
+    print(f"GW{current_gw} saved to {file_path}\n")
     
     return predictions
 

@@ -23,8 +23,9 @@ class DataLoader:
     prev_season = self._decrement_season(season)
 
     seasons_gw_data = []
-  
-    for s in [season, prev_season]:  
+
+    for s in [season]:
+    # for s in [season, prev_season]:  
       data_loader = Vaastav(s)
       gw_data = data_loader.get_merged_gw_data()
       season_data = data_loader.get_full_season_data()
@@ -50,7 +51,7 @@ class DataLoader:
     merged_data = merged_data.sort_values(by='GW', ascending=True)
 
     merged_data['kickoff_time'] = pd.to_datetime(merged_data['kickoff_time'], errors='coerce')
-
+    merged_data.to_csv('jhasjdkf.csv')
     return merged_data
 
   def _add_teams_data_to_gw_data(self, gw_data, teams_data):

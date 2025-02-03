@@ -23,26 +23,13 @@ class DataLoader():
     data = self.sanitize_season_data(raw_data)
     return data
 
-  """
-  Sanitizes the season data by filtering the relevant columns provided by the DATA_COLUMNS constants.
-
-  Params:
-    data_df: DataFrame with the raw data
-
-  Returns:
-    pd.DataFrame: Sanitized DataFrame of data.
-  """
   def sanitize_season_data(self, data_df):
     # Ensure data_df is in DataFrame format (if not already)
     if not isinstance(data_df, pd.DataFrame):
         data_df = pd.DataFrame(data_df[1:], columns=data_df[0])  # Adjust if raw data isn't already a DataFrame
 
     # Convert DataFrame values to numeric where possible
-    data_df = self.convert_df_to_numeric(data_df)
-
-    # Select only the columns that are in DATA_COLUMNS
-    sanitized_df = data_df.loc[:, data_df.columns.intersection(DATA_COLUMNS)]
-
+    sanitized_df = self.convert_df_to_numeric(data_df)
     return sanitized_df
 
   ### GWs Merged ###
@@ -65,7 +52,7 @@ class DataLoader():
   def sanitize_gw_data(self, data_df):
     # Ensure data_df is in DataFrame format (if not already)
     if not isinstance(data_df, pd.DataFrame):
-      data_df = pd.DataFrame(data_df[1:], columns=data_df[0])  # Adjust if raw data isn't already a DataFrame
+      data_df = pd.DataFrame(data_df[1:], columns=data_df[0]) # Adjust if raw data isn't already a DataFrame
 
     # Select only the columns that are in GW_COLS
     sanitized_df = data_df.rename(columns={'element': 'id', 'value': 'cost'})
@@ -77,10 +64,6 @@ class DataLoader():
     sanitized_df['kickoff_time'] = pd.to_datetime(sanitized_df['kickoff_time'], format='ISO8601', utc=True)
 
     sanitized_df['season'] = self.season
-
-    # TODO: Handle setting the id as the indexes?
-    # sanitized_df = sanitized_df.set_index('id')  # Remove inplace=True
-
     return sanitized_df
 
   ### Teams ###
@@ -93,10 +76,7 @@ class DataLoader():
 
   def sanitize_teams_data(self, data):
     teams_df = pd.DataFrame(data)
-
-    sanitized_data = teams_df.loc[:, teams_df.columns.intersection(TEAMS_COLUMNS)]
-
-    return sanitized_data
+    return teams_df
 
   ### ID Dict ###
   def get_id_dict_data(self):
@@ -115,9 +95,7 @@ class DataLoader():
   def sanitize_fixtures_data(self, data):
     fixtures_df = pd.DataFrame(data)
 
-    sanitized_data = fixtures_df.loc[:, fixtures_df.columns.intersection(FIXTURES_COLUMNS)]
-    sanitized_data = sanitized_data.rename(columns={'event': 'GW'})
-
+    sanitized_data = fixtures_df.rename(columns={'event': 'GW'})
     sanitized_data['kickoff_time'] = pd.to_datetime(sanitized_data['kickoff_time'], format='ISO8601', utc=True)
 
     sorted_data = sanitized_data.sort_values('kickoff_time', ascending=True)
@@ -132,11 +110,12 @@ class DataLoader():
 
     # Temp
     POSITIONS = {1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD'}
-    players_df = players_df.loc[:, players_df.columns.intersection(['id', 'element_type', 'team', 'now_cost', 'total_points'])]
+    
+    # TODO: handle managers
+    players_df = players_df[players_df['element_type'] <= 4]
     players_df = players_df.rename(columns={'element_type': 'position', 'now_cost': 'cost'})
 
     players_df['position'] = players_df['position'].apply(lambda x: POSITIONS[x])
-    
     return players_df
 
   ### FETCH DATA ###
@@ -169,76 +148,10 @@ class DataLoader():
     response = requests.get(f"{BASE_URL}{url}")
     response.raise_for_status()
 
-    df = pd.read_csv(io.StringIO(response.text))
-
+    df = pd.read_csv(io.StringIO(response.text), on_bad_lines="skip")
     return df
   
   def convert_df_to_numeric(self, df):
     # Apply pd.to_numeric to each cell of the DataFrame
     df = df.map(lambda x: pd.to_numeric(x, errors='coerce'))
     return df
-
-DATA_COLUMNS = [
-  "assists",
-  "bonus",
-  "bps",
-  "clean_sheets",
-  "creativity",
-  "expected_assists",
-  "expected_goal_involvements",
-  "expected_goals",
-  "expected_goals_conceded",
-  "goals_conceded",
-  "goals_scored",
-  "ict_index",
-  "influence",
-  "minutes",
-  "own_goals",
-  "penalties_missed",
-  "penalties_saved",
-  "red_cards",
-  "saves",
-  "starts",
-  "threat",
-  "total_points",
-  "yellow_cards",
-  # "chance_of_playing_next_round", # TODO?
-  # "chance_of_playing_this_round", # TODO?
-  "clean_sheets_per_90",
-  # "corners_and_indirect_freekicks_order",
-  # "cost_change_event",
-  # "cost_change_event_fall",
-  # "cost_change_start",
-  # "cost_change_start_fall",
-  # "creativity_rank",
-  # "creativity_rank_type",
-  # "direct_freekicks_order",
-  "element_type",
-  "expected_assists_per_90",
-  "expected_goal_involvements_per_90",
-  "expected_goals_conceded_per_90",
-  "expected_goals_per_90",
-  "form",
-  # "form_rank",
-  # "form_rank_type",
-  "goals_conceded_per_90",
-  # "ict_index_rank",
-  # "ict_index_rank_type",
-  "id",
-  # "influence_rank",
-  # "influence_rank_type",
-  # "news", # TODO?
-  # "news_added", # TODO?
-  # "penalties_order",
-  "points_per_game",
-  "saves_per_90",
-  "starts_per_90",
-  # "status", # TODO?
-  "team_code",
-  # "threat_rank",
-  # "threat_rank_type",
-]
-
-TEAMS_COLUMNS = ['id', 'name', 'strength', 'strength_overall_home', 'strength_overall_away',	'strength_attack_home',	'strength_attack_away',	'strength_defence_home', 'strength_defence_away']
-
-FIXTURES_COLUMNS = ['id', 'event', 'kickoff_time', 'team_a', 'team_h', 'team_h_difficulty',	'team_a_difficulty']
