@@ -39,22 +39,6 @@ if __name__=='__main__':
   simulation = Simulation(season=args.season)
   simulation.simulate_season()
 
-  # team_selector = Team(
-  #   team_selector_data,
-  #   teams_data,
-  #   fixtures_data
-  # )
-  # initial_team, team_cost = team_selector.initial_team()
-  # print(f"Initial team: {initial_team}")
-  
-  # transfers_available = 1
-  # transfers = team_selector.perform_transfers(
-  #   initial_team,
-  #   1000 - team_cost,
-  #   transfers_available
-  # )
-  # print(transfers)
-
 # if __name__=='__main__':
 #   data_loader = DataLoader()
 #   train_data = data_loader.get_data('2022-23')

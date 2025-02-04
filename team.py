@@ -191,11 +191,15 @@ class Team:
     current_team_list = list(chain(*current_team.values()))
     
     for player_id in current_team_list:
-      player_details = gw_data[gw_data['id'] == player_id].iloc[0]
-      player_team = player_details['team']
+      try:
+        player_details = gw_data[gw_data['id'] == player_id].iloc[0]
+        player_team = player_details['team']
 
-      team_count.setdefault(player_team, 0)
-      team_count[player_team] += 1
+        team_count.setdefault(player_team, 0)
+        team_count[player_team] += 1
+      except IndexError:
+        gw = gw_data.iloc[0]['GW']
+        print(f"⚠️ Warning (_get_teams_capped): Player {player_id} in GW{gw}")
   
     teams_capped = [key for key, value in team_count.items() if value == 3]
     return teams_capped
@@ -242,35 +246,67 @@ class Team:
     data["fitness"] = gw_data.apply(lambda player: self._calc_player_fitness(gw_data, player), axis=1)
     return data
 
+  # Suggests transfers by replacing underperforming players with those predicted to improve.
   def suggest_transfers(self, gw_data, current_team, budget):
     possible_transfers = []
 
-    # Apply fitness to all players
+    # Track players already transferred in
+    transferred_in = set()
+
+    # Apply fitness to all players and sort by fitness (best first)
     fitness_data = self._add_player_fitness_to_data(gw_data)
     fitness_data = fitness_data.sort_values(by=['fitness'], ascending=False)
 
-    # Iterates through all players and positions
     for position in self.POSITIONS:
       pos_players = current_team[position]
-      
-      for player_id in pos_players:
-        player = fitness_data[fitness_data['id'] == player_id].iloc[0]
-        available_budget = player['cost'] + budget
 
+      for player_id in pos_players:
+        player_row = fitness_data[fitness_data['id'] == player_id]
+
+        # If the player is missing from the dataset penalize
+        if player_row.empty:
+          print(f"⚠️ Warning (suggest_transfers): Player {player_id} not found in GW{gw}")
+          continue
+
+          player = {
+            'id': player_id,
+            'cost': 0,
+            'fitness': 0,
+            self.TARGET: 0
+          }
+        else:
+          player = player_row.iloc[0]
+
+        available_budget = budget + player['cost']
+
+        # Get all valid replacements sorted by self.TARGET
         available_players = self._get_filtered_players(
-          fitness_data,
-          position, 
-          available_budget, 
-          current_team
+          fitness_data, position, available_budget, current_team
         ).sort_values(by=self.TARGET, ascending=False)
 
-        transfer_option = available_players.iloc[0]
-        
+        # Skip if no valid transfer found
+        if available_players.empty:
+          continue
+
+        # Find a valid transfer option that hasn't been picked yet
+        transfer_option = None
+        for _, candidate in available_players.iterrows():
+          if candidate['id'] not in transferred_in:
+            transfer_option = candidate
+            break
+
+        # If no valid new player is found, skip
+        if transfer_option is None:
+          continue
+
+        # Ensure the new player has a better fitness score
         if transfer_option['fitness'] > player['fitness']:
-          fitness_difference = player['fitness'] - transfer_option['fitness']
+          fitness_difference = transfer_option['fitness'] - player['fitness']
+
+          transferred_in.add(transfer_option['id'])
           possible_transfers.append({
             'in': transfer_option,
-            'out': player, 
+            'out': player,
             'difference': fitness_difference
           })
 
@@ -283,17 +319,17 @@ class Team:
     Returns the minimum price for a player in a given position.
 
     Parameters:
-        - position (str): The position of the player ('GK', 'DEF', 'MID', 'FWD').
+      - position (str): The position of the player ('GK', 'DEF', 'MID', 'FWD').
 
     Returns:
-        - float: The minimum price for a player in the position.
+      - float: The minimum price for a player in the position.
     """
     if position == 'GK' or position == 'DEF':
-        return 40
+      return 40
     elif position == 'MID' or position == 'FWD':
-        return 45
+      return 45
     else:
-        print(f'Invalid position: {position}')
+      print(f'Invalid position: {position}')
 
 
   # TODO: Apply random team split
@@ -313,25 +349,46 @@ class Team:
   def select_best_xi(self, selected_team, gw_data, optimal=False):
     target = self._get_target(optimal)
 
-    best_xi = {}
-    for position in self.POSITIONS:
-      best_xi[position] = []
+    # Define all valid FPL formations
+    formations = [
+      {"GK": 1, "DEF": 5, "MID": 4, "FWD": 1},  # 5-4-1
+      {"GK": 1, "DEF": 5, "MID": 3, "FWD": 2},  # 5-3-2
+      {"GK": 1, "DEF": 4, "MID": 5, "FWD": 1},  # 4-5-1
+      {"GK": 1, "DEF": 4, "MID": 4, "FWD": 2},  # 4-4-2
+      {"GK": 1, "DEF": 4, "MID": 3, "FWD": 3},  # 4-3-3
+      {"GK": 1, "DEF": 3, "MID": 5, "FWD": 2},  # 3-5-2
+      {"GK": 1, "DEF": 3, "MID": 4, "FWD": 3},  # 3-4-3
+    ]
+
+    best_xi = None
+    best_captain = None
+    max_points = float("-inf")
 
     # Filter gw_data to only include players in selected_team
     gw_data = gw_data[gw_data['id'].isin(
       selected_team['GK'] + selected_team['DEF'] + selected_team['MID'] + selected_team['FWD']
     )]
 
-    # Using formation 1-3-4-3
-    position_limits = {'GK': 1, 'DEF': 3, 'MID': 4, 'FWD': 3}
+    # Try all formations
+    for formation in formations:
+      current_xi = {pos: [] for pos in self.POSITIONS}  # Initialize XI
+      total_points = 0
 
-    for pos, count in position_limits.items():
-      pos_players = gw_data[gw_data['id'].isin(selected_team[pos])].sort_values(by=target, ascending=False)
-      best_xi[pos] = pos_players['id'].head(count).tolist()
+      for pos, count in formation.items():
+        pos_players = gw_data[gw_data['id'].isin(selected_team[pos])].sort_values(by=target, ascending=False)
+        current_xi[pos] = pos_players['id'].head(count).tolist()
+        total_points += pos_players.head(count)[target].sum()
 
-    captain_id = self.select_captain(gw_data, best_xi, optimal)
-    
-    return best_xi, captain_id
+      # Pick the best captain for this formation
+      current_captain = self.select_captain(gw_data, current_xi, optimal)
+
+      # Update best XI if this formation is better
+      if total_points > max_points:
+        max_points = total_points
+        best_xi = current_xi
+        best_captain = current_captain
+
+    return best_xi, best_captain
 
   # Select the player with the highest TARGET value as captain from the selected team
   def select_captain(self, gw_data, best_xi, optimal):
@@ -352,6 +409,7 @@ class Team:
 
     for position in self.POSITIONS:
       for player_id in selected_xi[position]:
+        # If player cannot be found assume he didn't play
         try:
           player = gw_data[gw_data['id'] == player_id].iloc[0]
           player_points = player[self.OPTIMAL_TARGET]

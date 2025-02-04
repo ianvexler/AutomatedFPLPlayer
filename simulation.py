@@ -15,7 +15,7 @@ class Simulation:
     self.season = season
     self.POSITIONS = ['GK', 'DEF', 'MID', 'FWD']
     
-    self.chips_available = {chip.value: True for chip in Chip}
+    self.chips_available = { chip.value: True for chip in Chip }
 
     data_loader = DataLoader()
     self.fixtures_data = data_loader.get_fixtures(season)
@@ -29,13 +29,14 @@ class Simulation:
     self.chip_strategy = chip_strategy
 
     # TODO: Update to 38
-    self.MAX_GW = 20
+    self.MAX_GW = 38
     self.MAX_BUDGET = 1000
-    self.MAX_FREE_TRANSFERS = 2
+    self.MAX_FREE_TRANSFERS = 5 if season == '2024-25' else 2
     self.WILDCARD_THRESHOLD = 30
 
     self.cached_best_squad = None
     self.cached_best_squad_cost = None
+    self.cached_best_squad_gw = None
     
     # TODO:
     # - Include option for different strategies
@@ -47,7 +48,6 @@ class Simulation:
     # Ensure variables are restarted
     current_gw = 1
     current_budget = self.MAX_BUDGET
-    chip_budget = current_budget
     transfers_available = 0
 
     total_points = 0
@@ -59,7 +59,7 @@ class Simulation:
 
       # Restart wildcard on GW20
       if current_gw == 20:
-        self.chips_available[Chip.WILDCARD] = 1
+        self.chips_available[Chip.WILDCARD.value] = True
 
       # Load GW data
       gw_data = self._load_predicted_gw_data(current_gw)
@@ -69,20 +69,32 @@ class Simulation:
         current_squad, current_squad_cost = self.team.get_best_squad(gw_data, current_budget)
         current_budget -= current_squad_cost
       
-      chip_budget += current_squad_cost
-      use_chip = self.should_use_chip(current_squad, chip_budget, gw_data, current_gw)
+      budget_available = current_budget + current_squad_cost
+      use_chip = self.should_use_chip(current_squad, budget_available, gw_data, current_gw)
+      
+      if use_chip:
+        print(f"Using chip: {use_chip.value.replace("_", " ")}")
 
-      chip_blocks_transfer = (use_chip == Chip.WILDCARD or use_chip == Chip.FREE_HIT)
-      if current_gw > 1 and (not chip_blocks_transfer):
-        # Suggest and perform transfers
-        suggested_transfers = self.team.suggest_transfers(gw_data, current_squad, current_budget)
+      if current_gw > 1:
+        if use_chip == Chip.WILDCARD:
+          # Adds back the squad cost before using wildcard
+          current_budget += current_squad_cost
 
-        transfers = suggested_transfers[:transfers_available]
-        current_squad, current_budget = self.transfer_players(current_squad, transfers, current_budget)
-        transfers_available -= len(transfers)
+          # Updates current squads and budget with new cost
+          current_squad, current_squad_cost = self.use_wildcard()
+          current_budget -= current_squad_cost
+        elif use_chip == Chip.FREE_HIT:
+          self.use_free_hit(current_squad)
+        else:
+          # Suggest and perform transfers
+          suggested_transfers = self.team.suggest_transfers(gw_data, current_squad, current_budget)
 
-        for transfer in transfers:
-          print(f"Transfer: {transfer['out']['id']} => {transfer['in']['id']}")
+          transfers = suggested_transfers[:transfers_available]
+          current_squad, current_budget = self.transfer_players(current_squad, transfers, current_budget)
+          transfers_available -= len(transfers)
+
+          for transfer in transfers:
+            print(f"Transfer: {transfer['out']['id']} => {transfer['in']['id']}")
 
       print(f"\nGW{current_gw} Squad: {current_squad}")
       print(f"Budget: {current_budget}")
@@ -94,8 +106,17 @@ class Simulation:
       print(f"Selected XI: {selected_xi}")
       print(f"Selected Captain: {captain_id}")
 
-      squad_to_score = current_squad if use_chip == Chip.BENCH_BOOST else selected_xi
-      triple_captain = use_chip == Chip.TRIPLE_CAPTAIN
+      # Calculate score for full squad if bench boost is active
+      squad_to_score = selected_xi
+      if use_chip == Chip.BENCH_BOOST:
+        self.use_bench_boost()
+        squad_to_score = current_squad
+      
+      # Captaining, using triple captain if necessary
+      triple_captain = False
+      if use_chip == Chip.TRIPLE_CAPTAIN:
+        self.use_triple_captain()
+        triple_captain = True
 
       gw_points = self.team.calc_team_points(gw_data, squad_to_score, captain_id, triple_captain)
       total_points += gw_points
@@ -136,7 +157,7 @@ class Simulation:
       current_budget += player_out['cost']
       
       self._add_player_to_team(player_in, current_squad)
-      current_budget -= player_out['cost']
+      current_budget -= player_in['cost']
 
     return current_squad, current_budget
 
@@ -152,8 +173,8 @@ class Simulation:
       return Chip.WILDCARD
 
     # Check if should use free hit
-    if self.should_free_hit(current_gw):
-      return Chip.FREE_HIT
+    # if self.should_free_hit(current_gw):
+    #   return Chip.FREE_HIT
 
     # Check if should use bench boost
     if self.should_bench_boost(current_gw):
@@ -172,9 +193,8 @@ class Simulation:
 
     return False
 
-  def use_triple_captain(self, current_squad):
-    self.chips_available[Chip.TRIPLE_CAPTAIN] = False
-    return current_squad
+  def use_triple_captain(self):
+    self.chips_available[Chip.TRIPLE_CAPTAIN.value] = False
 
   def should_wildcard(self, current_squad, budget_available, gw_data, current_gw):
     """
@@ -182,7 +202,7 @@ class Simulation:
     significantly underperforms the best available squad.
     """
     chip = Chip.WILDCARD
-    if not self._is_chip_available(chip) or current_gw == 1:
+    if (not self._is_chip_available(chip)) or current_gw == 1:
       return False
 
     # Key wildcard decision points
@@ -192,7 +212,9 @@ class Simulation:
     strategy = self.chip_strategy[chip]
 
     # Only consider wildcarding at key points or if strategy is 'asap'
-    if strategy != 'asap' and not (current_gw >= first_quarter or current_gw >= third_quarter):
+    should_first_half = current_gw >= first_quarter and current_gw < 20
+    should_second_quarter = current_gw >= third_quarter and current_gw >= 20
+    if strategy != 'asap' and not (should_first_half or should_second_quarter):
       return False
 
     # Cache computed best squad
@@ -208,11 +230,9 @@ class Simulation:
   def use_wildcard(self):
     if self.cached_best_squad is None:
       raise ValueError("Wildcard should not be used without calling should_wildcard first.")
-
-    self.chips_available[Chip.WILDCARD] = False
-    best_squad = self.cached_best_squad
-    
-    return best_squad
+        
+    self.chips_available[Chip.WILDCARD.value] = False
+    return self.cached_best_squad, self.cached_best_squad_cost
 
   def should_free_hit(self, current_gw):
     chip = Chip.FREE_HIT
@@ -230,7 +250,7 @@ class Simulation:
     return False
 
   def use_free_hit(self, current_squad):
-    self.chips_available[Chip.FREE_HIT] = False
+    self.chips_available[Chip.FREE_HIT.value] = False
     return current_squad
 
   def should_bench_boost(self, current_gw):
@@ -244,9 +264,8 @@ class Simulation:
 
     return False
 
-  def use_bench_boost(self, current_squad):
-    self.chips_available[Chip.BENCH_BOOST] = False
-    return current_squad
+  def use_bench_boost(self):
+    self.chips_available[Chip.BENCH_BOOST.value] = False
   
   # Checks if current GW is double week
   def _is_double_gameweek(self, current_gw):
