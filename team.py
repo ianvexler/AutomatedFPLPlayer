@@ -1,6 +1,7 @@
 from itertools import chain
 import random
 import numpy as np
+import pandas as pd
 
 class Team:
   def __init__(self, teams_data, fixtures_data):
@@ -12,6 +13,8 @@ class Team:
     self.TARGET = 'xP'
     self.OPTIMAL_TARGET = 'total_points'
     self.POSITIONS = ['GK', 'DEF', 'MID', 'FWD']
+    # TODO: Experiment with differnet positions as captains
+    self.CAPTAIN_POSITIONS = ['MID', 'FWD']
     self.POS_DISTRIBUTION = {
       'GK': 2,
       'DEF': 5,
@@ -19,13 +22,22 @@ class Team:
       'FWD': 3
     }
     self.MAX_BUDGET = 1000
+    self.FORMATIONS = [
+      {"GK": 1, "DEF": 5, "MID": 4, "FWD": 1},  # 5-4-1
+      {"GK": 1, "DEF": 5, "MID": 3, "FWD": 2},  # 5-3-2
+      {"GK": 1, "DEF": 4, "MID": 5, "FWD": 1},  # 4-5-1
+      {"GK": 1, "DEF": 4, "MID": 4, "FWD": 2},  # 4-4-2
+      {"GK": 1, "DEF": 4, "MID": 3, "FWD": 3},  # 4-3-3
+      {"GK": 1, "DEF": 3, "MID": 5, "FWD": 2},  # 3-5-2
+      {"GK": 1, "DEF": 3, "MID": 4, "FWD": 3},  # 3-4-3
+    ]
         
   # Selects the initial squad trying to optimize selection
   def get_best_squad(self, gw_data, budget, optimal=False):
     best_squad = {}
     best_squad_fitness = 0
 
-    for _ in range(100):
+    for _ in range(10):
       squad = {}
       pos_budgets = {}
 
@@ -33,7 +45,7 @@ class Team:
 
       for position in self.POSITIONS:
         # Initializes dict with empty position
-        squad[position] = []
+        squad[position] = pd.DataFrame(columns=gw_data.columns)
 
         # Initailizes budgets per position dict
         pos_budgets[position] = budget * squad_split[position]
@@ -56,16 +68,21 @@ class Team:
 
         # How much can be spent in the next player
         player_budget = pos_budgets[position] - (pos_min * pos_count)
-      
-        player_id, player_cost, player_points = self._get_best_player(gw_data, position, player_budget, squad, optimal)
+
+        target = self._get_target(optimal)
+        player = self._get_best_player(gw_data, position, player_budget, squad, target)
         
         # Adds player to squad
-        squad[position].append(player_id)
+        if squad[position].empty:
+          squad[position] = pd.DataFrame([player])
+        else:
+          squad[position] = pd.concat([squad[position], pd.DataFrame([player])], ignore_index=True)
+
 
         # Updates total budget available for position
-        pos_budgets[position] -= player_cost
-        squad_cost += player_cost
-        squad_points += player_points
+        pos_budgets[position] -= player['cost']
+        squad_cost += player['cost']
+        squad_points += player[target]
       
       # Check if squad is better than current best
       squad_fitness = self._calc_squad_fitness(squad, squad_points)
@@ -188,29 +205,29 @@ class Team:
   # Returns all the teams which already have 3 players selected
   def _get_teams_capped(self, gw_data, current_team):
     team_count = {}
-    current_team_list = list(chain(*current_team.values()))
     
-    for player_id in current_team_list:
-      try:
-        player_details = gw_data[gw_data['id'] == player_id].iloc[0]
-        player_team = player_details['team']
-
+    for pos, df in current_team.items():
+      for _, selected_player in df.iterrows():
+        player_id = selected_player['id']
+        
+        try:
+          player_details = gw_data[gw_data['id'] == player_id].iloc[0]
+          player_team = player_details['team']
+        except IndexError:
+          player_team = selected_player['team']
+        
         team_count.setdefault(player_team, 0)
         team_count[player_team] += 1
-      except IndexError:
-        gw = gw_data.iloc[0]['GW']
-        print(f"⚠️ Warning (_get_teams_capped): Player {player_id} in GW{gw}")
-  
+          
     teams_capped = [key for key, value in team_count.items() if value == 3]
     return teams_capped
 
   # Returns the best player available given postion and budget
   # Returns id, cost
-  def _get_best_player(self, gw_data, position, budget, current_squad, optimal=False):
-    target = self._get_target(optimal)
-
+  def _get_best_player(self, gw_data, position, budget, current_squad, target):
     available_players = self._get_filtered_players(gw_data, position, budget, current_squad)
     
+    # TODO: Handle double GW
     # Group by player ID and sum their total points (handling double gameweeks)
     # grouped_players = available_players.groupby('id', as_index=False).agg({
     #   target: 'sum',
@@ -222,24 +239,20 @@ class Team:
     grouped_players = grouped_players.sort_values(by=[target], ascending=False)
 
     # Select player with the highest combined points
-    best_player_id = grouped_players.iloc[0]['id']
-    best_player_cost = grouped_players.iloc[0]['cost']
-    best_player_points = grouped_players.iloc[0][target]
-  
-    return best_player_id, best_player_cost, best_player_points
+    return grouped_players.iloc[0]
 
 
   # TODO: Get players available given restrictions, budget and position
   def _get_filtered_players(self, gw_data, position, budget, current_team):
-    selected_players = current_team[position]
+    selected_players_ids = current_team[position]['id'].tolist()
     teams_capped = self._get_teams_capped(gw_data, current_team)
 
     return gw_data[
       (gw_data['position'] == position) & 
       (gw_data['cost'] <= budget) &
-      (~gw_data['id'].isin(selected_players)) &
+      (~gw_data['id'].isin(selected_players_ids)) &
       (~gw_data['team'].isin(teams_capped))
-    ]
+    ].copy()
 
   def _add_player_fitness_to_data(self, gw_data):
     data = gw_data.copy()  # Ensure it's a full copy
@@ -258,24 +271,15 @@ class Team:
     fitness_data = fitness_data.sort_values(by=['fitness'], ascending=False)
 
     for position in self.POSITIONS:
-      pos_players = current_team[position]
-
-      for player_id in pos_players:
-        player_row = fitness_data[fitness_data['id'] == player_id]
+      for _, selected_player in current_team[position].iterrows():
+        player_row = fitness_data[fitness_data['id'] == selected_player['id']]
 
         # If the player is missing from the dataset penalize
         if player_row.empty:
-          print(f"⚠️ Warning (suggest_transfers): Player {player_id} not found in GW{gw}")
-          continue
+          missing_player = self._get_missing_player(selected_player)
+          player_row = pd.DataFrame([missing_player])
 
-          player = {
-            'id': player_id,
-            'cost': 0,
-            'fitness': 0,
-            self.TARGET: 0
-          }
-        else:
-          player = player_row.iloc[0]
+        player = player_row.iloc[0]
 
         available_budget = budget + player['cost']
 
@@ -343,84 +347,107 @@ class Team:
     }
     return base_split
 
-  def should_use_chip(self):
-    print('Returns true or false and which chip should be used')
-
-  def select_best_xi(self, selected_team, gw_data, optimal=False):
+  def select_best_xi(self, selected_squad, gw_data, optimal=False):
     target = self._get_target(optimal)
 
-    # Define all valid FPL formations
-    formations = [
-      {"GK": 1, "DEF": 5, "MID": 4, "FWD": 1},  # 5-4-1
-      {"GK": 1, "DEF": 5, "MID": 3, "FWD": 2},  # 5-3-2
-      {"GK": 1, "DEF": 4, "MID": 5, "FWD": 1},  # 4-5-1
-      {"GK": 1, "DEF": 4, "MID": 4, "FWD": 2},  # 4-4-2
-      {"GK": 1, "DEF": 4, "MID": 3, "FWD": 3},  # 4-3-3
-      {"GK": 1, "DEF": 3, "MID": 5, "FWD": 2},  # 3-5-2
-      {"GK": 1, "DEF": 3, "MID": 4, "FWD": 3},  # 3-4-3
-    ]
-
     best_xi = None
-    best_captain = None
-    max_points = float("-inf")
+    max_points = float('-inf')
 
-    # Filter gw_data to only include players in selected_team
-    gw_data = gw_data[gw_data['id'].isin(
-      selected_team['GK'] + selected_team['DEF'] + selected_team['MID'] + selected_team['FWD']
-    )]
+    # Collect all selected player IDs once
+    all_player_ids = {pid for pos in selected_squad for pid in selected_squad[pos]['id']}
+
+    # Identify missing players once
+    missing_players = all_player_ids - set(gw_data['id'])
+    
+    # Generate missing player data once
+    if missing_players:
+      missing_data = [self._get_missing_player(selected_squad[pos].loc[selected_squad[pos]['id'] == pid].iloc[0])
+                      for pos in selected_squad
+                      for pid in missing_players if pid in selected_squad[pos]['id'].values]
+      gw_data = pd.concat([gw_data, pd.DataFrame(missing_data)], ignore_index=True)
+
+    captain = self.select_captain(gw_data, selected_squad, optimal)
 
     # Try all formations
-    for formation in formations:
+    for formation in self.FORMATIONS:
       current_xi = {pos: [] for pos in self.POSITIONS}  # Initialize XI
       total_points = 0
 
       for pos, count in formation.items():
-        pos_players = gw_data[gw_data['id'].isin(selected_team[pos])].sort_values(by=target, ascending=False)
-        current_xi[pos] = pos_players['id'].head(count).tolist()
-        total_points += pos_players.head(count)[target].sum()
+        player_ids = selected_squad[pos]['id'].tolist()
+        # Select the top players
+        pos_players = gw_data[gw_data['id'].isin(player_ids)]
+        pos_players = pos_players.sort_values(by=target, ascending=False)
+        
+        selected_players = pos_players.head(count)
+
+        current_xi[pos] = selected_players
+        total_points += selected_players[target].sum()
 
       # Pick the best captain for this formation
-      current_captain = self.select_captain(gw_data, current_xi, optimal)
-
       # Update best XI if this formation is better
       if total_points > max_points:
         max_points = total_points
         best_xi = current_xi
-        best_captain = current_captain
 
-    return best_xi, best_captain
+    if captain.empty == None:
+      raise Exception('No captain selected')
+
+    return best_xi, captain
+
 
   # Select the player with the highest TARGET value as captain from the selected team
+  # Returns the id of the selected captain
   def select_captain(self, gw_data, best_xi, optimal):
-    # Removes GK from captain choices
     best_xi = best_xi.copy()
-    best_xi.pop('GK')
     
-    target = self._get_target(optimal)
-    selected_team_ids = sum(best_xi.values(), [])
+    # Get all valid captain choices
+    captain_candidates = []
     
-    # Filter gw_data to only include these players and find the highest TARGET value
-    captain = gw_data[gw_data['id'].isin(selected_team_ids)].nlargest(1, self.TARGET)
-    return captain['id'].values[0]
+    for pos in self.CAPTAIN_POSITIONS:
+      if pos in best_xi and not best_xi[pos].empty:
+        captain_candidates.append(best_xi[pos])
 
-  def calc_team_points(self, gw_data, selected_xi, captain_id=None, triple_captain=False):
+    # Combine valid captain options into a single DataFrame
+    captain_pool = pd.concat(captain_candidates)
+
+    # Get the highest-scoring player based on self.TARGET
+    captain = gw_data[gw_data['id'].isin(captain_pool['id'])].nlargest(1, self.TARGET)
+
+    return captain
+
+  def calc_team_points(self, gw_data, selected_xi, captain=None, triple_captain=False):
     total_points = 0
     captain_multiplier = 3 if triple_captain else 2
 
     for position in self.POSITIONS:
-      for player_id in selected_xi[position]:
+      for _, selected_player in selected_xi[position].iterrows():
         # If player cannot be found assume he didn't play
         try:
+          player_id = selected_player['id']
           player = gw_data[gw_data['id'] == player_id].iloc[0]
           player_points = player[self.OPTIMAL_TARGET]
         except IndexError:
           player_points = 0
-        
-        if captain_id == player_id:
-          player_points *= captain_multiplier
+
+        if captain is not None:
+          if captain['id'].values[0] == player_id:
+            player_points *= captain_multiplier
         total_points += player_points
     
     return total_points
 
   def _get_target(self, optimal):
     return self.OPTIMAL_TARGET if optimal else self.TARGET
+
+  def _get_missing_player(self, player):
+    missing_player = player.to_dict()
+    missing_player.update({
+      'fitness': 0,
+      self.TARGET: 0,
+      self.OPTIMAL_TARGET: 0
+    })
+    return missing_player
+
+  def _substitute_player(self):
+    print('Substitute player here')
