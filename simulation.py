@@ -3,6 +3,7 @@ from data.data_loader import DataLoader
 import pandas as pd
 from enum import Enum
 import argparse
+import math
 
 class Chip(Enum):
   TRIPLE_CAPTAIN = 'triple_captain'
@@ -11,7 +12,7 @@ class Chip(Enum):
   BENCH_BOOST = 'bench_boost'
 
 class Simulation:
-  def __init__(self, season, chip_strategy=None):
+  def __init__(self, season, chip_strategy=None, show_optimal=False):
     self.season = season
     self.POSITIONS = ['GK', 'DEF', 'MID', 'FWD']
     
@@ -32,11 +33,16 @@ class Simulation:
     self.MAX_GW = 38
     self.MAX_BUDGET = 1000
     self.MAX_FREE_TRANSFERS = 5 if season == '2024-25' else 2
-    self.WILDCARD_THRESHOLD = 30
+    self.REVAMP_THRESHOLD = 50
 
     self.cached_best_squad = None
     self.cached_best_squad_cost = None
     self.cached_best_squad_gw = None
+
+    self.total_profit = 0
+    self.total_loss = 0
+
+    self.show_optimal = show_optimal
     
     # TODO:
     # - Include option for different strategies
@@ -51,6 +57,9 @@ class Simulation:
     transfers_available = 0
 
     total_points = 0
+
+    current_squad = {}
+    current_squad_cost = 0
 
     # Iterates through every GW, including GW1
     for current_gw in range(1, self.MAX_GW + 1):
@@ -73,7 +82,7 @@ class Simulation:
       use_chip = self.should_use_chip(current_squad, budget_available, gw_data, current_gw)
       
       if use_chip:
-        print(f"Using chip: {use_chip.value.replace("_", " ")}")
+        print(f"Using chip: {use_chip.value.replace("_", " ").title()}\n")
 
       if current_gw > 1:
         if use_chip == Chip.WILDCARD:
@@ -84,7 +93,12 @@ class Simulation:
           current_squad, current_squad_cost = self.use_wildcard()
           current_budget -= current_squad_cost
         elif use_chip == Chip.FREE_HIT:
-          self.use_free_hit(current_squad)
+          # Saves the current squad to be resetted later
+          pre_free_hit_squad = current_squad.copy()
+
+          # Using free hit does not affect budget
+          free_hit_budget = current_budget + current_squad_cost
+          current_squad = self.use_free_hit(gw_data, free_hit_budget)
         else:
           # Suggest and perform transfers
           suggested_transfers = self.team.suggest_transfers(gw_data, current_squad, current_budget)
@@ -94,17 +108,18 @@ class Simulation:
           transfers_available -= len(transfers)
 
           for transfer in transfers:
-            print(f"Transfer: {transfer['out']['id']} => {transfer['in']['id']}")
+            print(f"Transfer: {transfer['out']['name']} => {transfer['in']['name']}")
+          print("")
 
-      print(f"\nGW{current_gw} Squad: {current_squad}")
+      print(f"GW{current_gw} Squad: {self._humanize_team_logs(current_squad)}")
       print(f"Budget: {current_budget}")
       print(f"Transfers Available: {transfers_available}\n")
 
       # Select best XI and captain
-      selected_xi, captain_id = self.team.select_best_xi(current_squad, gw_data)
+      selected_xi, captain = self.team.select_best_xi(current_squad, gw_data)
 
-      print(f"Selected XI: {selected_xi}")
-      print(f"Selected Captain: {captain_id}")
+      print(f"Selected XI: {self._humanize_team_logs(selected_xi)}")
+      print(f"Selected Captain: {captain['name'].values[0]}")
 
       # Calculate score for full squad if bench boost is active
       squad_to_score = selected_xi
@@ -118,48 +133,82 @@ class Simulation:
         self.use_triple_captain()
         triple_captain = True
 
-      gw_points = self.team.calc_team_points(gw_data, squad_to_score, captain_id, triple_captain)
+      gw_points = self.team.calc_team_points(gw_data, squad_to_score, captain, triple_captain)
       total_points += gw_points
       
       print(f"Team Points: {gw_points}\n")
 
-      # Compare to optimal
-      optimal_squad, _, = self.team.get_best_squad(gw_data, self.MAX_BUDGET, optimal=True)
-      optimal_xi, optimal_captain_id = self.team.select_best_xi(optimal_squad, gw_data, optimal=True)
-      optimal_points = self.team.calc_team_points(gw_data, optimal_xi, optimal_captain_id)
+      if use_chip == Chip.FREE_HIT:
+        current_squad = pre_free_hit_squad.copy()
 
-      print(f"Optimal XI: {optimal_xi}")
-      print(f"Optimal Captain: {optimal_captain_id}")
-      print(f"Optimal Points: {optimal_points}\n")
+      if self.show_optimal:
+        # Compare to optimal
+        optimal_squad, _, = self.team.get_best_squad(gw_data, self.MAX_BUDGET, optimal=True)
+        optimal_xi, optimal_captain = self.team.select_best_xi(optimal_squad, gw_data, optimal=True)
+        optimal_points = self.team.calc_team_points(gw_data, optimal_xi, optimal_captain)
 
+        print(f"Optimal XI: {self._humanize_team_logs(optimal_xi)}")
+        print(f"Optimal Captain: {optimal_captain['name']}")
+        print(f"Optimal Points: {optimal_points}\n")
+      
       print(f"Total points: {total_points}\n")
-
       print("---------------------------")
     
+    print(f"Total profit: {self.total_profit}")
+    print(f"Total loss: {self.total_loss}")
+
     print(f"\nTotal points: {total_points}\n")
 
   def _add_player_to_team(self, player, current_squad):
-    player_id = player['id']
     player_position = player['position']
-    current_squad[player_position].append(player_id)
+    player_df = pd.DataFrame([player])
+
+    team_position = current_squad[player_position]
+    current_squad[player_position] = pd.concat([team_position, player_df], ignore_index=True)
 
   def _remove_player_from_team(self, player, current_squad):
     player_id = player['id']
     player_position = player['position']
-    current_squad[player_position].remove(player_id)
+
+    team_position = current_squad[player_position]
+    current_squad[player_position] = team_position[team_position['id'] != player_id]
 
   def transfer_players(self, current_squad, transfers, current_budget):
     for transfer in transfers:
       player_out = transfer['out']
       player_in = transfer['in']
 
+      # TODO: Handle partial profit / full loss
+      pos_players = current_squad[player_out['position']]
+      player_then = pos_players[pos_players['id'] == player_out['id']].iloc[0]
+
       self._remove_player_from_team(player_out, current_squad)
-      current_budget += player_out['cost']
+      # current_budget += player_out['cost']
+      refund = self._calc_transfer_refund(player_then, player_out)
+      current_budget += refund
       
       self._add_player_to_team(player_in, current_squad)
       current_budget -= player_in['cost']
 
     return current_squad, current_budget
+
+  # Returns how much money should be added to budget when transfering out a player
+  # Adheres to FPL profit and loss rules on transfers
+  def _calc_transfer_refund(self, player_then, player_now):
+    cost_then = player_then['cost']
+    cost_now = player_now['cost']
+
+    if cost_now > cost_then:
+      profit = (cost_now - cost_then) / 2
+      profit = math.floor(profit * 10) / 10
+
+      self.total_profit += profit
+
+      return cost_then + profit
+
+    self.total_loss += cost_then - cost_now
+
+    return cost_now
 
   # Check if any chip should be used
   # Returns the chip to be used or None
@@ -168,13 +217,13 @@ class Simulation:
     if self.should_triple_captain(current_gw):
       return Chip.TRIPLE_CAPTAIN
 
+    # Check if should use free hit
+    if self.should_free_hit(current_squad, budget_available, gw_data, current_gw):
+      return Chip.FREE_HIT
+
     # Check if should use wildcards
     if self.should_wildcard(current_squad, budget_available, gw_data, current_gw):
       return Chip.WILDCARD
-
-    # Check if should use free hit
-    # if self.should_free_hit(current_gw):
-    #   return Chip.FREE_HIT
 
     # Check if should use bench boost
     if self.should_bench_boost(current_gw):
@@ -217,15 +266,13 @@ class Simulation:
     if strategy != 'asap' and not (should_first_half or should_second_quarter):
       return False
 
-    # Cache computed best squad
-    if self.cached_best_squad is None or self.cached_best_squad_gw != current_gw:
-      self.cached_best_squad, self.cached_best_squad_cost = self.team.get_best_squad(gw_data, budget_available)
-      self.cached_best_squad_gw = current_gw
+    # Get cached best squad
+    cached_best_squad, _ = self._get_best_cached_squad(gw_data, budget_available, current_gw)
 
     squad_points = self.team.calc_team_points(gw_data, current_squad)
     best_points = self.team.calc_team_points(gw_data, self.cached_best_squad)
 
-    return (best_points - squad_points) >= self.WILDCARD_THRESHOLD
+    return (best_points - squad_points) >= self.REVAMP_THRESHOLD
 
   def use_wildcard(self):
     if self.cached_best_squad is None:
@@ -234,24 +281,54 @@ class Simulation:
     self.chips_available[Chip.WILDCARD.value] = False
     return self.cached_best_squad, self.cached_best_squad_cost
 
-  def should_free_hit(self, current_gw):
+  def should_free_hit(self, current_squad, budget_available, gw_data, current_gw):
     chip = Chip.FREE_HIT
-    if not self._is_chip_available(chip):
+    if not self._is_chip_available(chip) or current_gw == 1:
       return False
+
+    _, cached_best_squad_cost = self._get_best_cached_squad(gw_data, budget_available, current_gw)
+
+    should_use = False
 
     strategy = self.chip_strategy[chip]
     if strategy == 'double_gw' and self._is_double_gameweek(current_gw):
       self.chips_available[chip] = False
-      return True
-    elif self._is_blank_gameweek(current_gw):
+      should_use = True
+    elif strategy == 'blank_gw' and self._is_blank_gameweek(current_gw):
+      if self._is_squad_affected_by_blank_gw(current_squad, gw_data):
+        self.chips_available[chip] = False
+        should_use = True
+
+    squad_points = self.team.calc_team_points(gw_data, current_squad)
+
+    # Only use wildcard if it improves on current result
+    if should_use and (cached_best_squad_cost - squad_points) >= self.REVAMP_THRESHOLD:
       self.chips_available[chip] = False
       return True
 
     return False
 
-  def use_free_hit(self, current_squad):
+  def use_free_hit(self, gw_data, current_budget):
+    if self.cached_best_squad is None:
+      raise ValueError("Free Hit should not be used without calling should_free_hit first.")
+        
     self.chips_available[Chip.FREE_HIT.value] = False
-    return current_squad
+    return self.cached_best_squad
+
+  def _is_squad_affected_by_blank_gw(self, current_squad, gw_data):
+    # Get all teams that have fixtures in this gameweek
+    active_teams = set(gw_data['team'].unique())
+
+    # Get all teams from the user's squad
+    squad_teams = set()
+
+    for pos in self.POSITIONS:
+      if not current_squad[pos].empty and 'team' in current_squad[pos]:
+        squad_teams.update(current_squad[pos]['team'].unique())
+
+    # Check if any team in the squad is missing from the active teams
+    missing_teams = squad_teams - active_teams
+    return len(missing_teams) > 0
 
   def should_bench_boost(self, current_gw):
     chip = Chip.BENCH_BOOST
@@ -266,6 +343,14 @@ class Simulation:
 
   def use_bench_boost(self):
     self.chips_available[Chip.BENCH_BOOST.value] = False
+
+  def _get_best_cached_squad(self, gw_data, budget_available, current_gw):
+    # Cache computed best squad
+    if self.cached_best_squad is None or self.cached_best_squad_gw != current_gw:
+      self.cached_best_squad, self.cached_best_squad_cost = self.team.get_best_squad(gw_data, budget_available)
+      self.cached_best_squad_gw = current_gw
+
+    return self.cached_best_squad, self.cached_best_squad_cost
   
   # Checks if current GW is double week
   def _is_double_gameweek(self, current_gw):
@@ -295,10 +380,15 @@ class Simulation:
     df = pd.read_csv(filepath)
     return df
 
+  def _humanize_team_logs(self, selected_team):
+    team_ids = { pos: pd.DataFrame(selected_team[pos])['name'].tolist() for pos in selected_team }
+    return team_ids
+
 if __name__=='__main__':
   # Valid strategy choices
   valid_strategies = ["double_gw", "blank_gw"]
   valid_wildcard_strategies = ["asap", "wait"]
+  valid_free_hit_strategies = ["double_gw", "blank_gw"]
 
   parser = argparse.ArgumentParser(description="Run the model with optional chip strategies.")
 
@@ -318,7 +408,7 @@ if __name__=='__main__':
     help="Strategy for the Wildcard chip. Options: 'double_gw', 'blank_gw', 'use_asap', 'wait'."
   )
   parser.add_argument(
-    "--free_hit", type=str, choices=valid_strategies, default="double_gw",
+    "--free_hit", type=str, choices=valid_free_hit_strategies, default="blank_gw",
     help="Strategy for the Free Hit chip. Options: 'double_gw', 'blank_gw'."
   )
   # TODO: Update strategies
