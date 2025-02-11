@@ -12,7 +12,7 @@ class Chip(Enum):
   BENCH_BOOST = 'bench_boost'
 
 class Simulation:
-  def __init__(self, season, chip_strategy=None, show_optimal=False):
+  def __init__(self, season, chip_strategy=None, show_optimal=False, config={ 'max_gw': 38 }):
     self.season = season
     self.POSITIONS = ['GK', 'DEF', 'MID', 'FWD']
     
@@ -30,7 +30,7 @@ class Simulation:
     self.chip_strategy = chip_strategy
 
     # TODO: Update to 38
-    self.MAX_GW = 38
+    self.MAX_GW = config['max_gw']
     self.MAX_BUDGET = 1000
     self.MAX_FREE_TRANSFERS = 5 if season == '2024-25' else 2
     self.REVAMP_THRESHOLD = 50
@@ -43,7 +43,7 @@ class Simulation:
     self.total_loss = 0
 
     self.show_optimal = show_optimal
-    
+   
     # TODO:
     # - Include option for different strategies
     # - Include multiple risks
@@ -115,25 +115,26 @@ class Simulation:
       print(f"Budget: {current_budget}")
       print(f"Transfers Available: {transfers_available}\n")
 
-      # Select best XI and captain
-      selected_xi, captain = self.team.select_best_xi(current_squad, gw_data)
+      # Select best team and captain
+      selected_team = self.team.pick_team(current_squad, gw_data)
 
-      print(f"Selected XI: {self._humanize_team_logs(selected_xi)}")
-      print(f"Selected Captain: {captain['name'].values[0]}")
-
-      # Calculate score for full squad if bench boost is active
-      squad_to_score = selected_xi
-      if use_chip == Chip.BENCH_BOOST:
-        self.use_bench_boost()
-        squad_to_score = current_squad
+      print(f"Selected team: {self._humanize_team_logs(selected_team)}")
+      print(f"Selected Captain: {selected_team['captain']['name'].values[0]}")
       
       # Captaining, using triple captain if necessary
       triple_captain = False
       if use_chip == Chip.TRIPLE_CAPTAIN:
         self.use_triple_captain()
-        triple_captain = True
 
-      gw_points = self.team.calc_team_points(gw_data, squad_to_score, captain, triple_captain)
+      if use_chip == Chip.BENCH_BOOST:
+        self.use_bench_boost()
+
+      gw_points = self.team.calc_team_points(
+        gw_data,
+        selected_team, 
+        triple_captain=(use_chip == Chip.TRIPLE_CAPTAIN),
+        bench_boost=(use_chip == Chip.BENCH_BOOST))
+
       total_points += gw_points
       
       print(f"Team Points: {gw_points}\n")
@@ -144,10 +145,10 @@ class Simulation:
       if self.show_optimal:
         # Compare to optimal
         optimal_squad, _, = self.team.get_best_squad(gw_data, self.MAX_BUDGET, optimal=True)
-        optimal_xi, optimal_captain = self.team.select_best_xi(optimal_squad, gw_data, optimal=True)
-        optimal_points = self.team.calc_team_points(gw_data, optimal_xi, optimal_captain)
+        optimal_team, optimal_captain = self.team.pick_team(optimal_squad, gw_data, optimal=True)
+        optimal_points = self.team.calc_team_points(gw_data, optimal_team, optimal_captain)
 
-        print(f"Optimal XI: {self._humanize_team_logs(optimal_xi)}")
+        print(f"Optimal team: {self._humanize_team_logs(optimal_team)}")
         print(f"Optimal Captain: {optimal_captain['name']}")
         print(f"Optimal Points: {optimal_points}\n")
       
@@ -178,12 +179,10 @@ class Simulation:
       player_out = transfer['out']
       player_in = transfer['in']
 
-      # TODO: Handle partial profit / full loss
       pos_players = current_squad[player_out['position']]
       player_then = pos_players[pos_players['id'] == player_out['id']].iloc[0]
 
       self._remove_player_from_team(player_out, current_squad)
-      # current_budget += player_out['cost']
       refund = self._calc_transfer_refund(player_then, player_out)
       current_budget += refund
       
@@ -269,8 +268,8 @@ class Simulation:
     # Get cached best squad
     cached_best_squad, _ = self._get_best_cached_squad(gw_data, budget_available, current_gw)
 
-    squad_points = self.team.calc_team_points(gw_data, current_squad)
-    best_points = self.team.calc_team_points(gw_data, self.cached_best_squad)
+    squad_points = self.team.calc_squad_fitness(gw_data, current_squad)
+    best_points = self.team.calc_squad_fitness(gw_data, self.cached_best_squad)
 
     return (best_points - squad_points) >= self.REVAMP_THRESHOLD
 
@@ -299,7 +298,7 @@ class Simulation:
         self.chips_available[chip] = False
         should_use = True
 
-    squad_points = self.team.calc_team_points(gw_data, current_squad)
+    squad_points = self.team.calc_squad_fitness(gw_data, current_squad)
 
     # Only use wildcard if it improves on current result
     if should_use and (cached_best_squad_cost - squad_points) >= self.REVAMP_THRESHOLD:
@@ -381,7 +380,7 @@ class Simulation:
     return df
 
   def _humanize_team_logs(self, selected_team):
-    team_ids = { pos: pd.DataFrame(selected_team[pos])['name'].tolist() for pos in selected_team }
+    team_ids = { key: pd.DataFrame(selected_team[key])['name'].tolist() for key in selected_team }
     return team_ids
 
 if __name__=='__main__':
@@ -417,8 +416,14 @@ if __name__=='__main__':
     help="Strategy for the Bench Boost chip. Options: 'double_gw', 'blank_gw'."
   )
 
-  args = parser.parse_args()
+  # Config parameters
+  parser.add_argument(
+    "--max_gw", type=int, nargs="?", default=38,
+    help="Max GW to iterate through"
+  )
 
+  args = parser.parse_args()
+  
   chip_strategy = {
     Chip.TRIPLE_CAPTAIN: args.triple_captain,
     Chip.WILDCARD: args.wildcard,
@@ -426,5 +431,12 @@ if __name__=='__main__':
     Chip.BENCH_BOOST: args.bench_boost
   }
 
-  simulation = Simulation(season=args.season, chip_strategy=chip_strategy)
+  config = {
+    'max_gw': args.max_gw
+  }
+
+  simulation = Simulation(
+    season=args.season, 
+    chip_strategy=chip_strategy,
+    config=config)
   simulation.simulate_season()

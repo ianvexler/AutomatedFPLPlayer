@@ -13,6 +13,8 @@ class Team:
     self.TARGET = 'xP'
     self.OPTIMAL_TARGET = 'total_points'
     self.POSITIONS = ['GK', 'DEF', 'MID', 'FWD']
+    self.TRANSFER_THRESHOLD = 10
+
     # TODO: Experiment with differnet positions as captains
     self.CAPTAIN_POSITIONS = ['MID', 'FWD']
     self.POS_DISTRIBUTION = {
@@ -35,7 +37,8 @@ class Team:
   # Selects the initial squad trying to optimize selection
   def get_best_squad(self, gw_data, budget, optimal=False):
     best_squad = {}
-    best_squad_fitness = 0
+    best_squad_cost = 0
+    best_squad_points = 0
 
     for _ in range(10):
       squad = {}
@@ -78,24 +81,32 @@ class Team:
         else:
           squad[position] = pd.concat([squad[position], pd.DataFrame([player])], ignore_index=True)
 
-
         # Updates total budget available for position
         pos_budgets[position] -= player['cost']
         squad_cost += player['cost']
         squad_points += player[target]
       
       # Check if squad is better than current best
-      squad_fitness = self._calc_squad_fitness(squad, squad_points)
+      if squad_points > best_squad_points:
+        best_squad_points = squad_points.round(2)
 
-      if squad_fitness > best_squad_fitness:
-        best_squad_fitness = squad_fitness
         best_squad = squad
+        best_squad_cost = squad_cost
 
-    return best_squad, squad_cost
+    return best_squad, best_squad_cost
 
-  # TODO: Calculate squad fitness using squad
-  def _calc_squad_fitness(self, squad, squad_points):
-    return squad_points
+  # Calculate squad fitness using squad
+  def calc_squad_fitness(self, gw_data, squad, optimal=False):
+    total_points = 0
+    target = self._get_target(optimal)
+
+    for position in self.POSITIONS:
+      for _, player in squad[position].iterrows():
+        player_data = self._get_player_gw_data(player, gw_data)
+
+        total_points += player[target]
+
+    return total_points
 
   def _calc_player_fitness(self, gw_data, player, extra_transfers=0, weight_future=0.8, test=False):
     """
@@ -198,10 +209,6 @@ class Team:
 
     return future_team_fixtures
 
-  # TODO: Calculate team value
-  def team_value():
-    return self.budget
-
   # Returns all the teams which already have 3 players selected
   def _get_teams_capped(self, gw_data, current_team):
     team_count = {}
@@ -240,7 +247,6 @@ class Team:
 
     # Select player with the highest combined points
     return grouped_players.iloc[0]
-
 
   # TODO: Get players available given restrictions, budget and position
   def _get_filtered_players(self, gw_data, position, budget, current_team):
@@ -335,22 +341,21 @@ class Team:
     else:
       print(f'Invalid position: {position}')
 
-
   # TODO: Apply random team split
-  def _random_squad_split(self, variation=0.2):    
-    # Base allocation
+  def _random_squad_split(self):
     base_split = {
       'GK': 0.1,
-      'DEF': 0.3,
-      'MID': 0.4,
-      'FWD': 0.2
+      'DEF': 0.25,
+      'MID': 0.35,
+      'FWD': 0.3
     }
+
     return base_split
 
-  def select_best_xi(self, selected_squad, gw_data, optimal=False):
+  def pick_team(self, selected_squad, gw_data, optimal=False):
     target = self._get_target(optimal)
 
-    best_xi = None
+    best_team = None
     max_points = float('-inf')
 
     # Collect all selected player IDs once
@@ -366,11 +371,10 @@ class Team:
                       for pid in missing_players if pid in selected_squad[pos]['id'].values]
       gw_data = pd.concat([gw_data, pd.DataFrame(missing_data)], ignore_index=True)
 
-    captain = self.select_captain(gw_data, selected_squad, optimal)
-
     # Try all formations
     for formation in self.FORMATIONS:
-      current_xi = {pos: [] for pos in self.POSITIONS}  # Initialize XI
+      current_team = {pos: pd.DataFrame() for pos in self.POSITIONS}  # Initialize team
+      current_team['bench'] = pd.DataFrame()
       total_points = 0
 
       for pos, count in formation.items():
@@ -380,74 +384,178 @@ class Team:
         pos_players = pos_players.sort_values(by=target, ascending=False)
         
         selected_players = pos_players.head(count)
+        remaining_players = pos_players.tail(self.POS_DISTRIBUTION[pos] - count)
 
-        current_xi[pos] = selected_players
+        current_team[pos] = selected_players
         total_points += selected_players[target].sum()
 
-      # Pick the best captain for this formation
-      # Update best XI if this formation is better
+        current_bench = current_team['bench']
+        if current_bench.empty:
+          current_team['bench'] = pd.DataFrame(remaining_players)
+        else:
+          current_team['bench'] = pd.concat([current_team['bench'], pd.DataFrame(remaining_players)])
+
+      # Pick the best captain for this formation, update best team if this formation is better
       if total_points > max_points:
         max_points = total_points
-        best_xi = current_xi
 
-    if captain.empty == None:
-      raise Exception('No captain selected')
+        # Sort bench by target
+        current_team['bench'] = current_team['bench'].sort_values(by=target, ascending=False)
+        best_team = current_team
 
-    return best_xi, captain
+    captain, vice_captain = self.select_captains(gw_data, best_team, optimal)
 
+    best_team['captain'] = captain
+    best_team['vice_captain'] = vice_captain
+
+    return best_team
 
   # Select the player with the highest TARGET value as captain from the selected team
   # Returns the id of the selected captain
-  def select_captain(self, gw_data, best_xi, optimal):
-    best_xi = best_xi.copy()
+  def select_captains(self, gw_data, team, optimal):
+    current_team = team.copy()
     
     # Get all valid captain choices
     captain_candidates = []
     
     for pos in self.CAPTAIN_POSITIONS:
-      if pos in best_xi and not best_xi[pos].empty:
-        captain_candidates.append(best_xi[pos])
-
-    # Combine valid captain options into a single DataFrame
-    captain_pool = pd.concat(captain_candidates)
+      if pos in current_team and not current_team[pos].empty:
+        captain_candidates.append(current_team[pos])
+    captain_candidates = pd.concat(captain_candidates)
 
     # Get the highest-scoring player based on self.TARGET
-    captain = gw_data[gw_data['id'].isin(captain_pool['id'])].nlargest(1, self.TARGET)
+    captains = gw_data[gw_data['id'].isin(captain_candidates['id'])].nlargest(2, self.TARGET)
 
-    return captain
+    captain = pd.DataFrame([captains.iloc[0]])
+    vice_captain = pd.DataFrame([captains.iloc[1]])
 
-  def calc_team_points(self, gw_data, selected_xi, captain=None, triple_captain=False):
+    if captain.empty == None:
+      raise Exception('No captain selected')
+
+    return captain, vice_captain
+
+  def calc_team_points(self, gw_data, selected_team, triple_captain=False, bench_boost=False):
     total_points = 0
     captain_multiplier = 3 if triple_captain else 2
 
+    final_team = self._team_after_subs(gw_data, selected_team)
+
     for position in self.POSITIONS:
-      for _, selected_player in selected_xi[position].iterrows():
+      for _, selected_player in final_team[position].iterrows():
         # If player cannot be found assume he didn't play
         try:
           player_id = selected_player['id']
           player = gw_data[gw_data['id'] == player_id].iloc[0]
-          player_points = player[self.OPTIMAL_TARGET]
         except IndexError:
-          player_points = 0
+          player = self._get_missing_player(selected_player)
 
-        if captain is not None:
-          if captain['id'].values[0] == player_id:
-            player_points *= captain_multiplier
+        player_points = player[self.OPTIMAL_TARGET]
+
+        if not final_team['captain'].empty:
+          captain = final_team['captain'].iloc[0]
+        else:
+          captain = None
+
+        if (captain is not None) and (captain['id'] == player_id):
+          player_points *= captain_multiplier
+
         total_points += player_points
-    
+
     return total_points
+
+  def _team_after_subs(self, gw_data, team):
+    available_bench = team['bench']
+    new_bench = pd.DataFrame()
+    updated_team = {}
+
+    for position in self.POSITIONS:
+      updated_team.setdefault(position, pd.DataFrame())
+
+      for _, selected_player in team[position].iterrows():
+        try:
+          player_id = selected_player['id']
+          player = gw_data[gw_data['id'] == player_id].iloc[0]
+        except IndexError:
+          player = self._get_missing_player(selected_player)
+
+        # If player available in bench
+        if (not available_bench.empty) and self._check_player_performed(player):
+          # Goalkeepers can only be subbed by goalkeepers
+          if position == 'GK':
+            sub = available_bench[available_bench['position'] == 'GK'].iloc[0]  
+          else:
+            suitable_subs = available_bench[available_bench['position'] != 'GK']
+            sub = available_bench.iloc[0]
+
+          if self._can_sub(position, team, sub):
+            # Remove sub from available bench
+            available_bench = available_bench[available_bench['id'] != sub['id']]
+            new_bench = self._add_to_df(new_bench, player)
+            updated_team[position] = self._add_to_df(updated_team[position], sub)
+            continue
+
+        # If sub was not added then add player
+        updated_team[position] = self._add_to_df(updated_team[position], player)
+
+    updated_team_ids = set(pd.concat(updated_team.values())['id'])
+    
+    captain_id = team['captain']['id'].values[0]
+    vice_captain_id = team['vice_captain']['id'].values[0]
+    
+    if captain_id in updated_team_ids:
+      new_captain = team['captain']
+    elif vice_captain_id in updated_team_ids:
+      new_captain = team['vice_captain']
+    else:
+      new_captain = pd.DataFrame()
+    
+    updated_team['captain'] = new_captain
+    return updated_team
+
+  def _can_sub(self, position, team, sub):
+    if position == 'GK' and sub['position'] == 'GK':
+      return True
+    elif position == 'DEF' and (len(team[position]) > 3 or sub['position'] == 'DEF'):
+      return True
+    elif position == 'MID' and (len(team[position]) > 3 or sub['position'] == 'MID'):
+      return True
+    elif position == 'FWD' and (len(team[position]) > 1 or sub['position'] == 'FWD'):
+      return True
+
+    return False
+
+  def _check_player_performed(self, player):
+    minutes = player['minutes']
+    player_points = player[self.OPTIMAL_TARGET]
+    
+    return minutes == 0 and player_points == 0
 
   def _get_target(self, optimal):
     return self.OPTIMAL_TARGET if optimal else self.TARGET
+
+  def _get_player_gw_data(self, player, gw_data):
+    try:
+      player_id = player['id']
+      player_data = gw_data[gw_data['id'] == player_id].iloc[0]
+    except IndexError:
+      player_data = self._get_missing_player(player)
+
+    return player_data
 
   def _get_missing_player(self, player):
     missing_player = player.to_dict()
     missing_player.update({
       'fitness': 0,
+      'minutes': 0,
       self.TARGET: 0,
-      self.OPTIMAL_TARGET: 0
+      self.OPTIMAL_TARGET: 0,
     })
     return missing_player
 
-  def _substitute_player(self):
-    print('Substitute player here')
+  def _add_to_df(self, current_df, item):
+    item_df = pd.DataFrame([item])
+
+    if current_df.empty:
+      return item_df
+    else:
+      return pd.concat([current_df, item_df], ignore_index=True)
