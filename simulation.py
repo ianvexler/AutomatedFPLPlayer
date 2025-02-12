@@ -11,8 +11,10 @@ class Chip(Enum):
   FREE_HIT = 'free_hit'
   BENCH_BOOST = 'bench_boost'
 
+DEFAULT_CONFIG = { 'max_gw': 38 }
+
 class Simulation:
-  def __init__(self, season, chip_strategy=None, show_optimal=False, config={ 'max_gw': 38 }):
+  def __init__(self, season, chip_strategy=None, show_optimal=False, config=DEFAULT_CONFIG):
     self.season = season
     self.POSITIONS = ['GK', 'DEF', 'MID', 'FWD']
     
@@ -29,7 +31,6 @@ class Simulation:
 
     self.chip_strategy = chip_strategy
 
-    # TODO: Update to 38
     self.MAX_GW = config['max_gw']
     self.MAX_BUDGET = 1000
     self.MAX_FREE_TRANSFERS = 5 if season == '2024-25' else 2

@@ -13,7 +13,7 @@ class Team:
     self.TARGET = 'xP'
     self.OPTIMAL_TARGET = 'total_points'
     self.POSITIONS = ['GK', 'DEF', 'MID', 'FWD']
-    self.TRANSFER_THRESHOLD = 10
+    self.TRANSFER_THRESHOLD = 3
 
     # TODO: Experiment with differnet positions as captains
     self.CAPTAIN_POSITIONS = ['MID', 'FWD']
@@ -40,7 +40,7 @@ class Team:
     best_squad_cost = 0
     best_squad_points = 0
 
-    for _ in range(10):
+    for _ in range(50):
       squad = {}
       pos_budgets = {}
 
@@ -108,7 +108,7 @@ class Team:
 
     return total_points
 
-  def _calc_player_fitness(self, gw_data, player, extra_transfers=0, weight_future=0.8, test=False):
+  def _calc_player_fitness(self, gw_data, player, extra_transfers=0, weight_future=0.8):
     """
     Computes a player's fitness score based on predicted points, price, form, fixtures, 
     playing time consistency, captaincy potential, transfer trends, and additional transfers.
@@ -123,8 +123,7 @@ class Team:
     player_entries = gw_data[gw_data['id'] == player['id']]
     expected_points = player_entries[self.TARGET].sum()
     
-    if not test:
-      return expected_points
+    return expected_points
 
     base_fitness = expected_points / cost if cost > 0 else 0
 
@@ -299,29 +298,33 @@ class Team:
           continue
 
         # Find a valid transfer option that hasn't been picked yet
-        transfer_option = None
+        player_in = None
         for _, candidate in available_players.iterrows():
           if candidate['id'] not in transferred_in:
-            transfer_option = candidate
+            player_in = candidate
             break
 
         # If no valid new player is found, skip
-        if transfer_option is None:
+        if player_in is None:
           continue
 
         # Ensure the new player has a better fitness score
-        if transfer_option['fitness'] > player['fitness']:
-          fitness_difference = transfer_option['fitness'] - player['fitness']
+        # if player_in['fitness'] > player['fitness']:
+        if self._should_transfer(player_in, player):
+          fitness_difference = player_in['fitness'] - player['fitness']
 
-          transferred_in.add(transfer_option['id'])
+          transferred_in.add(player_in['id'])
           possible_transfers.append({
-            'in': transfer_option,
+            'in': player_in,
             'out': player,
             'difference': fitness_difference
           })
 
     sorted_transfers = sorted(possible_transfers, key=lambda x: x['difference'], reverse=True)
     return sorted_transfers
+
+  def _should_transfer(self, player_in, player_out):
+    return player_in['fitness'] - player_out['fitness'] >= self.TRANSFER_THRESHOLD
 
   # Update to use prices based on data
   def _pos_min_price(self, position):
