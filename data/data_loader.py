@@ -1,11 +1,15 @@
 from data.vaastav.data_loader import DataLoader as Vaastav
 from data.sofascore.data_loader import DataLoader as Sofascore
 from utils.feature_selector import FeatureSelector
+from utils.team_matcher import TeamMatcher
+from utils.player_matcher import PlayerMatcher
 import pandas as pd
 
 class DataLoader:
   def __init__(self):
     self.feature_selector = FeatureSelector()
+    self.team_matcher = TeamMatcher()
+    self.player_matcher = PlayerMatcher()
 
   def get_season_data(self, season):
     data_loader = Vaastav(season)
@@ -24,11 +28,11 @@ class DataLoader:
 
     seasons_gw_data = []
 
-    for s in [season]:
-    # for s in [season, prev_season]:  
-      data_loader = Vaastav(s)
-      gw_data = data_loader.get_merged_gw_data()
-      season_data = data_loader.get_full_season_data()
+    # for s in [season]:
+    for s in [season, prev_season]:  
+      vaastav = Vaastav(s)
+      gw_data = vaastav.get_merged_gw_data()
+      season_data = vaastav.get_full_season_data()
 
       if include_teams:
         teams_data = self.get_teams_data(s)
@@ -40,10 +44,46 @@ class DataLoader:
 
       # Fromats data from previous season
       if not s == season:
+        relegated_teams = {}
+
         max_gw = gw_data['GW'].max()
         gw_data = gw_data[gw_data['GW'] > max_gw - time_steps]
         gw_data.loc[:, 'GW'] = gw_data['GW'] - 39
 
+        data_to_remove = []
+
+        # Update player & team IDs to match current season
+        for index, player in gw_data.iterrows():
+          # Player ID
+          player_id = player['id']
+
+          # TODO: Temporary while ID issues remain
+          try:
+            player_mapping = self.player_matcher.get_fpl_player(player_id, s)
+          except:
+            data_to_remove.append(index)
+
+          # If player doesnt have current season data
+          if season in player_mapping['FPL']:
+            player['id'] = player_mapping['FPL'][season]['id']
+
+            # Reassign Team ID
+            team_id = player['team']
+            team_mapping = self.team_matcher.get_fpl_team(team_id, s)
+
+            # Reassign the id to the team
+            # Checks if team got relegated
+            if season in team_mapping['FPL']:
+              player['team'] = team_mapping['FPL'][season]
+            else:
+              # Assign a new id to relegated teams
+              relegated_teams.setdefault(team_id, len(relegated_teams) + 21)
+              player['team'] = relegated_teams[team_id]
+          else:
+            data_to_remove.append(index)
+
+        gw_data = gw_data.drop(data_to_remove).reset_index(drop=True)
+      
       seasons_gw_data.append(gw_data)
 
     # Concats both seasons data into one df
@@ -51,7 +91,6 @@ class DataLoader:
     merged_data = merged_data.sort_values(by='GW', ascending=True)
 
     merged_data['kickoff_time'] = pd.to_datetime(merged_data['kickoff_time'], errors='coerce')
-    merged_data.to_csv('jhasjdkf.csv')
     return merged_data
 
   def _add_teams_data_to_gw_data(self, gw_data, teams_data):

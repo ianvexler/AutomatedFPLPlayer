@@ -158,10 +158,6 @@ class LSTMModel:
     for gw, gw_group in self.fixtures.groupby('GW'):
       current_gw = gw
       current_data = self.gw_data[self.gw_data['GW'] <= current_gw]
-      
-      # TODO: To be removed
-      if current_gw < 8:
-        continue
 
       gw_aggregates = {}
       for _, game in gw_group.iterrows():
@@ -261,7 +257,7 @@ class LSTMModel:
     home_team = self.teams_data[self.teams_data['id'] == home_team_id].iloc[0]['name']
     away_team = self.teams_data[self.teams_data['id'] == away_team_id].iloc[0]['name']
 
-    file_path = os.path.join(directory, f"GW{current_gw}_{home_team}_vs_{away_team}.csv")
+    file_path = os.path.join(directory, f"GW{int(current_gw)}_{home_team}_vs_{away_team}.csv")
 
     predictions_df = pd.DataFrame.from_dict(predictions, orient='index', columns=['expected_points'])
     
@@ -275,14 +271,14 @@ class LSTMModel:
     directory = f"predictions/gws/{self.season}"
     os.makedirs(directory, exist_ok=True)
 
-    file_path = os.path.join(directory, f"GW{current_gw}.csv")
+    file_path = os.path.join(directory, f"GW{int(current_gw)}.csv")
 
     predictions_df = pd.DataFrame.from_dict(predictions, orient='index', columns=['expected_points'])
 
     gw_predictions_df = gw_data.merge(predictions_df, left_on='id', right_index=True, how='left')
     gw_predictions_df.to_csv(file_path, index=False)
     
-    print(f"GW{current_gw} saved to {file_path}\n")
+    print(f"GW{int(current_gw)} saved to {file_path}\n")
     
     return predictions
 

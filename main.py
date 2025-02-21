@@ -36,19 +36,5 @@ if __name__=='__main__':
     time_steps=args.steps)
   model.predict_season()
   
-  # simulation = Simulation(season=args.season)
-  # simulation.simulate_season()
-
-# if __name__=='__main__':
-#   data_loader = DataLoader()
-#   train_data = data_loader.get_data('2022-23')
-#   data = data_loader.get_data('2023-24')
-  
-#   model = Model(data, train_data, model=ModelType('xgboost'))
-#   # indexes, predictions, targets = model.predict()
-#   indexes, predictions, targets = model.test_predict()
-
-#   ids_df = data_loader.get_id_dict_data('2022-23')[['FPL_ID', 'FPL_Name']]
-
 #   evaluate = Evaluate(ids_df)
 #   evaluate.evaulate_prediction(indexes, predictions, targets)

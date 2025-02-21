@@ -1,0 +1,564 @@
+{
+    "Arsenal": {
+        "ClubElo": "Arsenal",
+        "FBref": "Arsenal",
+        "FPL": {
+            "2020-21": {
+                "id": 1,
+                "name": "Arsenal"
+            },
+            "2021-22": {
+                "id": 1,
+                "name": "Arsenal"
+            },
+            "2022-23": {
+                "id": 1,
+                "name": "Arsenal"
+            },
+            "2023-24": {
+                "id": 1,
+                "name": "Arsenal"
+            },
+            "2024-25": {
+                "id": 1,
+                "name": "Arsenal"
+            }
+        }
+    },
+    "Aston Villa": {
+        "ClubElo": "Aston Villa",
+        "FBref": "Aston Villa",
+        "FPL": {
+            "2020-21": {
+                "id": 2,
+                "name": "Aston Villa"
+            },
+            "2021-22": {
+                "id": 2,
+                "name": "Aston Villa"
+            },
+            "2022-23": {
+                "id": 2,
+                "name": "Aston Villa"
+            },
+            "2023-24": {
+                "id": 2,
+                "name": "Aston Villa"
+            },
+            "2024-25": {
+                "id": 2,
+                "name": "Aston Villa"
+            }
+        }
+    },
+    "Brighton": {
+        "ClubElo": "Brighton",
+        "FBref": "Brighton",
+        "FPL": {
+            "2020-21": {
+                "id": 3,
+                "name": "Brighton"
+            },
+            "2021-22": {
+                "id": 4,
+                "name": "Brighton"
+            },
+            "2022-23": {
+                "id": 5,
+                "name": "Brighton"
+            },
+            "2023-24": {
+                "id": 5,
+                "name": "Brighton"
+            },
+            "2024-25": {
+                "id": 5,
+                "name": "Brighton"
+            }
+        }
+    },
+    "Burnley": {
+        "ClubElo": "Burnley",
+        "FBref": "Burnley",
+        "FPL": {
+            "2020-21": {
+                "id": 4,
+                "name": "Burnley"
+            },
+            "2021-22": {
+                "id": 5,
+                "name": "Burnley"
+            },
+            "2023-24": {
+                "id": 6,
+                "name": "Burnley"
+            }
+        }
+    },
+    "Chelsea": {
+        "ClubElo": "Chelsea",
+        "FBref": "Chelsea",
+        "FPL": {
+            "2020-21": {
+                "id": 5,
+                "name": "Chelsea"
+            },
+            "2021-22": {
+                "id": 6,
+                "name": "Chelsea"
+            },
+            "2022-23": {
+                "id": 6,
+                "name": "Chelsea"
+            },
+            "2023-24": {
+                "id": 7,
+                "name": "Chelsea"
+            },
+            "2024-25": {
+                "id": 6,
+                "name": "Chelsea"
+            }
+        }
+    },
+    "Crystal Palace": {
+        "ClubElo": "Crystal Palace",
+        "FBref": "Crystal Palace",
+        "FPL": {
+            "2020-21": {
+                "id": 6,
+                "name": "Crystal Palace"
+            },
+            "2021-22": {
+                "id": 7,
+                "name": "Crystal Palace"
+            },
+            "2022-23": {
+                "id": 7,
+                "name": "Crystal Palace"
+            },
+            "2023-24": {
+                "id": 8,
+                "name": "Crystal Palace"
+            },
+            "2024-25": {
+                "id": 7,
+                "name": "Crystal Palace"
+            }
+        }
+    },
+    "Everton": {
+        "ClubElo": "Everton",
+        "FBref": "Everton",
+        "FPL": {
+            "2020-21": {
+                "id": 7,
+                "name": "Everton"
+            },
+            "2021-22": {
+                "id": 8,
+                "name": "Everton"
+            },
+            "2022-23": {
+                "id": 8,
+                "name": "Everton"
+            },
+            "2023-24": {
+                "id": 9,
+                "name": "Everton"
+            },
+            "2024-25": {
+                "id": 8,
+                "name": "Everton"
+            }
+        }
+    },
+    "Fulham": {
+        "ClubElo": "Fulham",
+        "FBref": "Fulham",
+        "FPL": {
+            "2020-21": {
+                "id": 8,
+                "name": "Fulham"
+            },
+            "2022-23": {
+                "id": 9,
+                "name": "Fulham"
+            },
+            "2023-24": {
+                "id": 10,
+                "name": "Fulham"
+            },
+            "2024-25": {
+                "id": 9,
+                "name": "Fulham"
+            }
+        }
+    },
+    "Leicester": {
+        "ClubElo": "Leicester",
+        "FBref": "Leicester City",
+        "FPL": {
+            "2020-21": {
+                "id": 9,
+                "name": "Leicester"
+            },
+            "2021-22": {
+                "id": 9,
+                "name": "Leicester"
+            },
+            "2022-23": {
+                "id": 10,
+                "name": "Leicester"
+            },
+            "2024-25": {
+                "id": 11,
+                "name": "Leicester"
+            }
+        }
+    },
+    "Leeds": {
+        "ClubElo": "Leeds",
+        "FBref": "Leeds United",
+        "FPL": {
+            "2020-21": {
+                "id": 10,
+                "name": "Leeds"
+            },
+            "2021-22": {
+                "id": 10,
+                "name": "Leeds"
+            },
+            "2022-23": {
+                "id": 11,
+                "name": "Leeds"
+            }
+        }
+    },
+    "Liverpool": {
+        "ClubElo": "Liverpool",
+        "FBref": "Liverpool",
+        "FPL": {
+            "2020-21": {
+                "id": 11,
+                "name": "Liverpool"
+            },
+            "2021-22": {
+                "id": 11,
+                "name": "Liverpool"
+            },
+            "2022-23": {
+                "id": 12,
+                "name": "Liverpool"
+            },
+            "2023-24": {
+                "id": 11,
+                "name": "Liverpool"
+            },
+            "2024-25": {
+                "id": 12,
+                "name": "Liverpool"
+            }
+        }
+    },
+    "Man City": {
+        "ClubElo": "Man City",
+        "FBref": "Manchester City",
+        "FPL": {
+            "2020-21": {
+                "id": 12,
+                "name": "Man City"
+            },
+            "2021-22": {
+                "id": 12,
+                "name": "Man City"
+            },
+            "2022-23": {
+                "id": 13,
+                "name": "Man City"
+            },
+            "2023-24": {
+                "id": 13,
+                "name": "Man City"
+            },
+            "2024-25": {
+                "id": 13,
+                "name": "Man City"
+            }
+        }
+    },
+    "Man Utd": {
+        "ClubElo": "Man United",
+        "FBref": "Manchester Utd",
+        "FPL": {
+            "2020-21": {
+                "id": 13,
+                "name": "Man Utd"
+            },
+            "2021-22": {
+                "id": 13,
+                "name": "Man Utd"
+            },
+            "2022-23": {
+                "id": 14,
+                "name": "Man Utd"
+            },
+            "2023-24": {
+                "id": 14,
+                "name": "Man Utd"
+            },
+            "2024-25": {
+                "id": 14,
+                "name": "Man Utd"
+            }
+        }
+    },
+    "Newcastle": {
+        "ClubElo": "Newcastle",
+        "FBref": "Newcastle Utd",
+        "FPL": {
+            "2020-21": {
+                "id": 14,
+                "name": "Newcastle"
+            },
+            "2021-22": {
+                "id": 14,
+                "name": "Newcastle"
+            },
+            "2022-23": {
+                "id": 15,
+                "name": "Newcastle"
+            },
+            "2023-24": {
+                "id": 15,
+                "name": "Newcastle"
+            },
+            "2024-25": {
+                "id": 15,
+                "name": "Newcastle"
+            }
+        }
+    },
+    "Sheffield Utd": {
+        "ClubElo": "Sheffield United",
+        "FBref": "Sheffield Utd",
+        "FPL": {
+            "2020-21": {
+                "id": 15,
+                "name": "Sheffield Utd"
+            },
+            "2023-24": {
+                "id": 17,
+                "name": "Sheffield Utd"
+            }
+        }
+    },
+    "Southampton": {
+        "ClubElo": "Southampton",
+        "FBref": "Southampton",
+        "FPL": {
+            "2020-21": {
+                "id": 16,
+                "name": "Southampton"
+            },
+            "2021-22": {
+                "id": 16,
+                "name": "Southampton"
+            },
+            "2022-23": {
+                "id": 17,
+                "name": "Southampton"
+            },
+            "2024-25": {
+                "id": 17,
+                "name": "Southampton"
+            }
+        }
+    },
+    "Spurs": {
+        "ClubElo": "Tottenham",
+        "FBref": "Tottenham",
+        "FPL": {
+            "2020-21": {
+                "id": 17,
+                "name": "Spurs"
+            },
+            "2021-22": {
+                "id": 17,
+                "name": "Spurs"
+            },
+            "2022-23": {
+                "id": 18,
+                "name": "Spurs"
+            },
+            "2023-24": {
+                "id": 18,
+                "name": "Spurs"
+            },
+            "2024-25": {
+                "id": 18,
+                "name": "Spurs"
+            }
+        }
+    },
+    "West Brom": {
+        "ClubElo": "West Brom",
+        "FBref": "West Brom",
+        "FPL": {
+            "2020-21": {
+                "id": 18,
+                "name": "West Brom"
+            }
+        }
+    },
+    "West Ham": {
+        "ClubElo": "West Ham",
+        "FBref": "West Ham",
+        "FPL": {
+            "2020-21": {
+                "id": 19,
+                "name": "West Ham"
+            },
+            "2021-22": {
+                "id": 19,
+                "name": "West Ham"
+            },
+            "2022-23": {
+                "id": 19,
+                "name": "West Ham"
+            },
+            "2023-24": {
+                "id": 19,
+                "name": "West Ham"
+            },
+            "2024-25": {
+                "id": 19,
+                "name": "West Ham"
+            }
+        }
+    },
+    "Wolves": {
+        "ClubElo": "Wolves",
+        "FBref": "Wolves",
+        "FPL": {
+            "2020-21": {
+                "id": 20,
+                "name": "Wolves"
+            },
+            "2021-22": {
+                "id": 20,
+                "name": "Wolves"
+            },
+            "2022-23": {
+                "id": 20,
+                "name": "Wolves"
+            },
+            "2023-24": {
+                "id": 20,
+                "name": "Wolves"
+            },
+            "2024-25": {
+                "id": 20,
+                "name": "Wolves"
+            }
+        }
+    },
+    "Brentford": {
+        "ClubElo": "Brentford",
+        "FBref": "Brentford",
+        "FPL": {
+            "2021-22": {
+                "id": 3,
+                "name": "Brentford"
+            },
+            "2022-23": {
+                "id": 4,
+                "name": "Brentford"
+            },
+            "2023-24": {
+                "id": 4,
+                "name": "Brentford"
+            },
+            "2024-25": {
+                "id": 4,
+                "name": "Brentford"
+            }
+        }
+    },
+    "Norwich": {
+        "ClubElo": "Norwich",
+        "FBref": "Norwich City",
+        "FPL": {
+            "2021-22": {
+                "id": 15,
+                "name": "Norwich"
+            }
+        }
+    },
+    "Watford": {
+        "ClubElo": "Watford",
+        "FBref": "Watford",
+        "FPL": {
+            "2021-22": {
+                "id": 18,
+                "name": "Watford"
+            }
+        }
+    },
+    "Bournemouth": {
+        "ClubElo": "Bournemouth",
+        "FBref": "Bournemouth",
+        "FPL": {
+            "2022-23": {
+                "id": 3,
+                "name": "Bournemouth"
+            },
+            "2023-24": {
+                "id": 3,
+                "name": "Bournemouth"
+            },
+            "2024-25": {
+                "id": 3,
+                "name": "Bournemouth"
+            }
+        }
+    },
+    "Nott'm Forest": {
+        "ClubElo": "Forest",
+        "FBref": "Nott'ham Forest",
+        "FPL": {
+            "2022-23": {
+                "id": 16,
+                "name": "Nott'm Forest"
+            },
+            "2023-24": {
+                "id": 16,
+                "name": "Nott'm Forest"
+            },
+            "2024-25": {
+                "id": 16,
+                "name": "Nott'm Forest"
+            }
+        }
+    },
+    "Luton": {
+        "ClubElo": "Luton",
+        "FBref": "Luton Town",
+        "FPL": {
+            "2023-24": {
+                "id": 12,
+                "name": "Luton"
+            }
+        }
+    },
+    "Ipswich": {
+        "ClubElo": "Ipswich",
+        "FBref": "Ipswich Town",
+        "FPL": {
+            "2024-25": {
+                "id": 10,
+                "name": "Ipswich"
+            }
+        }
+    }
+}

@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import re
 import numpy as np
+import warnings
 
 class DataLoader:
   def __init__(self, season):
@@ -19,30 +20,32 @@ class DataLoader:
     return df
   
   ### Player Season Stats ###
-  def get_player_season_stats(self, fetch = True):
-    if (fetch):
-      self.fetch_player_season_stats()
+  def get_player_season_stats(self):
+    return self.fetch_player_season_stats()
 
-  def fetch_player_season_stats(self):
-    for stat in STAT_TYPES:
-      df = self.fbref.read_player_season_stats(stat)
+  def fetch_player_season_stats(self, stat_types=['standard']):
+    for stat in stat_types:
+      # Mutes warning logs from Soccerdata
+      with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=FutureWarning)
+        df = self.fbref.read_player_season_stats(stat)
+        
+        for league in df.index.get_level_values('league').unique():
+          for season in df.loc[league].index.get_level_values('season').unique(): 
+            for team in df.loc[league, season].index.get_level_values('team').unique():
+              team_df = df.loc[league, season, team]
+              team_df = team_df.reset_index()
+              team_df.rename(columns={'index': 'Player'}, inplace=True)
 
-      for league in df.index.get_level_values('league').unique():
-        for season in df.loc[league].index.get_level_values('season').unique(): 
-          for team in df.loc[league, season].index.get_level_values('team').unique():
-            team_df = df.loc[league, season, team]
-            team_df = team_df.reset_index()
-            team_df.rename(columns={'index': 'Player'}, inplace=True)
+              # Replace '' with NaN in the MultiIndex levels
+              team_df.columns = pd.MultiIndex.from_tuples(
+                [('General', a.capitalize()) if b == '' else (a.capitalize(), b.capitalize()) for a, b in team_df.columns]
+              )
 
-            # Replace '' with NaN in the MultiIndex levels
-            team_df.columns = pd.MultiIndex.from_tuples(
-              [('General', a.capitalize()) if b == '' else (a.capitalize(), b.capitalize()) for a, b in team_df.columns]
-            )
-
-            self.create_or_update_csv(team_df, f"data/{self.season}/leagues/{league}/player_season_stats/{team}", f"{stat}.csv")
+              self.create_or_update_csv(team_df, f"data/{self.season}/leagues/{league}/player_season_stats/{team}", f"{stat}.csv")
       
-      print(f"Fetched and saved {stat}")
-  
+    return df
+
   ### CUSTOM SCRAPPERS ###
   ### Player Stats Scrapper ###
   def get_player_stats(self):
