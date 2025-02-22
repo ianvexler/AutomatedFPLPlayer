@@ -165,15 +165,15 @@ class LSTMModel:
         away_team_id = game['team_a']
 
         players_data = current_data[
-          ((current_data['team'] == away_team_id) | (current_data['team'] == away_team_id)) & 
+          ((current_data['team'] == home_team_id) | (current_data['team'] == away_team_id)) & 
           (current_data['GW'] < current_gw)
         ]
-        players_data.to_csv('player_data.csv')
+        
         # Predict and accumulate results for players in both teams
         predictions = self._predict_players_game(players_data, current_gw)
 
         players_gw_data = current_data[
-          ((current_data['team'] == away_team_id) | (current_data['team'] == away_team_id)) & 
+          ((current_data['team'] == home_team_id) | (current_data['team'] == away_team_id)) & 
           (current_data['GW'] == current_gw)
         ]
         self._format_and_save_match_prediction(predictions, home_team_id, away_team_id, players_gw_data, current_gw)
@@ -202,10 +202,12 @@ class LSTMModel:
 
     return predictions_df
 
-  def _predict_players_game(self, players, current_gw):
+  def _predict_players_game(self, players_data, current_gw):
     predictions = {}
 
-    for player_id, player_data in players.groupby('id'):
+    players_data.to_csv('jaksldfkjlk.csv')
+
+    for player_id, player_data in players_data.groupby('id'):
       position = self._get_player_position(player_id)
 
       player_sequence = self._get_player_sequence(player_data, position)
@@ -260,8 +262,10 @@ class LSTMModel:
     file_path = os.path.join(directory, f"GW{int(current_gw)}_{home_team}_vs_{away_team}.csv")
 
     predictions_df = pd.DataFrame.from_dict(predictions, orient='index', columns=['expected_points'])
-    
+
     gw_predictions_df = gw_data.merge(predictions_df, left_on='id', right_index=True, how='left')
+    gw_predictions_df['expected_points'] = gw_predictions_df['expected_points'].fillna(0)
+
     gw_predictions_df.to_csv(file_path, index=False)
     print(f"{home_team} vs {away_team} saved to {file_path}\n")
     
@@ -272,7 +276,6 @@ class LSTMModel:
     os.makedirs(directory, exist_ok=True)
 
     file_path = os.path.join(directory, f"GW{int(current_gw)}.csv")
-
     predictions_df = pd.DataFrame.from_dict(predictions, orient='index', columns=['expected_points'])
 
     gw_predictions_df = gw_data.merge(predictions_df, left_on='id', right_index=True, how='left')

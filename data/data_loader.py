@@ -23,12 +23,11 @@ class DataLoader:
 
     return data
 
-  def get_merged_gw_data(self, season, time_steps, include_season=True, include_teams=True):
+  def get_merged_gw_data(self, season, time_steps=0, include_season=True, include_teams=True):
     prev_season = self._decrement_season(season)
 
     seasons_gw_data = []
 
-    # for s in [season]:
     for s in [season, prev_season]:  
       vaastav = Vaastav(s)
       gw_data = vaastav.get_merged_gw_data()
@@ -65,8 +64,10 @@ class DataLoader:
 
           # If player doesnt have current season data
           if season in player_mapping['FPL']:
-            player['id'] = player_mapping['FPL'][season]['id']
-
+            # Update player ID
+            new_player_id = player_mapping['FPL'][season]['id']
+            gw_data.loc[index, 'id'] = new_player_id
+            
             # Reassign Team ID
             team_id = player['team']
             team_mapping = self.team_matcher.get_fpl_team(team_id, s)
@@ -74,11 +75,12 @@ class DataLoader:
             # Reassign the id to the team
             # Checks if team got relegated
             if season in team_mapping['FPL']:
-              player['team'] = team_mapping['FPL'][season]
+              new_team_id = team_mapping['FPL'][season]['id']
+              gw_data.loc[index, 'team'] = new_team_id
             else:
               # Assign a new id to relegated teams
               relegated_teams.setdefault(team_id, len(relegated_teams) + 21)
-              player['team'] = relegated_teams[team_id]
+              gw_data.loc[index, 'team'] = relegated_teams[team_id]
           else:
             data_to_remove.append(index)
 
@@ -88,10 +90,27 @@ class DataLoader:
 
     # Concats both seasons data into one df
     merged_data = pd.concat(seasons_gw_data, ignore_index=True)
-    merged_data = merged_data.sort_values(by='GW', ascending=True)
 
-    merged_data['kickoff_time'] = pd.to_datetime(merged_data['kickoff_time'], errors='coerce')
-    return merged_data
+    # TODO: Temporary
+    # Ensures all players have data for all GWs
+    # unique_players = merged_data['id'].unique()
+    # players_missing_negative_gw = []
+
+    # for player_id in unique_players:
+    #   player_data = merged_data[merged_data['id'] == player_id]
+    #   if player_data['GW'].sum() == 38 + time_steps:  # Check if negative GWs exist
+    #     players_missing_negative_gw.append(player_id)
+
+    # # If some players are missing negative GWs, add placeholders
+    # for player_id in players_missing_negative_gw:
+      
+    merged_data['kickoff_time'] = pd.to_datetime(merged_data['kickoff_time'], errors='coerce') 
+    return merged_data.sort_values(by='GW', ascending=True)
+
+  def _fill_missing_gw_data(self, player_id, season_data, prev_season_data):
+    player_data = season_data[season_data['id'] == player_id]
+    initial_player_data = player_data.sort_values(by='GW', ascending=True).iloc[0]
+    initial_value = initial_player_data['value']
 
   def _add_teams_data_to_gw_data(self, gw_data, teams_data):
     home_data = teams_data.rename(columns=lambda x: f"home_team_{x}")
