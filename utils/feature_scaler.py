@@ -30,6 +30,9 @@ class FeatureScaler:
   def select_scaler(self, stats, features):
     """Automatically assign a scaler to each feature based on its statistics."""
     for feature in features:
+      self.scalers[feature] = RobustScaler()
+      continue
+
       # Extract scalar values from the pandas Series
       max_val = stats['max'][feature].max()
       min_val = stats['min'][feature].min()

@@ -40,10 +40,7 @@ class LSTMModel:
       'FWD': FeatureScaler('FWD')
     }
 
-    if train:
-      for position in self.models:
-        self.train(position)
-    else:
+    if not train:
       for position in self.models:
         directory = 'models/trained'
 
@@ -57,7 +54,7 @@ class LSTMModel:
 
   def _build_model(self, position):
     features = self.feature_selector.get_features_for_position(position)
-
+  
     # Define the input layer
     input_layer = Input(shape=(self.time_steps, len(features)))
 
@@ -77,34 +74,31 @@ class LSTMModel:
 
     return model
 
-  def train(self, position):
-    # Prepare sequences from historical gameweek data
-    X_reshaped, y_reshaped, _ = self._prepare_sequences(position)
+  def train(self, training_data):
+    for position in ['GK', 'DEF', 'MID', 'FWD']:
+      # Prepare sequences from historical gameweek data
+      X_reshaped, y_reshaped = self._prepare_sequences(training_data, position)
 
-    # Train the model
-    model = self.models[position]
+      # Train the model
+      model = self.models[position]
 
-    history = model.fit(X_reshaped, y_reshaped, epochs=80, batch_size=32, validation_split=0.2, verbose=1)
+      history = model.fit(X_reshaped, y_reshaped, epochs=80, batch_size=32, validation_split=0.2, verbose=1)
 
-    directory = 'models/trained'
-    os.makedirs(directory, exist_ok=True)
+      directory = 'models/trained'
+      os.makedirs(directory, exist_ok=True)
 
-    model.save(os.path.join(directory, f'lstm_model_{position}.keras'))
+      model.save(os.path.join(directory, f'lstm_model_{position}.keras'))
 
-    print(f"Saved model and scalers for {position}\n")
+      print(f"Saved model and scalers for {position}\n")
 
-  def _prepare_sequences(self, position):
+  def _prepare_sequences(self, training_data, position):
     X_reshaped = []
     y_reshaped = []
-    player_ids = []  # To keep track of player IDs for each sequence
 
-    # Group data by player to generate sequences per player and orders them
-
-    position_gw_data = self._filter_data_by_position(position)
-    # position_gw_data = self.feature_selector.reorder_features(position_gw_data, position)
+    # Filter data per position
+    position_gw_data = training_data[training_data['position'] == position]
 
     features = self.feature_selector.get_features_for_position(position)
-
     feature_scaler = self._fit_scaler(position_gw_data, features, position)
 
     scaled_data = position_gw_data.copy()
@@ -126,14 +120,13 @@ class LSTMModel:
 
         X_reshaped.append(X_sequence)
         y_reshaped.append(y_target)
-        player_ids.append(player_id)  # Keep track of player IDs
 
-    return np.array(X_reshaped), np.array(y_reshaped), player_ids
+    return np.array(X_reshaped), np.array(y_reshaped)
 
   def _fit_scaler(self, position_gw_data, columns, position):
     scaler = self.scalers[position]
     data = position_gw_data[columns]
-    scaler.fit(data)  # Fit the scaler on all columns (features and targets)
+    scaler.fit(data)
 
     return scaler
 
@@ -210,8 +203,8 @@ class LSTMModel:
     for player_id, player_data in players_data.groupby('id'):
       position = self._get_player_position(player_id)
 
-      player_sequence = self._get_player_sequence(player_data, position)
-      
+      player_sequence = self._get_player_sequence(player_data, position, current_gw)
+
       combined_sequence = player_sequence[np.newaxis, :, :]
 
       # Returns unscaled prediction
@@ -233,11 +226,14 @@ class LSTMModel:
     prediction_unscaled = scaler.inverse_transform(prediction_df)
 
     return prediction_unscaled.iloc[0][self.target]
+    # return prediction_df.iloc[0][self.target]
 
-  def _get_player_sequence(self, player_data, position):
-    player_data = player_data.sort_values(by='GW').tail(self.time_steps)
-
+  def _get_player_sequence(self, player_data, position, current_gw):
+    player_data = player_data.sort_values(by='GW')
+    player_data = player_data[player_data['GW'] < current_gw].tail(self.time_steps)
+    
     features = self.feature_selector.get_features_for_position(position)
+    # return player_data[features].values
 
     scaler = self.scalers[position]
     scaled_sequence = scaler.transform(player_data[features])
