@@ -90,6 +90,7 @@ class DataLoader:
 
     # Concats both seasons data into one df
     merged_data = pd.concat(seasons_gw_data, ignore_index=True)
+    merged_data['kickoff_time'] = pd.to_datetime(merged_data['kickoff_time'], errors='coerce') 
 
     # TODO: Temporary
     # Ensures all players have data for all GWs
@@ -104,7 +105,6 @@ class DataLoader:
     # # If some players are missing negative GWs, add placeholders
     # for player_id in players_missing_negative_gw:
       
-    merged_data['kickoff_time'] = pd.to_datetime(merged_data['kickoff_time'], errors='coerce') 
     return merged_data.sort_values(by='GW', ascending=True)
 
   def _fill_missing_gw_data(self, player_id, season_data, prev_season_data):

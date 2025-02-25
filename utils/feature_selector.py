@@ -22,6 +22,8 @@ class FeatureSelector:
 
     self.ADDITIONAL_FEATURES = ['was_home', 'cost']
 
+    self.CUSTOM_FEATURES = ['gw_decay']
+
     # self.features = {
     #   'GK': ['saves', 'penalties_saved', 'clean_sheets', 'goals_conceded', 'expected_goals_conceded', 'total_points'],
     #   'DEF': ['assists', 'goals_scored', 'clean_sheets', 'expected_goals', 'expected_assists', 'total_points', 'goals_conceded'],
@@ -39,7 +41,7 @@ class FeatureSelector:
     self.TARGET = 'total_points'
 
   def get_features_for_position(self, position):
-    features = self.features[position] + self.GW_TEAM_FEATURES + self.ADDITIONAL_FEATURES
+    features = self.features[position] + self.GW_TEAM_FEATURES + self.ADDITIONAL_FEATURES + self.CUSTOM_FEATURES
 
     season_features = self.position_season_features(position)
     season_features = [f'season_{feature}' for feature in season_features]
