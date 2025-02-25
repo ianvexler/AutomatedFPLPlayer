@@ -40,10 +40,7 @@ class LSTMModel:
       'FWD': FeatureScaler('FWD')
     }
 
-    if train:
-      for position in self.models:
-        self.train(position)
-    else:
+    if not train:
       for position in self.models:
         directory = 'models/trained'
 
@@ -57,7 +54,7 @@ class LSTMModel:
 
   def _build_model(self, position):
     features = self.feature_selector.get_features_for_position(position)
-
+    
     # Define the input layer
     input_layer = Input(shape=(self.time_steps, len(features)))
 
@@ -77,64 +74,59 @@ class LSTMModel:
 
     return model
 
-  def train(self, position):
-    # Prepare sequences from historical gameweek data
-    X_reshaped, y_reshaped, _ = self._prepare_sequences(position)
+  def train(self, training_data):
+    for position in ['GK', 'DEF', 'MID', 'FWD']:
+      print(f"Training model and fitting scalers for {position}\n")
 
-    # Train the model
-    model = self.models[position]
+      # Prepare sequences from historical gameweek data
+      X, y = self._prepare_sequences(training_data, position)
 
-    history = model.fit(X_reshaped, y_reshaped, epochs=80, batch_size=32, validation_split=0.2, verbose=1)
+      # Train the model
+      model = self.models[position]
 
-    directory = 'models/trained'
-    os.makedirs(directory, exist_ok=True)
+      history = model.fit(X, y, epochs=80, batch_size=32, validation_split=0.2, verbose=1)
 
-    model.save(os.path.join(directory, f'lstm_model_{position}.keras'))
+      directory = 'models/trained'
+      os.makedirs(directory, exist_ok=True)
 
-    print(f"Saved model and scalers for {position}\n")
+      model.save(os.path.join(directory, f'lstm_model_{position}.keras'))
 
-  def _prepare_sequences(self, position):
-    X_reshaped = []
-    y_reshaped = []
-    player_ids = []  # To keep track of player IDs for each sequence
+      print(f"Saved model and scalers for {position}\n")
 
-    # Group data by player to generate sequences per player and orders them
+  def _prepare_sequences(self, training_data, position):
+    X = []
+    y = []
 
-    position_gw_data = self._filter_data_by_position(position)
-    # position_gw_data = self.feature_selector.reorder_features(position_gw_data, position)
-
+    # Filter data per position
+    position_gw_data = training_data[training_data['position'] == position]
+    
     features = self.feature_selector.get_features_for_position(position)
-
     feature_scaler = self._fit_scaler(position_gw_data, features, position)
 
-    scaled_data = position_gw_data.copy()
-    scaled_data[features] = feature_scaler.transform(position_gw_data[features])
+    # Iterate on every game for every player
+    for player_id, player_data in position_gw_data.groupby('id'):
+      season_kickoffs = (player_data[player_data['GW'] >= 1])['kickoff_time'].tolist()
 
-    for player_id, player_data in scaled_data.groupby('id'):
-      player_data = player_data.reset_index(drop=True)
+      for kickoff_time in season_kickoffs:
+        # Use all feature columns for input
+        X_sequence = self._get_player_sequence(player_data, position, kickoff_time)
+        
+        if X_sequence.shape[0] < self.time_steps:
+          continue
 
-      # Use all feature columns for input
-      X = player_data[features].values
-      
-      # Use only target columns for prediction targets
-      y = player_data[self.target].values
+        # Get the target of current sequence
+        target_game_data = player_data[player_data['kickoff_time'] == kickoff_time].iloc[0]
+        y_target = target_game_data[self.target]
+        scaled_target = self.scalers[position].transform(y_target, 'total_points', target=True)
+        
+        X.append(X_sequence)
+        y.append(scaled_target)
+    
+    return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)
 
-      # Use sliding window to create sequences
-      for i in range(len(player_data) - self.time_steps):
-        X_sequence = X[i:i + self.time_steps]  # Sequence of past data (inputs)
-        y_target = y[i + self.time_steps]  # Predict stats for the next gameweek (target)
-
-        X_reshaped.append(X_sequence)
-        y_reshaped.append(y_target)
-        player_ids.append(player_id)  # Keep track of player IDs
-
-    return np.array(X_reshaped), np.array(y_reshaped), player_ids
-
-  def _fit_scaler(self, position_gw_data, columns, position):
+  def _fit_scaler(self, position_gw_data, features, position):
     scaler = self.scalers[position]
-    data = position_gw_data[columns]
-    scaler.fit(data)  # Fit the scaler on all columns (features and targets)
-
+    scaler.fit(position_gw_data, features)
     return scaler
 
   """
@@ -161,20 +153,22 @@ class LSTMModel:
 
       gw_aggregates = {}
       for _, game in gw_group.iterrows():
+        kickoff_time = game['kickoff_time']
+
         home_team_id = game['team_h']
         away_team_id = game['team_a']
 
         players_data = current_data[
           ((current_data['team'] == home_team_id) | (current_data['team'] == away_team_id)) & 
-          (current_data['GW'] < current_gw)
+          (current_data['kickoff_time'] < kickoff_time)
         ]
         
         # Predict and accumulate results for players in both teams
-        predictions = self._predict_players_game(players_data, current_gw)
+        predictions = self._predict_players_game(players_data, kickoff_time)
 
         players_gw_data = current_data[
           ((current_data['team'] == home_team_id) | (current_data['team'] == away_team_id)) & 
-          (current_data['GW'] == current_gw)
+          (current_data['kickoff_time'] == kickoff_time)
         ]
         self._format_and_save_match_prediction(predictions, home_team_id, away_team_id, players_gw_data, current_gw)
 
@@ -191,10 +185,10 @@ class LSTMModel:
 
     # Convert the accumulated results to a DataFrame
     aggregate_predictions = []
-    for player_id, metrics in player_aggregates.items():
+    for player_id, prediction in player_aggregates.items():
       aggregate_predictions.append({
         'player_id': player_id,
-        **metrics
+        'expected_points': prediction
       })
 
     # Convert to DataFrame and save as CSV
@@ -202,16 +196,14 @@ class LSTMModel:
 
     return predictions_df
 
-  def _predict_players_game(self, players_data, current_gw):
+  def _predict_players_game(self, players_data, kickoff_time):
     predictions = {}
-
-    players_data.to_csv('jaksldfkjlk.csv')
 
     for player_id, player_data in players_data.groupby('id'):
       position = self._get_player_position(player_id)
 
-      player_sequence = self._get_player_sequence(player_data, position)
-      
+      player_sequence = self._get_player_sequence(player_data, position, kickoff_time)
+
       combined_sequence = player_sequence[np.newaxis, :, :]
 
       # Returns unscaled prediction
@@ -219,7 +211,6 @@ class LSTMModel:
 
       predictions.setdefault(player_id, 0)
       predictions[player_id] += prediction
-    
     return predictions
 
   # Returns total predicted points
@@ -230,18 +221,38 @@ class LSTMModel:
     prediction_df = pd.DataFrame(prediction, columns=[self.target])
 
     scaler = self.scalers[position]
-    prediction_unscaled = scaler.inverse_transform(prediction_df)
+    prediction_unscaled = scaler.inverse_transform(prediction_df, 'target')
+    return prediction_unscaled
 
-    return prediction_unscaled.iloc[0][self.target]
+  # TODO: Move to shared model
+  # To be applied to every sequence
+  def _add_gw_decay(self, player_data, kickoff_time):
+    # Calculate the difference in days
+    player_data["days_since_gw"] = (kickoff_time - player_data["kickoff_time"]).dt.days
 
-  def _get_player_sequence(self, player_data, position):
-    player_data = player_data.sort_values(by='GW').tail(self.time_steps)
+    # Apply exponential decay
+    lambda_decay = 0.02 
+    player_data["gw_decay"] = np.exp(-lambda_decay * player_data["days_since_gw"])
+    
+    # Drop raw time difference
+    player_data = player_data.drop(columns=["days_since_gw"])
+    return player_data
+
+  def _get_player_sequence(self, player_data, position, kickoff_time):
+    # Ensure data is sorted by kickoff time
+    player_data = player_data.sort_values(by='kickoff_time')
+    player_data = player_data[player_data['kickoff_time'] < kickoff_time].tail(self.time_steps)
+    
+    if player_data.empty:
+      return np.array([])
+
+    player_data = self._add_gw_decay(player_data, kickoff_time)
 
     features = self.feature_selector.get_features_for_position(position)
 
     scaler = self.scalers[position]
-    scaled_sequence = scaler.transform(player_data[features])
 
+    scaled_sequence = scaler.transform_data(player_data[features])
     return scaled_sequence.values
 
   def _get_player_position(self, player_id):
