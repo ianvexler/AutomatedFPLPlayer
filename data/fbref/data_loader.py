@@ -59,7 +59,6 @@ class DataLoader:
 
     df = self.format_df(df, stat_type)
 
-
     # Groups the dfs by league and team
     idx = pd.IndexSlice
     league_series = df.loc[:, idx[:, :, 'League']].squeeze()
@@ -112,7 +111,6 @@ class DataLoader:
     df_formatted = self.format_cols_and_cells(df_formatted)
 
     return df_formatted
-
   
   # Function to extract values from a tuple of tuples or a single tuple
   def extract_value(self, input_data):

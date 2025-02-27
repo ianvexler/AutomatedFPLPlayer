@@ -203,11 +203,9 @@ class Simulation:
       profit = math.floor(profit * 10) / 10
 
       self.total_profit += profit
-
       return cost_then + profit
 
     self.total_loss += cost_then - cost_now
-
     return cost_now
 
   # Check if any chip should be used
