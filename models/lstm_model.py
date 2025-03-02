@@ -5,6 +5,7 @@ import os
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout, Input
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.optimizers import Adam
 from utils.feature_selector import FeatureSelector
 from utils.feature_scaler import FeatureScaler
@@ -44,13 +45,15 @@ class LSTMModel:
       for position in self.models:
         directory = 'models/trained'
 
-        self.models[position] = tf.keras.models.load_model(os.path.join(directory, f'lstm_model_{position}.keras'))
+        self.models[position] = tf.keras.models.load_model(os.path.join(directory, f'lstm_model_{position}_steps_{self.time_steps}.keras'))
         
         # Improve
         features = self.feature_selector.get_features_for_position(position)
         
         scaler = self.scalers[position]
         scaler.load_scalers(features)
+
+    self.DIRECTORY = f"predictions/steps {self.time_steps}"
 
   def _build_model(self, position):
     features = self.feature_selector.get_features_for_position(position)
@@ -89,7 +92,7 @@ class LSTMModel:
       directory = 'models/trained'
       os.makedirs(directory, exist_ok=True)
 
-      model.save(os.path.join(directory, f'lstm_model_{position}.keras'))
+      model.save(os.path.join(directory, f'lstm_model_{position}_steps_{self.time_steps}.keras'))
 
       print(f"Saved model and scalers for {position}\n")
 
@@ -158,24 +161,30 @@ class LSTMModel:
         home_team_id = game['team_h']
         away_team_id = game['team_a']
 
-        players_data = current_data[
-          ((current_data['team'] == home_team_id) | (current_data['team'] == away_team_id)) & 
-          (current_data['kickoff_time'] < kickoff_time)
-        ]
-        
-        # Predict and accumulate results for players in both teams
-        predictions = self._predict_players_game(players_data, kickoff_time)
-
+        # Data of players that are going to perform
         players_gw_data = current_data[
           ((current_data['team'] == home_team_id) | (current_data['team'] == away_team_id)) & 
           (current_data['kickoff_time'] == kickoff_time)
         ]
+
+        # Those player's player perfomances
+        players_data = current_data[
+          current_data['id'].isin(players_gw_data['id'].unique()) &
+          (current_data['kickoff_time'] < kickoff_time)
+        ]
+
+        # Predict and accumulate results for players in both teams
+        predictions = self._predict_players_game(players_data, kickoff_time)
+
         self._format_and_save_match_prediction(predictions, home_team_id, away_team_id, players_gw_data, current_gw)
 
         # Add to aggregate
         for player_id, prediction in predictions.items():
-          player_aggregates.setdefault(player_id, 0)
-          player_aggregates[player_id] += prediction
+          player_data = players_gw_data[(players_gw_data['id'] == player_id) & (players_gw_data['kickoff_time'] == kickoff_time)].iloc[0]
+
+          player_aggregates.setdefault(player_id, {'expected_points': 0, 'xP': 0})
+          player_aggregates[player_id]['expected_points'] += prediction
+          player_aggregates[player_id]['xP'] += player_data['xP']
 
           gw_aggregates.setdefault(player_id, 0)
           gw_aggregates[player_id] += prediction
@@ -187,8 +196,9 @@ class LSTMModel:
     aggregate_predictions = []
     for player_id, prediction in player_aggregates.items():
       aggregate_predictions.append({
-        'player_id': player_id,
-        'expected_points': prediction
+        'id': player_id,
+        'expected_points': prediction['expected_points'],
+        'xP': prediction['xP']
       })
 
     # Convert to DataFrame and save as CSV
@@ -199,30 +209,48 @@ class LSTMModel:
   def _predict_players_game(self, players_data, kickoff_time):
     predictions = {}
 
-    for player_id, player_data in players_data.groupby('id'):
-      position = self._get_player_position(player_id)
+    position_groups = players_data.groupby('position')
 
-      player_sequence = self._get_player_sequence(player_data, position, kickoff_time)
+    for position, position_data in position_groups:
+      player_ids = position_data['id'].unique()
+      player_sequences = []
 
-      combined_sequence = player_sequence[np.newaxis, :, :]
+      for player_id in player_ids:
+        player_data = position_data[position_data['id'] == player_id]
 
-      # Returns unscaled prediction
-      prediction = self._predict_player_performance(combined_sequence, position)
+        if player_data.empty:
+          # If no prior data, fill with zeros of correct shape
+          sequence_length = self.models[position].input_shape[1]  # Get model expected sequence length
+          feature_count = self.models[position].input_shape[2]  # Get feature count
+          sequence = np.zeros((sequence_length, feature_count), dtype='float32')
+        else:
+          sequence = self._get_player_sequence(player_data, position, kickoff_time)
 
-      predictions.setdefault(player_id, 0)
-      predictions[player_id] += prediction
+        player_sequences.append(sequence)
+
+      # Ensure all sequences have the same length by padding
+      padded_sequences = pad_sequences(player_sequences, padding='post', dtype='float32')
+
+      # Perform batch prediction
+      predictions_batch = self._predict_player_performance(padded_sequences, position)
+
+      # Assign predictions back to respective players
+      for i, player_id in enumerate(player_ids):
+        predictions.setdefault(player_id, 0)
+        predictions[player_id] += predictions_batch[i]
+
     return predictions
 
-  # Returns total predicted points
-  def _predict_player_performance(self, combined_sequence, position):
-    prediction = self.models[position].predict(combined_sequence)    
-    prediction = np.maximum(prediction, 0)
+  def _predict_player_performance(self, combined_sequences, position):
+    predictions = self.models[position].predict(combined_sequences)
+    # predictions = np.maximum(predictions, 0)  # Avoid negative values
 
-    prediction_df = pd.DataFrame(prediction, columns=[self.target])
+    prediction_df = pd.DataFrame(predictions, columns=[self.target])
 
     scaler = self.scalers[position]
-    prediction_unscaled = scaler.inverse_transform(prediction_df, 'target')
-    return prediction_unscaled
+    predictions_unscaled = scaler.inverse_transform(prediction_df, 'target')
+    
+    return np.array(predictions_unscaled).flatten()
 
   # TODO: Move to shared model
   # To be applied to every sequence
@@ -264,7 +292,7 @@ class LSTMModel:
     return position
   
   def _format_and_save_match_prediction(self, predictions, home_team_id, away_team_id, gw_data, current_gw):
-    directory = f"predictions/matches/{self.season}"
+    directory = f"{self.DIRECTORY}/matches/{self.season}"
     os.makedirs(directory, exist_ok=True)
 
     home_team = self.teams_data[self.teams_data['id'] == home_team_id].iloc[0]['name']
@@ -283,7 +311,7 @@ class LSTMModel:
     return predictions
 
   def _format_and_save_gw_prediction(self, predictions, gw_data, current_gw):
-    directory = f"predictions/gws/{self.season}"
+    directory = f"{self.DIRECTORY}/gws/{self.season}"
     os.makedirs(directory, exist_ok=True)
 
     file_path = os.path.join(directory, f"GW{int(current_gw)}.csv")
@@ -297,13 +325,12 @@ class LSTMModel:
     return predictions
 
   def _format_and_save_predictions(self, aggregate_predictions):
-    # Convert aggregate predictions to a DataFrame
-    predictions_df = pd.DataFrame(aggregate_predictions)
-
-    directory = 'predictions'
+    directory = f'{self.DIRECTORY}/'
     os.makedirs(directory, exist_ok=True)
     file_path = os.path.join(directory, f"predictions_{self.season}.csv")
 
+    # Convert aggregate predictions to a DataFrame
+    predictions_df = pd.DataFrame(aggregate_predictions)
     predictions_df.to_csv(file_path, index=False)
     print(f"Predictions saved to {file_path}")
 

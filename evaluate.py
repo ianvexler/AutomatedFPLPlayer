@@ -1,61 +1,169 @@
 import pandas as pd
-from sklearn.metrics import mean_absolute_error, mean_squared_error, accuracy_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 from data.data_loader import DataLoader
+from utils.feature_selector import FeatureSelector
+import argparse
+import os
+import matplotlib.pyplot as plt
+import numpy as np
 
 class Evaluate:
-  def __init__(self, ids_df: pd.DataFrame):
-    self.ids_df = ids_df
+  def __init__(self, predictions, season, steps):
+    self.predictions = predictions
+    self.season = season
+    self.steps = steps
+    self.feature_selector = FeatureSelector()
+    self.evaluation_results = []  # Stores results for CSV export
 
-  def evaulate_prediction(self, indexes, predictions, targets):
-    error, mse = self.score_model(predictions, targets)
+  def evaluate_model(self):
+    predictions = self.predictions.round()
+    season_data = self._load_season_data()
+
+    self.feature_selector = FeatureSelector()
+
+    # Merge to ensure only common records are considered
+    evaluation_df = season_data.merge(predictions, on='id')
+
+    # General evaluation
+    error, mse = self.score_model(evaluation_df, self.feature_selector.EXPECTED)
+    baseline_error, baseline_mse = self.score_model(evaluation_df, self.feature_selector.BASELINE)
+
+    print('--- Expected ---')
     print(f'Mean Absolute Error: {error}')
-    print(f'Mean Squared Error: {mse}')
+    print(f'Mean Squared Error: {mse}\n')
 
-    results = self.format_results(indexes, predictions, targets)
-    results.to_csv('results.csv')
+    print('--- Baseline ---')
+    print(f'Mean Absolute Error: {baseline_error}')
+    print(f'Mean Squared Error: {baseline_mse}\n')
 
-  """
-  Calculate the error and mean squared error (MSE).
+    # Store general results
+    self.evaluation_results.append(["Overall", "General", round(error, 2), round(mse, 2), round(baseline_error, 2), round(baseline_mse, 2)])
 
-  Params:
-      predictions: The predicted values.
-      labels: The actual values.
+    # Run grouped evaluations
+    self.evaluate_grouped_by_points(evaluation_df)
+    self.evaluate_grouped_by_costs(evaluation_df)
 
-  Returns:
-    error: mean absolute error
-    mse: mean squared error
-  """
-  def score_model(self, predictions, targets):
-    predictions = predictions.round()
+    # Export results to CSV
+    self.export_evaluation_to_csv()
 
-    error = mean_absolute_error(targets, predictions)
-    mse = mean_squared_error(targets, predictions)
+  def evaluate_grouped_by_points(self, evaluation_df):
+    print("\n--- Evaluation Grouped by Points ---")
+
+    # Define quantiles for grouping
+    points_q25 = evaluation_df[self.feature_selector.TARGET].quantile(0.25)
+    points_q75 = evaluation_df[self.feature_selector.TARGET].quantile(0.75)
+
+    # Assign group labels
+    evaluation_df['points_group'] = np.select(
+      [evaluation_df[self.feature_selector.TARGET] <= points_q25,
+       evaluation_df[self.feature_selector.TARGET] >= points_q75],
+      ['Bottom 25%', 'Top 25%'],
+      default='Middle 50%'
+    )
+
+    # Compute model errors per group
+    grouped_errors = evaluation_df.groupby('points_group')[[self.feature_selector.EXPECTED, self.feature_selector.TARGET]].apply(
+      lambda df: self.score_model(df, self.feature_selector.EXPECTED)
+    )
+
+    # Compute baseline errors per group
+    baseline_errors = evaluation_df.groupby('points_group')[[self.feature_selector.BASELINE, self.feature_selector.TARGET]].apply(
+      lambda df: self.score_model(df, self.feature_selector.BASELINE)
+    )
+
+    self.log_grouped_errors(grouped_errors, 'points', baseline_errors)
+
+  def evaluate_grouped_by_costs(self, evaluation_df):
+    print("\n--- Evaluation Grouped by Costs ---")
+
+    # Define quantiles for grouping
+    cost_q25 = evaluation_df[self.feature_selector.COST].quantile(0.25)
+    cost_q75 = evaluation_df[self.feature_selector.COST].quantile(0.75)
+
+    # Assign group labels
+    evaluation_df['cost_group'] = np.select(
+      [evaluation_df[self.feature_selector.COST] <= cost_q25,
+       evaluation_df[self.feature_selector.COST] >= cost_q75],
+      ['Bottom 25%', 'Top 25%'],
+      default='Middle 50%'
+    )
+
+    # Compute model errors per group
+    grouped_errors = evaluation_df.groupby('cost_group')[[self.feature_selector.EXPECTED, self.feature_selector.TARGET]].apply(
+      lambda df: self.score_model(df, self.feature_selector.EXPECTED)
+    )
+
+    # Compute baseline errors per group
+    baseline_errors = evaluation_df.groupby('cost_group')[[self.feature_selector.BASELINE, self.feature_selector.TARGET]].apply(
+      lambda df: self.score_model(df, self.feature_selector.BASELINE)
+    )
+
+    self.log_grouped_errors(grouped_errors, 'cost', baseline_errors)
+
+  def score_model(self, evaluation_df, expected):
+    # Extract targets and expected values
+    targets = evaluation_df[self.feature_selector.TARGET]
+    expected = evaluation_df[expected]
+
+    error = mean_absolute_error(targets, expected)
+    mse = mean_squared_error(targets, expected)
 
     return error, mse
 
-  """
-  Formats the results. Maps the FPL Ids to the player names
-  """
-  def format_results(self, indexes, predictions, targets):
-    combined_results = pd.DataFrame({
-      'id': indexes,
-      'total_points': targets,
-      'predicted_points': predictions,
-    }).set_index('id')
+  def log_grouped_errors(self, grouped_errors, label, baseline_errors):
+    for group in grouped_errors.index:
+      mae_model, mse_model = grouped_errors.loc[group]
+      mae_baseline, mse_baseline = baseline_errors.loc[group]
 
-    combined_results['difference'] = (combined_results['total_points'] - combined_results['predicted_points'])
+      # Compute percentage difference
+      mae_diff = ((mae_model - mae_baseline) / mae_baseline) * 100
+      mse_diff = ((mse_model - mse_baseline) / mse_baseline) * 100
 
-    # Load the DataFrame containing player IDs and names, ensuring only FPL-related columns are selected
-    fpl_ids_df = self.ids_df[['FPL_ID', 'FPL_Name']]
+      # Log results
+      print(f"{group} ({label} Group):")
+      print(f"   Model  -> MAE: {int(round(mae_model))}, MSE: {int(round(mse_model))}")
+      print(f"   Baseline -> MAE: {int(round(mae_baseline))}, MSE: {int(round(mse_baseline))}")
+      print(f"   Difference -> MAE: {mae_diff:.2f}%, MSE: {mse_diff:.2f}% {'(Worse)' if mae_diff > 0 else '(Better)'}\n")
 
-    # Merge combined_results with fpl_ids_df to include player names based on their IDs
-    merged_results = combined_results.merge(fpl_ids_df, how='left', left_index=True, right_on='FPL_ID')
+      # Store results for CSV export
+      self.evaluation_results.append([group, label, round(mae_model, 2), round(mse_model, 2), round(mae_baseline, 2), round(mse_baseline, 2)])
 
-    # Drop 'FPL_ID' after merge since it's already the index
-    merged_results.drop(columns=['FPL_ID'], inplace=True)
+  def export_evaluation_to_csv(self):
+    # Ensure the evaluations directory exists
+    evaluations_dir = "evaluations"
+    os.makedirs(evaluations_dir, exist_ok=True)
+
+    # Define CSV path
+    csv_path = os.path.join(evaluations_dir, f"evaluation_{self.season}_steps_{self.steps}.csv")
+
+    # Create DataFrame
+    df = pd.DataFrame(self.evaluation_results, columns=["Group", "Metric", "Model MAE", "Model MSE", "Baseline MAE", "Baseline MSE"])
+
+    # Save to CSV
+    df.to_csv(csv_path, index=False)
+    print(f"Evaluation results saved to {csv_path}")
+
+  def _load_season_data(self):
+    data_loader = DataLoader()
+    season_data = data_loader.get_season_data(self.season)
+    return season_data
+
+if __name__ == "__main__":
+  parser = argparse.ArgumentParser(description='Run the model evaluation.')
+  parser.add_argument('--season', type=str, nargs='?', default='2024-25', help='Season to evaluate in the format 20xx-yy')
+  parser.add_argument('--steps', type=int, nargs='?', default=5, help='Steps to evaluate')
+  args = parser.parse_args()
+
+  season = args.season
+  steps = args.steps
+
+  directory = f'predictions/steps {steps}'
+  file_path = os.path.join(directory, f"predictions_{season}.csv")
+
+  if os.path.exists(file_path):
+    predictions = pd.read_csv(file_path)
     
-    # Sort by the difference
-    sorted_combined_results = merged_results.sort_values(by='difference')
-    # sorted_combined_results.sort_index(inplace=True)
-
-    return sorted_combined_results
+    evaluate = Evaluate(predictions, season, steps)
+    evaluate.evaluate_model()
+  else:
+    print(f"Predictions for {season} and {steps} steps not found")

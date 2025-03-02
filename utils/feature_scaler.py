@@ -45,7 +45,6 @@ class FeatureScaler:
         continue
       
       transformed_data[feature] = self.scalers[feature].transform(data[[feature]])
-
     return transformed_data
 
   def transform(self, value, feature, target=False):
@@ -56,7 +55,7 @@ class FeatureScaler:
 
   def inverse_transform(self, value_df, feature_key):
     """Apply the inverse transformation to return to the original scale for the passed features."""
-    return self.scalers[feature_key].inverse_transform(value_df)[0][0]
+    return self.scalers[feature_key].inverse_transform(value_df)
 
   def save_scaler(self, feature):
     """Save the scaler to disk for a specific feature."""
@@ -72,5 +71,4 @@ class FeatureScaler:
         continue
 
       self.scalers[feature] = joblib.load(f'{self.directory}/scaler_{self.position}_{feature}.pkl')
-    
     self.scalers['target'] = joblib.load(f'{self.directory}/scaler_{self.position}_target.pkl')

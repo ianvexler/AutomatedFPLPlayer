@@ -7,6 +7,7 @@ from models.lstm_model import LSTMModel
 import argparse
 from team import Team
 from simulation import Simulation
+from data.fbref.data_loader import DataLoader as FBref
 
 def train_model(model, steps, season):
   # Use previous season as training
@@ -23,7 +24,7 @@ def train_model(model, steps, season):
 if __name__=='__main__':
   parser = argparse.ArgumentParser(description='Run the model with optional training.')
   parser.add_argument('--train', action='store_true', help='Set this flag to true to train the model. Defaults to false.')
-  parser.add_argument('--steps', type=int, nargs='?', const=7, default=7, help='Time step for data window. Defaults to 7 if not provided or null.')
+  parser.add_argument('--steps', type=int, nargs='?', const=5, default=5, help='Time step for data window. Defaults to 7 if not provided or null.')
   parser.add_argument('--season', type=str, nargs='?', default='2024-25', help='Season to simulate in the format 20xx-yy')
   
   # # Option to run predictions, true by default
