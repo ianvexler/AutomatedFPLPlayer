@@ -4,15 +4,18 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler, Po
 import joblib
 import os
 from utils.feature_selector import FeatureSelector
+from utils.model_types import ModelType
 
 class FeatureScaler:
-  def __init__(self, position):
+  def __init__(self, position, model_type):
     """Initialize the scaler with a position and optional thresholds."""
     self.position = position
     self.scalers = {}  # Dictionary to store scalers per feature
 
     self.NO_SCALE = ['gw_decay']
-    self.directory = 'models/lstm/scalers'
+
+    self.model_type = model_type
+    self.directory = f"models/{self.model_type.value}/scalers"
     self.feature_selector = FeatureSelector()
 
   def fit(self, data, features):

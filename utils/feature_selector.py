@@ -43,14 +43,17 @@ class FeatureSelector:
     self.BASELINE = 'xP'
     self.COST = 'now_cost'
 
-  def get_features_for_position(self, position):
+  def get_features_for_position(self, position, include_prev_season=False, include_season=False):
     features = self.features[position] + self.GW_TEAM_FEATURES + self.ADDITIONAL_FEATURES + self.CUSTOM_FEATURES
 
-    season_features = self.position_season_features(position)
-    season_features = [f'season_{feature}' for feature in season_features]
+    if include_prev_season:
+      season_features = self.position_season_features(position)
+      season_features = [f'prev_season_{feature}' for feature in season_features]
+
+      # return features
+      features = list(features + season_features)
 
     return features
-    # return list(features + season_features)
     
   def position_season_features(self, position):
     match position:

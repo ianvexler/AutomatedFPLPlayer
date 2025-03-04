@@ -6,13 +6,15 @@ import argparse
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+from utils.model_types import ModelType
 
 class Evaluate:
-  def __init__(self, predictions, season, steps):
+  def __init__(self, predictions, season, steps, model_type, include_prev_season=False):
     self.predictions = predictions
     self.season = season
     self.steps = steps
     self.feature_selector = FeatureSelector()
+    self.include_prev_season = include_prev_season
     self.evaluation_results = []  # Stores results for CSV export
 
   def evaluate_model(self):
@@ -134,7 +136,7 @@ class Evaluate:
     os.makedirs(evaluations_dir, exist_ok=True)
 
     # Define CSV path
-    csv_path = os.path.join(evaluations_dir, f"evaluation_{self.season}_steps_{self.steps}.csv")
+    csv_path = os.path.join(evaluations_dir, f"evaluation_{self.season}_steps_{self.steps}_prev_season_{self.include_prev_season}.csv")
 
     # Create DataFrame
     df = pd.DataFrame(self.evaluation_results, columns=["Group", "Metric", "Model MAE", "Model MSE", "Baseline MAE", "Baseline MSE"])
@@ -152,18 +154,34 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Run the model evaluation.')
   parser.add_argument('--season', type=str, nargs='?', default='2024-25', help='Season to evaluate in the format 20xx-yy')
   parser.add_argument('--steps', type=int, nargs='?', default=5, help='Steps to evaluate')
+  parser.add_argument('--prev_season', action='store_true', help='Set this flag to include prev season data. Defaults to false.')
+  parser.add_argument('--model', type=str, help='The model to use', choices=[m.value for m in ModelType])
+  
   args = parser.parse_args()
+
 
   season = args.season
   steps = args.steps
+  include_prev_season = args.prev_season
 
-  directory = f'predictions/steps {steps}'
+  try:
+    model_type = ModelType(args.model)
+  except ValueError:
+    print(f"Error: Invalid model type '{args.model}'. Choose from {', '.join(m.value for m in ModelType)}")
+    exit(1)
+
+  directory = f'predictions/{model_type.value}/steps_{steps}_prev_season_{include_prev_season}'
   file_path = os.path.join(directory, f"predictions_{season}.csv")
 
   if os.path.exists(file_path):
     predictions = pd.read_csv(file_path)
     
-    evaluate = Evaluate(predictions, season, steps)
+    evaluate = Evaluate(
+      predictions, 
+      season, 
+      steps,
+      model_type,
+      include_prev_season)
     evaluate.evaluate_model()
   else:
-    print(f"Predictions for {season} and {steps} steps not found")
+    print(f"Predictions for {season}, {steps} steps and prev season {include_prev_season} not found")

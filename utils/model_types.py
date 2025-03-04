@@ -1,9 +1,9 @@
 from enum import Enum
 
 class ModelType(Enum):
-  RANDOM_FOREST = 'random-forest'
+  RANDOM_FOREST = 'random_forest'
   ADABOOST = 'adaboost'
-  GRADIENT_BOOST = 'gradient-boost'
+  GRADIENT_BOOST = 'gradient_boost'
   XGBOOST = 'xgboost'
-  BI_LSTM = 'bi-lstm'
+  ML_LSTM = 'ml_lstm'
   LSTM = 'lstm'

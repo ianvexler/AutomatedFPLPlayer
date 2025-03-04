@@ -41,7 +41,7 @@ class DataLoader:
         season_data = self.get_season_data(s)
         gw_data = self._add_season_data_to_gw_data(gw_data, season_data)
 
-      # Fromats data from previous season
+      # Formats data from previous season
       if not s == season:
         relegated_teams = {}
 
@@ -144,13 +144,13 @@ class DataLoader:
 
   def _add_season_data_to_gw_data(self, gw_data, season_data):
     # season_data = season_data[self.feature_selector.SEASON_FEATURES]
-    season_data = season_data.rename(columns=lambda x: f"season_{x}")
-
+    season_data = season_data.rename(columns=lambda x: f"prev_season_{x}")
+    
     gw_data = gw_data.merge(
       season_data,
       how='left',
       left_on='id',
-      right_on='season_id'
+      right_on='prev_season_id'
     )
 
     return gw_data
