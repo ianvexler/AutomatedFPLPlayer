@@ -59,30 +59,31 @@ class DataLoader:
           # TODO: Temporary while ID issues remain
           try:
             player_mapping = self.player_matcher.get_fpl_player(player_id, s)
+            
+            # If player doesnt have current season data
+            if season in player_mapping['FPL']:
+              # Update player ID
+              new_player_id = player_mapping['FPL'][season]['id']
+              gw_data.loc[index, 'id'] = new_player_id
+              
+              # Reassign Team ID
+              team_id = player['team']
+              team_mapping = self.team_matcher.get_fpl_team(team_id, s)
+
+              # Reassign the id to the team
+              # Checks if team got relegated
+              if season in team_mapping['FPL']:
+                new_team_id = team_mapping['FPL'][season]['id']
+                gw_data.loc[index, 'team'] = new_team_id
+              else:
+                # Assign a new id to relegated teams
+                relegated_teams.setdefault(team_id, len(relegated_teams) + 21)
+                gw_data.loc[index, 'team'] = relegated_teams[team_id]
+            else:
+              data_to_remove.append(index)
           except:
             data_to_remove.append(index)
 
-          # If player doesnt have current season data
-          if season in player_mapping['FPL']:
-            # Update player ID
-            new_player_id = player_mapping['FPL'][season]['id']
-            gw_data.loc[index, 'id'] = new_player_id
-            
-            # Reassign Team ID
-            team_id = player['team']
-            team_mapping = self.team_matcher.get_fpl_team(team_id, s)
-
-            # Reassign the id to the team
-            # Checks if team got relegated
-            if season in team_mapping['FPL']:
-              new_team_id = team_mapping['FPL'][season]['id']
-              gw_data.loc[index, 'team'] = new_team_id
-            else:
-              # Assign a new id to relegated teams
-              relegated_teams.setdefault(team_id, len(relegated_teams) + 21)
-              gw_data.loc[index, 'team'] = relegated_teams[team_id]
-          else:
-            data_to_remove.append(index)
 
         gw_data = gw_data.drop(data_to_remove).reset_index(drop=True)
       

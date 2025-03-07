@@ -14,7 +14,6 @@ from utils.feature_scaler import FeatureScaler
 from models.lstm_model import LSTMModel
 from data.data_loader import DataLoader
 
-
 class Model:
   def __init__(
     self, 
@@ -132,14 +131,43 @@ class Model:
 
   def _get_training_data(self):
     start_year, end_year = self.season.split('-')
-    new_start = int(start_year) - 1
-    new_end = int(end_year) - 1
-    prev_season = f"{new_start}-{new_end}"
+    start_year, end_year = int(start_year), int(end_year)
 
     data_loader = DataLoader()
-    training_data = data_loader.get_merged_gw_data(prev_season, self.time_steps, self.include_prev_season)
+    all_data = []
+    required_columns = None
 
-    return training_data
+    while True:
+      try:
+        prev_season = f"{start_year - 1}-{end_year - 1}"
+        print(f"Trying to load data for season: {prev_season}")
+
+        season_data = data_loader.get_merged_gw_data(prev_season, self.time_steps, self.include_prev_season)
+
+        # Ensure the data has the required columns
+        if all_data:
+          required_columns = all_data[0].columns
+          missing_columns = set(required_columns) - set(season_data.columns)
+
+          if missing_columns:
+            print(f"Missing columns in {prev_season}: {missing_columns}")
+            for col in missing_columns:
+              season_data[col] = 0
+
+        all_data.append(season_data)
+        start_year -= 1
+        end_year -= 1
+
+      except Exception as e:
+        print(f"Stopping at {prev_season} due to error: {e}\n")
+        break
+
+    # Concatenate all collected data and return
+    if all_data:
+      training_data = pd.concat(all_data, ignore_index=True)
+      return training_data
+    else:
+      raise ValueError("No valid training data could be loaded.\n")
 
   def _prepare_sequences(self, training_data, position):
     X = []
@@ -158,7 +186,7 @@ class Model:
       for kickoff_time in season_kickoffs:
         # Use all feature columns for input
         X_sequence = self._get_player_sequence(player_data, position, kickoff_time)
-        
+
         if X_sequence.shape[0] < self.time_steps:
           continue
 
@@ -168,7 +196,7 @@ class Model:
         scaled_target = self.scalers[position].transform(y_target, 'total_points', target=True)
         
         # Flatten if not LSTM
-        if not self.model_type.value == ModelType.LSTM.value:
+        if not self._is_model_sequential():
           X_sequence = X_sequence.flatten()
    
         X.append(X_sequence)
@@ -321,10 +349,10 @@ class Model:
     player_data = self._add_gw_decay(player_data, kickoff_time)
 
     features = self.feature_selector.get_features_for_position(position, self.include_prev_season)
+    player_data = player_data[features]
 
     scaler = self.scalers[position]
-
-    scaled_sequence = scaler.transform_data(player_data[features])
+    scaled_sequence = scaler.transform_data(player_data)
     return scaled_sequence.values
 
   def _get_player_position(self, player_id):
