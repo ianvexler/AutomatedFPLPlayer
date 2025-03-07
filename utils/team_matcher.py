@@ -11,7 +11,7 @@ import warnings
 class TeamMatcher:
   def __init__(self):
     self.FILENAME = 'team_ids.json'
-    self.team_dict = self.load_dict_from_json()
+    self.team_dict = self.load_dict()
 
     self.FPL_MAPPING = {
       "Spurs": "Tottenham Hotspur",
@@ -57,15 +57,54 @@ class TeamMatcher:
       teams_data = fbref.read_team_season_stats()
     return teams_data
 
+  # Gets the ids for english clubs
+  def get_fbref_details(self):
+    url = "https://fbref.com/en/country/clubs/ENG/"
+    dfs = pd.read_html(url, extract_links='all')  # Extracts hyperlinks as (text, link) tuples
+    df = dfs[0]
+
+    # Filter out irrelevant teams
+    df = df[df[('Comps', None)].apply(lambda x: int(x[0]) if isinstance(x, tuple) else 0) > 0]
+
+    # First column contains tuples (Club Name, URL)
+    teams_data = df.iloc[:, 0]
+
+    # Convert tuple values directly into two columns
+    teams_df = pd.DataFrame(teams_data.tolist(), columns=['name', 'url'])
+    
+    # Extract team ids
+    teams_df['id'] = teams_df['url'].str.extract(r"/squads/([a-fA-F0-9]+)")[0]
+    teams_df = teams_df.drop(columns=['url'])
+
+    return teams_df
+
   def find_closest_elo_match(self, team_name, team_list):
     # Find the closest match for a team name in a list of team names
     closest_matches = difflib.get_close_matches(team_name, team_list, n=1, cutoff=0.6)
     return closest_matches[0] if closest_matches else None
 
-  def find_closest_fbref_match(self, team_name, fbref_data):
-    team_list = fbref_data.reset_index()["team"].unique()
-    closest_matches = process.extractOne(team_name, team_list, scorer=fuzz.token_sort_ratio, score_cutoff=20)
-    return closest_matches[0] if closest_matches else None
+  def find_closest_fbref_match(self, team_name, fbref_teams, fbref_details):
+    closest_matches = process.extractOne(team_name, fbref_teams, scorer=fuzz.partial_ratio, score_cutoff=40)
+    
+    if closest_matches:
+      match = closest_matches[0]
+    else:
+      raise Exception(f'No match for {team_name}')
+        
+    details_match = process.extractOne(match, fbref_details['name'].values, scorer=fuzz.partial_ratio, score_cutoff=40)[0]
+    if not details_match:
+      raise Exception(f'No match for {team_name}')
+    
+    team_details = fbref_details[fbref_details['name'] == details_match]
+
+    team_full_name = team_details['name'].iloc[0]
+    team_id = team_details['id'].iloc[0]
+
+    return {
+      "name": match,
+      "full_name": team_full_name.replace(" FC", ""),
+      "id": team_id
+    }
 
   def create_team_dict(self):
     self.team_dict = {}
@@ -73,7 +112,11 @@ class TeamMatcher:
     # Fetch teams from FPL and Club Elo
     fpl_teams = self.get_fpl_teams()
     club_elo_teams = self.get_club_elo_teams()
-    fbref_teams = self.get_fbref_teams()
+
+    fbref_data = self.get_fbref_teams()
+    fbref_teams = fbref_data.reset_index()["team"].unique()
+    fbref_details = self.get_fbref_details()
+
     fpl_team_names = fpl_teams['name'].unique()
 
     # Match FPL teams to closest Club Elo teams
@@ -81,7 +124,7 @@ class TeamMatcher:
       team_name = self.FPL_MAPPING.get(fpl_team_name, fpl_team_name)
 
       closest_club_elo_team = self.find_closest_elo_match(team_name, club_elo_teams)
-      closest_fbref_team = self.find_closest_fbref_match(team_name, fbref_teams)
+      closest_fbref_team = self.find_closest_fbref_match(team_name, fbref_teams, fbref_details)
 
       fpl_team_entries = fpl_teams[fpl_teams["name"] == fpl_team_name]
 
@@ -113,20 +156,15 @@ class TeamMatcher:
 
     raise Exception(f"Team could not be found for key {key} with type {key_type} in season {season}")
 
-  # Retrieve the mapping for a specific team and source
-  def get_team(self, key, source, key_type='id'):
-    for _, value in self.team_dict.items():
-      mapping = value[source]
+  def get_fbref_team(self, key, key_type='name'):
+    for _, team_data in self.team_dict.items():
+      team_entry = team_data.get("FBref", {})
 
-      if source == 'FPL':
-        for _, season_value in mapping.items():
-          if key == season_value[key_type]:
-            return value
-      else:
-        if key == mapping:
-          return value
-    
-    raise Exception(f"Team could not be found for key {key} in source {source}")
+      # Check based on key_type
+      if key_type in team_entry and team_entry[key_type] == key:
+        return team_data  
+
+    raise Exception(f"Team could not be found for key {key} with type {key_type} in season {season}")
 
   def save_dict_to_json(self):
     # Save the dictionary to a JSON file
@@ -134,7 +172,7 @@ class TeamMatcher:
       json.dump(self.team_dict, file, indent=4)
     return True
 
-  def load_dict_from_json(self):
+  def load_dict(self):
     script_dir = os.path.dirname(os.path.abspath(__file__))    
     file_path = os.path.join(script_dir, self.FILENAME)
 
