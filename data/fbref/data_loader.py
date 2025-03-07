@@ -13,6 +13,20 @@ class DataLoader:
       # 'NED-Eredivisie'
     ], seasons=season)
 
+    self.STAT_TYPES = [
+      'standard', 
+      'keeper', 
+      'keeper_adv', 
+      'shooting', 
+      'passing', 
+      'passing_types', 
+      'goal_shot_creation', 
+      'defense', 
+      'possession',
+      'playing_time',
+      'misc'
+    ]
+
   def get_leagues(self):
     df = self.fbref.read_leagues()
     self.save_data_to_csv(df, 'data', 'leagues.csv')
@@ -21,9 +35,6 @@ class DataLoader:
   
   ### Player Season Stats ###
   def get_player_season_stats(self):
-    return self.fetch_player_season_stats()
-
-  def fetch_player_season_stats(self, stat_types=['standard']):
     for stat in stat_types:
       # Mutes warning logs from Soccerdata
       with warnings.catch_warnings():
@@ -48,6 +59,11 @@ class DataLoader:
 
   ### CUSTOM SCRAPPERS ###
   ### Player Stats Scrapper ###
+
+  # TODO
+  def get_players(self):
+    url = f"https://fbref.com/en/squads/5bfb9659/2022-2023/Leeds-United-Stats"
+
   def get_player_stats(self):
     # TODO: Loop through all stat types
     stat_type = 'stats'
@@ -257,18 +273,3 @@ class DataLoader:
     else:
       # If the file does not exist, use the save_data_to_csv method
       self.save_data_to_csv(df, subdirectory, filename)
-
-
-STAT_TYPES = [
-  'standard', 
-  'keeper', 
-  'keeper_adv', 
-  'shooting', 
-  'passing', 
-  'passing_types', 
-  'goal_shot_creation', 
-  'defense', 
-  'possession',
-  'playing_time',
-  'misc'
-]
