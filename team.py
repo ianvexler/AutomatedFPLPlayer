@@ -355,7 +355,7 @@ class Team:
 
     return base_split
 
-  def pick_team(self, selected_squad, gw_data, optimal=False):
+  def pick_team(self, selected_squad, gw_data, optimal=False, triple_captain_strat=None):
     target = self._get_target(optimal)
 
     best_team = None

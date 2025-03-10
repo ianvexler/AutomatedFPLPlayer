@@ -2,11 +2,16 @@
     "Arsenal": {
         "ClubElo": "Arsenal",
         "FBref": {
+            "id": "18bb7c10",
             "name": "Arsenal",
             "full_name": "Arsenal",
-            "id": "18bb7c10"
+            "url_name": "Arsenal"
         },
         "FPL": {
+            "2019-20": {
+                "id": 1,
+                "name": "Arsenal"
+            },
             "2020-21": {
                 "id": 1,
                 "name": "Arsenal"
@@ -32,11 +37,16 @@
     "Aston Villa": {
         "ClubElo": "Aston Villa",
         "FBref": {
+            "id": "8602292d",
             "name": "Aston Villa",
             "full_name": "Aston Villa",
-            "id": "8602292d"
+            "url_name": "Aston-Villa"
         },
         "FPL": {
+            "2019-20": {
+                "id": 2,
+                "name": "Aston Villa"
+            },
             "2020-21": {
                 "id": 2,
                 "name": "Aston Villa"
@@ -59,14 +69,46 @@
             }
         }
     },
+    "Bournemouth": {
+        "ClubElo": "Bournemouth",
+        "FBref": {
+            "id": "4ba7cbea",
+            "name": "Bournemouth",
+            "full_name": "AFC Bournemouth",
+            "url_name": "Bournemouth"
+        },
+        "FPL": {
+            "2019-20": {
+                "id": 3,
+                "name": "Bournemouth"
+            },
+            "2022-23": {
+                "id": 3,
+                "name": "Bournemouth"
+            },
+            "2023-24": {
+                "id": 3,
+                "name": "Bournemouth"
+            },
+            "2024-25": {
+                "id": 3,
+                "name": "Bournemouth"
+            }
+        }
+    },
     "Brighton": {
         "ClubElo": "Brighton",
         "FBref": {
+            "id": "d07537b9",
             "name": "Brighton",
             "full_name": "Brighton & Hove Albion",
-            "id": "d07537b9"
+            "url_name": "Brighton-and-Hove-Albion"
         },
         "FPL": {
+            "2019-20": {
+                "id": 4,
+                "name": "Brighton"
+            },
             "2020-21": {
                 "id": 3,
                 "name": "Brighton"
@@ -92,11 +134,16 @@
     "Burnley": {
         "ClubElo": "Burnley",
         "FBref": {
+            "id": "943e8050",
             "name": "Burnley",
             "full_name": "Burnley",
-            "id": "943e8050"
+            "url_name": "Burnley"
         },
         "FPL": {
+            "2019-20": {
+                "id": 5,
+                "name": "Burnley"
+            },
             "2020-21": {
                 "id": 4,
                 "name": "Burnley"
@@ -114,11 +161,16 @@
     "Chelsea": {
         "ClubElo": "Chelsea",
         "FBref": {
+            "id": "cff3d9bb",
             "name": "Chelsea",
             "full_name": "Chelsea",
-            "id": "cff3d9bb"
+            "url_name": "Chelsea"
         },
         "FPL": {
+            "2019-20": {
+                "id": 6,
+                "name": "Chelsea"
+            },
             "2020-21": {
                 "id": 5,
                 "name": "Chelsea"
@@ -144,11 +196,16 @@
     "Crystal Palace": {
         "ClubElo": "Crystal Palace",
         "FBref": {
+            "id": "47c64c55",
             "name": "Crystal Palace",
             "full_name": "Crystal Palace",
-            "id": "47c64c55"
+            "url_name": "Crystal-Palace"
         },
         "FPL": {
+            "2019-20": {
+                "id": 7,
+                "name": "Crystal Palace"
+            },
             "2020-21": {
                 "id": 6,
                 "name": "Crystal Palace"
@@ -174,11 +231,16 @@
     "Everton": {
         "ClubElo": "Everton",
         "FBref": {
+            "id": "d3fd31cc",
             "name": "Everton",
             "full_name": "Everton",
-            "id": "d3fd31cc"
+            "url_name": "Everton"
         },
         "FPL": {
+            "2019-20": {
+                "id": 8,
+                "name": "Everton"
+            },
             "2020-21": {
                 "id": 7,
                 "name": "Everton"
@@ -201,40 +263,19 @@
             }
         }
     },
-    "Fulham": {
-        "ClubElo": "Fulham",
-        "FBref": {
-            "name": "Fulham",
-            "full_name": "Fulham",
-            "id": "fd962109"
-        },
-        "FPL": {
-            "2020-21": {
-                "id": 8,
-                "name": "Fulham"
-            },
-            "2022-23": {
-                "id": 9,
-                "name": "Fulham"
-            },
-            "2023-24": {
-                "id": 10,
-                "name": "Fulham"
-            },
-            "2024-25": {
-                "id": 9,
-                "name": "Fulham"
-            }
-        }
-    },
     "Leicester": {
         "ClubElo": "Leicester",
         "FBref": {
+            "id": "a2d435b3",
             "name": "Leicester City",
             "full_name": "Leicester City",
-            "id": "a2d435b3"
+            "url_name": "Leicester-City"
         },
         "FPL": {
+            "2019-20": {
+                "id": 9,
+                "name": "Leicester"
+            },
             "2020-21": {
                 "id": 9,
                 "name": "Leicester"
@@ -250,39 +291,22 @@
             "2024-25": {
                 "id": 11,
                 "name": "Leicester"
-            }
-        }
-    },
-    "Leeds": {
-        "ClubElo": "Leeds",
-        "FBref": {
-            "name": "Leeds United",
-            "full_name": "Leeds United",
-            "id": "5bfb9659"
-        },
-        "FPL": {
-            "2020-21": {
-                "id": 10,
-                "name": "Leeds"
-            },
-            "2021-22": {
-                "id": 10,
-                "name": "Leeds"
-            },
-            "2022-23": {
-                "id": 11,
-                "name": "Leeds"
             }
         }
     },
     "Liverpool": {
         "ClubElo": "Liverpool",
         "FBref": {
+            "id": "822bd0ba",
             "name": "Liverpool",
             "full_name": "Liverpool",
-            "id": "822bd0ba"
+            "url_name": "Liverpool"
         },
         "FPL": {
+            "2019-20": {
+                "id": 10,
+                "name": "Liverpool"
+            },
             "2020-21": {
                 "id": 11,
                 "name": "Liverpool"
@@ -308,11 +332,16 @@
     "Man City": {
         "ClubElo": "Man City",
         "FBref": {
-            "name": "Leicester City",
-            "full_name": "Leicester City",
-            "id": "a2d435b3"
+            "id": "b8fd03ef",
+            "name": "Manchester City",
+            "full_name": "Manchester City",
+            "url_name": "Manchester-City"
         },
         "FPL": {
+            "2019-20": {
+                "id": 11,
+                "name": "Man City"
+            },
             "2020-21": {
                 "id": 12,
                 "name": "Man City"
@@ -336,13 +365,18 @@
         }
     },
     "Man Utd": {
-        "ClubElo": "Man United",
+        "ClubElo": null,
         "FBref": {
-            "name": "Leeds United",
-            "full_name": "Leeds United",
-            "id": "5bfb9659"
+            "id": "19538871",
+            "name": "Manchester Utd",
+            "full_name": "Manchester United",
+            "url_name": "Manchester-United"
         },
         "FPL": {
+            "2019-20": {
+                "id": 12,
+                "name": "Man Utd"
+            },
             "2020-21": {
                 "id": 13,
                 "name": "Man Utd"
@@ -368,11 +402,16 @@
     "Newcastle": {
         "ClubElo": "Newcastle",
         "FBref": {
+            "id": "b2b47a98",
             "name": "Newcastle Utd",
             "full_name": "Newcastle United",
-            "id": "b2b47a98"
+            "url_name": "Newcastle-United"
         },
         "FPL": {
+            "2019-20": {
+                "id": 13,
+                "name": "Newcastle"
+            },
             "2020-21": {
                 "id": 14,
                 "name": "Newcastle"
@@ -395,14 +434,38 @@
             }
         }
     },
+    "Norwich": {
+        "ClubElo": "Norwich",
+        "FBref": {
+            "id": "1c781004",
+            "name": "Norwich City",
+            "full_name": "Norwich City",
+            "url_name": "Norwich-City"
+        },
+        "FPL": {
+            "2019-20": {
+                "id": 14,
+                "name": "Norwich"
+            },
+            "2021-22": {
+                "id": 15,
+                "name": "Norwich"
+            }
+        }
+    },
     "Sheffield Utd": {
         "ClubElo": "Sheffield United",
         "FBref": {
+            "id": "1df6b87e",
             "name": "Sheffield Utd",
             "full_name": "Sheffield United",
-            "id": "1df6b87e"
+            "url_name": "Sheffield-United"
         },
         "FPL": {
+            "2019-20": {
+                "id": 15,
+                "name": "Sheffield Utd"
+            },
             "2020-21": {
                 "id": 15,
                 "name": "Sheffield Utd"
@@ -416,11 +479,16 @@
     "Southampton": {
         "ClubElo": "Southampton",
         "FBref": {
+            "id": "33c895d4",
             "name": "Southampton",
             "full_name": "Southampton",
-            "id": "33c895d4"
+            "url_name": "Southampton"
         },
         "FPL": {
+            "2019-20": {
+                "id": 16,
+                "name": "Southampton"
+            },
             "2020-21": {
                 "id": 16,
                 "name": "Southampton"
@@ -442,11 +510,16 @@
     "Spurs": {
         "ClubElo": "Tottenham",
         "FBref": {
+            "id": "361ca564",
             "name": "Tottenham",
             "full_name": "Tottenham Hotspur",
-            "id": "361ca564"
+            "url_name": "Tottenham-Hotspur"
         },
         "FPL": {
+            "2019-20": {
+                "id": 17,
+                "name": "Spurs"
+            },
             "2020-21": {
                 "id": 17,
                 "name": "Spurs"
@@ -469,28 +542,38 @@
             }
         }
     },
-    "West Brom": {
-        "ClubElo": "West Brom",
+    "Watford": {
+        "ClubElo": "Watford",
         "FBref": {
-            "name": "West Brom",
-            "full_name": "West Bromwich Albion",
-            "id": "60c6b05f"
+            "id": "2abfe087",
+            "name": "Watford",
+            "full_name": "Watford",
+            "url_name": "Watford"
         },
         "FPL": {
-            "2020-21": {
+            "2019-20": {
                 "id": 18,
-                "name": "West Brom"
+                "name": "Watford"
+            },
+            "2021-22": {
+                "id": 18,
+                "name": "Watford"
             }
         }
     },
     "West Ham": {
         "ClubElo": "West Ham",
         "FBref": {
+            "id": "7c21e445",
             "name": "West Ham",
             "full_name": "West Ham United",
-            "id": "7c21e445"
+            "url_name": "West-Ham-United"
         },
         "FPL": {
+            "2019-20": {
+                "id": 19,
+                "name": "West Ham"
+            },
             "2020-21": {
                 "id": 19,
                 "name": "West Ham"
@@ -516,11 +599,16 @@
     "Wolves": {
         "ClubElo": "Wolves",
         "FBref": {
+            "id": "8cec06e1",
             "name": "Wolves",
             "full_name": "Wolverhampton Wanderers",
-            "id": "8cec06e1"
+            "url_name": "Wolverhampton-Wanderers"
         },
         "FPL": {
+            "2019-20": {
+                "id": 20,
+                "name": "Wolves"
+            },
             "2020-21": {
                 "id": 20,
                 "name": "Wolves"
@@ -543,12 +631,78 @@
             }
         }
     },
+    "Fulham": {
+        "ClubElo": "Fulham",
+        "FBref": {
+            "id": "fd962109",
+            "name": "Fulham",
+            "full_name": "Fulham",
+            "url_name": "Fulham"
+        },
+        "FPL": {
+            "2020-21": {
+                "id": 8,
+                "name": "Fulham"
+            },
+            "2022-23": {
+                "id": 9,
+                "name": "Fulham"
+            },
+            "2023-24": {
+                "id": 10,
+                "name": "Fulham"
+            },
+            "2024-25": {
+                "id": 9,
+                "name": "Fulham"
+            }
+        }
+    },
+    "Leeds": {
+        "ClubElo": "Leeds",
+        "FBref": {
+            "id": "5bfb9659",
+            "name": "Leeds United",
+            "full_name": "Leeds United",
+            "url_name": "Leeds-United"
+        },
+        "FPL": {
+            "2020-21": {
+                "id": 10,
+                "name": "Leeds"
+            },
+            "2021-22": {
+                "id": 10,
+                "name": "Leeds"
+            },
+            "2022-23": {
+                "id": 11,
+                "name": "Leeds"
+            }
+        }
+    },
+    "West Brom": {
+        "ClubElo": "West Brom",
+        "FBref": {
+            "id": "60c6b05f",
+            "name": "West Brom",
+            "full_name": "West Bromwich Albion",
+            "url_name": "West-Bromwich-Albion"
+        },
+        "FPL": {
+            "2020-21": {
+                "id": 18,
+                "name": "West Brom"
+            }
+        }
+    },
     "Brentford": {
         "ClubElo": "Brentford",
         "FBref": {
+            "id": "cd051869",
             "name": "Brentford",
             "full_name": "Brentford",
-            "id": "cd051869"
+            "url_name": "Brentford"
         },
         "FPL": {
             "2021-22": {
@@ -566,65 +720,16 @@
             "2024-25": {
                 "id": 4,
                 "name": "Brentford"
-            }
-        }
-    },
-    "Norwich": {
-        "ClubElo": "Norwich",
-        "FBref": {
-            "name": "Norwich City",
-            "full_name": "Norwich City",
-            "id": "1c781004"
-        },
-        "FPL": {
-            "2021-22": {
-                "id": 15,
-                "name": "Norwich"
-            }
-        }
-    },
-    "Watford": {
-        "ClubElo": "Watford",
-        "FBref": {
-            "name": "Watford",
-            "full_name": "Watford",
-            "id": "2abfe087"
-        },
-        "FPL": {
-            "2021-22": {
-                "id": 18,
-                "name": "Watford"
-            }
-        }
-    },
-    "Bournemouth": {
-        "ClubElo": "Bournemouth",
-        "FBref": {
-            "name": "Bournemouth",
-            "full_name": "AFC Bournemouth",
-            "id": "4ba7cbea"
-        },
-        "FPL": {
-            "2022-23": {
-                "id": 3,
-                "name": "Bournemouth"
-            },
-            "2023-24": {
-                "id": 3,
-                "name": "Bournemouth"
-            },
-            "2024-25": {
-                "id": 3,
-                "name": "Bournemouth"
             }
         }
     },
     "Nott'm Forest": {
         "ClubElo": "Forest",
         "FBref": {
+            "id": "e4a775cb",
             "name": "Nott'ham Forest",
             "full_name": "Nottingham Forest",
-            "id": "e4a775cb"
+            "url_name": "Nottingham-Forest"
         },
         "FPL": {
             "2022-23": {
@@ -644,9 +749,10 @@
     "Luton": {
         "ClubElo": "Luton",
         "FBref": {
+            "id": "e297cd13",
             "name": "Luton Town",
             "full_name": "Luton Town",
-            "id": "e297cd13"
+            "url_name": "Luton-Town"
         },
         "FPL": {
             "2023-24": {
@@ -658,9 +764,10 @@
     "Ipswich": {
         "ClubElo": "Ipswich",
         "FBref": {
+            "id": "b74092de",
             "name": "Ipswich Town",
             "full_name": "Ipswich Town",
-            "id": "b74092de"
+            "url_name": "Ipswich-Town"
         },
         "FPL": {
             "2024-25": {

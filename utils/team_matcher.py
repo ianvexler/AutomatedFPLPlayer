@@ -7,14 +7,21 @@ import json
 import difflib
 from fuzzywuzzy import process, fuzz
 import warnings
+import re
 
 class TeamMatcher:
   def __init__(self):
     self.FILENAME = 'team_ids.json'
     self.team_dict = self.load_dict()
 
-    self.FPL_MAPPING = {
+    self.FPL_OVERRIDE = {
       "Spurs": "Tottenham Hotspur",
+      "Man Utd": "Manchester Utd",
+      "Man City": "Manchester City"
+    }
+
+    self.FBREF_DETAILS_OVERRIDE = {
+      "Wolves": "Wolverhampton Wanderers FC"
     }
 
   def get_fpl_teams(self, start_year=20):
@@ -64,16 +71,17 @@ class TeamMatcher:
     df = dfs[0]
 
     # Filter out irrelevant teams
-    df = df[df[('Comps', None)].apply(lambda x: int(x[0]) if isinstance(x, tuple) else 0) > 0]
+    df = df[df[('Comps', None)].apply(lambda x: int(x[0]) if isinstance(x, tuple) else 0) > 10]
 
     # First column contains tuples (Club Name, URL)
     teams_data = df.iloc[:, 0]
 
     # Convert tuple values directly into two columns
     teams_df = pd.DataFrame(teams_data.tolist(), columns=['name', 'url'])
-    
+
     # Extract team ids
     teams_df['id'] = teams_df['url'].str.extract(r"/squads/([a-fA-F0-9]+)")[0]
+    teams_df['url_name'] = teams_df['url'].str.extract(r"/history/([^/]+)$")[0]
     teams_df = teams_df.drop(columns=['url'])
 
     return teams_df
@@ -84,14 +92,23 @@ class TeamMatcher:
     return closest_matches[0] if closest_matches else None
 
   def find_closest_fbref_match(self, team_name, fbref_teams, fbref_details):
-    closest_matches = process.extractOne(team_name, fbref_teams, scorer=fuzz.partial_ratio, score_cutoff=40)
+    closest_matches = process.extractOne(team_name, fbref_teams, scorer=fuzz.partial_ratio, score_cutoff=70)
     
     if closest_matches:
       match = closest_matches[0]
     else:
-      raise Exception(f'No match for {team_name}')
-        
-    details_match = process.extractOne(match, fbref_details['name'].values, scorer=fuzz.partial_ratio, score_cutoff=40)[0]
+      # Try alternative matching method
+      closest_matches = process.extractOne(team_name, fbref_teams, scorer=fuzz.token_sort_ratio, score_cutoff=70)
+    
+      if not closest_matches:
+        raise Exception(f'No match for {team_name}')
+      else:
+        match = closest_matches[0]
+
+    
+    details_name = self.FBREF_DETAILS_OVERRIDE.get(match, match)
+    details_match = process.extractOne(details_name, fbref_details['name'].values, scorer=fuzz.token_sort_ratio, score_cutoff=40)[0]
+
     if not details_match:
       raise Exception(f'No match for {team_name}')
     
@@ -99,11 +116,13 @@ class TeamMatcher:
 
     team_full_name = team_details['name'].iloc[0]
     team_id = team_details['id'].iloc[0]
+    team_url_name = team_details['url_name'].iloc[0]
 
     return {
+      "id": team_id,
       "name": match,
       "full_name": team_full_name.replace(" FC", ""),
-      "id": team_id
+      "url_name": re.sub(r"-Stats-and-History$", "", team_url_name)
     }
 
   def create_team_dict(self):
@@ -121,7 +140,7 @@ class TeamMatcher:
 
     # Match FPL teams to closest Club Elo teams
     for fpl_team_name in fpl_team_names:
-      team_name = self.FPL_MAPPING.get(fpl_team_name, fpl_team_name)
+      team_name = self.FPL_OVERRIDE.get(fpl_team_name, fpl_team_name)
 
       closest_club_elo_team = self.find_closest_elo_match(team_name, club_elo_teams)
       closest_fbref_team = self.find_closest_fbref_match(team_name, fbref_teams, fbref_details)
@@ -165,6 +184,10 @@ class TeamMatcher:
         return team_data  
 
     raise Exception(f"Team could not be found for key {key} with type {key_type} in season {season}")
+
+  """Returns a list of teams that have an FPL entry for the given season."""
+  def get_season_teams(self, season):
+    return {team: data for team, data in self.team_dict.items() if season in data.get("FPL", {})}
 
   def save_dict_to_json(self):
     # Save the dictionary to a JSON file

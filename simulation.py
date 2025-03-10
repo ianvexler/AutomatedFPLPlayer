@@ -44,10 +44,6 @@ class Simulation:
     self.total_loss = 0
 
     self.show_optimal = show_optimal
-   
-    # TODO:
-    # - Include option for different strategies
-    # - Include multiple risks
 
   def simulate_season(self):
     print(f"Simulating season {self.season}\n")
@@ -124,6 +120,8 @@ class Simulation:
       
       # Captaining, using triple captain if necessary
       triple_captain = False
+      
+      # TODO: Accept multiple tripple captain strats
       if use_chip == Chip.TRIPLE_CAPTAIN:
         self.use_triple_captain()
 
@@ -134,7 +132,8 @@ class Simulation:
         gw_data,
         selected_team, 
         triple_captain=(use_chip == Chip.TRIPLE_CAPTAIN),
-        bench_boost=(use_chip == Chip.BENCH_BOOST))
+        bench_boost=(use_chip == Chip.BENCH_BOOST),
+        )
 
       total_points += gw_points
       
@@ -333,9 +332,18 @@ class Simulation:
     if not self._is_chip_available(chip):
       return False
 
-    if self._is_double_gameweek(current_gw):
-      self.chips_available[chip] = False
-      return True
+    strategy = self.chip_strategy[chip]
+
+    if strategy == 'double_gw':
+      if self._is_double_gameweek(current_gw):
+        self.chips_available[chip] = False
+        return True
+
+    # Uses bench boost after wildcard has been played
+    if strategy == 'with_wildcard':
+      if not self.chips_available[Chip.WILDCARD.value]:
+        self.chips_available[chip] = False
+        return True
 
     return False
 
@@ -384,9 +392,6 @@ class Simulation:
 
 if __name__=='__main__':
   # Valid strategy choices
-  valid_strategies = ["double_gw", "blank_gw"]
-  valid_wildcard_strategies = ["asap", "wait"]
-  valid_free_hit_strategies = ["double_gw", "blank_gw"]
 
   parser = argparse.ArgumentParser(description="Run the model with optional chip strategies.")
 
@@ -396,23 +401,29 @@ if __name__=='__main__':
   )
 
   # Chip strategy arguments with validation
-  # TODO: Update strategies
+  valid_triple_captain_strategies = ["risky", "conservative"]
   parser.add_argument(
-    "--triple_captain", type=str, choices=valid_strategies, default="double_gw",
-    help="Strategy for the Triple Captain chip. Options: 'double_gw', 'blank_gw'."
+    "--triple_captain", type=str, choices=valid_triple_captain_strategies, default="conservative",
+    help="Strategy for the Triple Captain chip. Options: 'risky', 'conservative'."
   )
+  
+  # Maybe include double and blank gws?
+  valid_wildcard_strategies = ["asap", "wait"]
   parser.add_argument(
-    "--wildcard", type=str, choices=valid_wildcard_strategies, default="double_gw",
-    help="Strategy for the Wildcard chip. Options: 'double_gw', 'blank_gw', 'use_asap', 'wait'."
+    "--wildcard", type=str, choices=valid_wildcard_strategies, default="wait",
+    help="Strategy for the Wildcard chip. Options: 'asap', 'wait'."
   )
+  
+  valid_free_hit_strategies = ["double_gw", "blank_gw"]
   parser.add_argument(
     "--free_hit", type=str, choices=valid_free_hit_strategies, default="blank_gw",
     help="Strategy for the Free Hit chip. Options: 'double_gw', 'blank_gw'."
   )
-  # TODO: Update strategies
+  
+  valid_bench_boost_strategies = ["double_gw", "with_wildcard"]
   parser.add_argument(
-    "--bench_boost", type=str, choices=valid_strategies, default="double_gw",
-    help="Strategy for the Bench Boost chip. Options: 'double_gw', 'blank_gw'."
+    "--bench_boost", type=str, choices=valid_bench_boost_strategies, default="double_gw",
+    help="Strategy for the Bench Boost chip. Options: 'double_gw', 'with_wildcard'."
   )
 
   # Config parameters
