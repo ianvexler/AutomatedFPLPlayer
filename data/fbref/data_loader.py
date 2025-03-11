@@ -27,7 +27,7 @@ class DataLoader:
     ]
 
     self.STAT_TYPES = [
-      'standard', 
+      'standard',
       'keeper', 
       'keeper_adv', 
       'shooting', 

@@ -7,25 +7,23 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from utils.model_types import ModelType
+from pathlib import Path
 
 class Evaluate:
-  def __init__(self, predictions, season, steps, model_type, include_prev_season=False):
-    self.predictions = predictions
+  def __init__(self, season, steps, model_type, include_prev_season=False):
     self.season = season
     self.steps = steps
+    self.model_type = model_type
     self.feature_selector = FeatureSelector()
     self.include_prev_season = include_prev_season
     self.evaluation_results = []  # Stores results for CSV export
 
   def evaluate_model(self):
-    predictions = self.predictions.round()
-    season_data = self._load_season_data()
-
     self.feature_selector = FeatureSelector()
 
-    # Merge to ensure only common records are considered
-    evaluation_df = season_data.merge(predictions, on='id')
-
+    evaluation_df = self._load_predictions()
+    evaluation_df = evaluation_df.dropna(subset=[self.feature_selector.EXPECTED])
+    
     # General evaluation
     error, mse = self.score_model(evaluation_df, self.feature_selector.EXPECTED)
     baseline_error, baseline_mse = self.score_model(evaluation_df, self.feature_selector.BASELINE)
@@ -106,7 +104,7 @@ class Evaluate:
     # Extract targets and expected values
     targets = evaluation_df[self.feature_selector.TARGET]
     expected = evaluation_df[expected]
-
+    
     error = mean_absolute_error(targets, expected)
     mse = mean_squared_error(targets, expected)
 
@@ -145,10 +143,20 @@ class Evaluate:
     df.to_csv(csv_path, index=False)
     print(f"Evaluation results saved to {csv_path}")
 
-  def _load_season_data(self):
-    data_loader = DataLoader()
-    season_data = data_loader.get_season_data(self.season)
-    return season_data
+  def _load_predictions(self):
+    directory = f'predictions/{self.model_type.value}/steps_{self.steps}_prev_season_{self.include_prev_season}/gws/{self.season}'
+    
+    if os.path.exists(directory):
+      predictions_df = pd.DataFrame()
+
+      path = Path(directory)
+      for csv_file in path.glob("*.csv"):
+        df = pd.read_csv(csv_file)
+        predictions_df = pd.concat([predictions_df, df], ignore_index=True)
+      
+      return predictions_df
+    else:
+      raise Exception(f"Predictions for {season}, {steps} steps and prev season {include_prev_season} not found")
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Run the model evaluation.')
@@ -159,7 +167,6 @@ if __name__ == "__main__":
   
   args = parser.parse_args()
 
-
   season = args.season
   steps = args.steps
   include_prev_season = args.prev_season
@@ -169,19 +176,10 @@ if __name__ == "__main__":
   except ValueError:
     print(f"Error: Invalid model type '{args.model}'. Choose from {', '.join(m.value for m in ModelType)}")
     exit(1)
-
-  directory = f'predictions/{model_type.value}/steps_{steps}_prev_season_{include_prev_season}'
-  file_path = os.path.join(directory, f"predictions_{season}.csv")
-
-  if os.path.exists(file_path):
-    predictions = pd.read_csv(file_path)
     
-    evaluate = Evaluate(
-      predictions, 
-      season, 
-      steps,
-      model_type,
-      include_prev_season)
-    evaluate.evaluate_model()
-  else:
-    print(f"Predictions for {season}, {steps} steps and prev season {include_prev_season} not found")
+  evaluate = Evaluate(
+    season, 
+    steps,
+    model_type,
+    include_prev_season)
+  evaluate.evaluate_model()

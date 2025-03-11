@@ -41,7 +41,7 @@ class FeatureSelector:
     self.TARGET = 'total_points'
     self.EXPECTED = 'expected_points'
     self.BASELINE = 'xP'
-    self.COST = 'now_cost'
+    self.COST = 'cost'
 
   def get_features_for_position(self, position, include_prev_season=False, include_season=False):
     features = self.features[position] + self.GW_TEAM_FEATURES + self.ADDITIONAL_FEATURES + self.CUSTOM_FEATURES
