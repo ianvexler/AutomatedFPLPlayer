@@ -115,34 +115,32 @@ class DataLoader:
     for _, player_data in gw_data.iterrows():
       player_id = player_data['id']
 
-      # Try and get player ids, if not available skip
+      # Try and get player ids, if not available, fill with 0s
       try:
         player_ids = self.player_matcher.get_fpl_player(player_id, season)
+        fbref_id = player_ids['FBref']['id']
+        fbref_player_data = fbref_data[fbref_data['id'] == fbref_id].copy()
+        
+        fbref_player_data['date'] = pd.to_datetime(fbref_player_data['date']).dt.date
+        player_kickoff_date = pd.to_datetime(player_data['kickoff_time']).date()
+
+        # Find matching FBref rows by date
+        matching_fbref_data = fbref_player_data[fbref_player_data['date'] == player_kickoff_date]
+        
+        # Use FBref data if available, otherwise fill with 0s
+        if not matching_fbref_data.empty:
+          fbref_stats = matching_fbref_data.iloc[0].to_dict()
+        else:
+          fbref_stats = {col: 0 for col in fbref_data.columns if col != 'id'}  # Fill FBref stats with 0s
+          
       except:
-        continue
+        fbref_stats = {col: 0 for col in fbref_data.columns if col != 'id'}  # If no FBref ID, fill with 0s
 
-      fbref_id = player_ids['FBref']['id']
-
-      fbref_player_data = fbref_data[fbref_data['id'] == fbref_id].copy()
-      
-      fbref_player_data['date'] = pd.to_datetime(fbref_player_data['date']).dt.date
-      player_kickoff_date = pd.to_datetime(player_data['kickoff_time']).date()
-      # print(fbref_player_data)
-      # print(player_kickoff_date)
-      # Find matching FBref rows by date
-      matching_fbref_data = fbref_player_data[fbref_player_data['date'] == player_kickoff_date]
-      
-      # Merge the player data with matching FBref data
-      if not matching_fbref_data.empty:
-        merged_row = {**player_data.to_dict(), **matching_fbref_data.iloc[0].to_dict()}
-        merged_data.append(merged_row)
+      # Merge player data with FBref stats
+      merged_row = {**player_data.to_dict(), **fbref_stats}
+      merged_data.append(merged_row)
 
     return pd.DataFrame(merged_data)
-
-  def _fill_missing_gw_data(self, player_id, season_data, prev_season_data):
-    player_data = season_data[season_data['id'] == player_id]
-    initial_player_data = player_data.sort_values(by='GW', ascending=True).iloc[0]
-    initial_value = initial_player_data['value']
 
   def _add_teams_data_to_gw_data(self, gw_data, teams_data):
     home_data = teams_data.rename(columns=lambda x: f"home_team_{x}")

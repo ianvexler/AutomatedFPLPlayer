@@ -11,7 +11,7 @@ import requests
 import json
 import io
 from data.fbref.data_loader import DataLoader as FBref
-from fuzzywuzzy import process, fuzz
+from thefuzz import process, fuzz
 import numpy as np
 from utils.team_matcher import TeamMatcher
 

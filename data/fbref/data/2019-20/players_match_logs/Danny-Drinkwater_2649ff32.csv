@@ -1,0 +1,17 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 4,L 0–3,943e8050,822bd0ba,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-08-31,af072d61
+Premier League,Matchweek 14,L 0–2,943e8050,47c64c55,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-11-30,86428aca
+Premier League,Matchweek 15,L 1–4,943e8050,b8fd03ef,1,58,0,0,0,0,0,0,0,0,28,2,1,0,0.0,0.0,0.0,0,0,14,24,58.3,0,9,0,0,0,2019-12-03,4d718594
+Premier League,Matchweek 16,L 0–5,943e8050,361ca564,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-12-07,56da163b
+Premier League,Matchweek 17,W 1–0,943e8050,b2b47a98,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-12-14,4c3c57fa
+Premier League,Matchweek 18,W 1–0,943e8050,4ba7cbea,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-12-21,e8b74ca0
+Premier League,Matchweek 19,L 0–1,943e8050,d3fd31cc,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-12-26,b23c6c90
+Premier League,Matchweek 20,L 0–2,943e8050,19538871,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-12-28,f66bbb03
+Premier League,Matchweek 21,L 1–2,943e8050,8602292d,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-01-01,ac409026
+Premier League,Matchweek 22,L 1–6,8602292d,b8fd03ef,1,78,0,0,0,0,0,0,0,0,42,2,2,0,0.0,0.0,0.0,0,0,32,35,91.4,0,28,0,2,1,2020-01-12,ffb4946c
+Premier League,Matchweek 23,D 1–1,8602292d,d07537b9,1,67,0,0,0,0,2,0,1,0,51,1,2,2,0.1,0.1,0.0,1,0,29,41,70.7,3,20,1,0,0,2020-01-18,bd044bad
+Premier League,Matchweek 24,W 2–1,8602292d,2abfe087,1,55,0,0,0,0,0,0,0,0,48,1,0,1,0.0,0.0,0.0,1,0,34,43,79.1,9,23,1,1,0,2020-01-21,3deb145e
+Premier League,Matchweek 26,L 2–3,8602292d,361ca564,1,59,0,0,0,0,0,0,0,0,59,1,1,2,0.0,0.0,0.0,2,0,43,50,86.0,8,26,0,1,0,2020-02-16,ebfe971d
+Premier League,Matchweek 27,L 0–2,8602292d,33c895d4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-02-22,66823ac4
+Premier League,Matchweek 29,L 0–4,8602292d,a2d435b3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-03-09,76f492dc
+Premier League,Matchweek 32,L 0–1,8602292d,8cec06e1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-06-27,b4483d72

@@ -5,7 +5,7 @@ import soccerdata as sd
 import requests
 import json
 import difflib
-from fuzzywuzzy import process, fuzz
+from thefuzz import process, fuzz
 import warnings
 import re
 
