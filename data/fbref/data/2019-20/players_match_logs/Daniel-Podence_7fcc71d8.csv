@@ -1,0 +1,14 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 25,D 0–0,8cec06e1,19538871,0,15,0,0,0,0,1,0,0,0,11,1,0,0,0.1,0.1,0.3,2,0,8,9,88.9,1,8,1,0,0,2020-02-01,88328013
+Premier League,Matchweek 26,D 0–0,8cec06e1,a2d435b3,0,13,0,0,0,0,0,0,0,0,6,0,0,0,0.0,0.0,0.0,0,0,3,4,75.0,1,6,0,0,0,2020-02-14,a11273b7
+Premier League,Matchweek 27,W 3–0,8cec06e1,1c781004,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-02-23,09ec6552
+Premier League,Matchweek 28,W 3–2,8cec06e1,361ca564,0,1,0,0,0,0,0,0,0,0,2,0,0,0,0.0,0.0,0.0,0,0,0,1,0.0,0,1,0,0,0,2020-03-01,2475762d
+Premier League,Matchweek 29,D 0–0,8cec06e1,d07537b9,0,17,0,0,0,0,1,0,0,0,12,0,0,0,0.1,0.1,0.1,2,0,5,8,62.5,2,8,2,0,0,2020-03-07,6a08610e
+Premier League,Matchweek 30,W 2–0,8cec06e1,7c21e445,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-06-20,6ddd148a
+Premier League,Matchweek 31,W 1–0,8cec06e1,4ba7cbea,0,1,0,0,0,0,0,0,0,0,4,0,0,0,0.0,0.0,0.0,0,0,2,3,66.7,0,2,0,0,0,2020-06-24,4f61e5af
+Premier League,Matchweek 32,W 1–0,8cec06e1,8602292d,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-06-27,b4483d72
+Premier League,Matchweek 34,L 0–1,8cec06e1,1df6b87e,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-07-08,f898c8ea
+Premier League,Matchweek 35,W 3–0,8cec06e1,d3fd31cc,1,70,0,0,0,0,3,2,0,0,42,0,0,1,0.2,0.2,0.0,3,2,23,33,69.7,3,33,6,5,4,2020-07-12,476e8583
+Premier League,Matchweek 36,D 1–1,8cec06e1,943e8050,1,69,0,0,0,0,2,0,0,0,24,1,1,0,0.1,0.1,0.1,1,0,10,16,62.5,1,20,5,2,1,2020-07-15,a7c5d31f
+Premier League,Matchweek 37,W 2–0,8cec06e1,47c64c55,1,71,1,0,0,0,3,1,0,0,32,1,0,2,0.8,0.8,0.2,2,0,14,20,70.0,1,18,3,2,2,2020-07-20,70598e52
+Premier League,Matchweek 38,L 0–2,8cec06e1,cff3d9bb,0,32,0,0,0,0,0,0,0,0,12,0,1,1,0.0,0.0,0.0,0,0,5,7,71.4,0,10,1,2,0,2020-07-26,9cca4ba0

@@ -10,7 +10,7 @@ import time
 import unicodedata
 
 class DataLoader:
-  def __init__(self, season, no_cache=False, timeout=3):
+  def __init__(self, season, no_cache=False, timeout=10):
     self.season = season
     self.fbref = sd.FBref(leagues=[
       'Big 5 European Leagues Combined',

@@ -1,0 +1,22 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Bundesliga,Matchweek 1,W 3–2,c7a9f859,d9f93f02,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-08-17,db6a3cfb
+Bundesliga,Matchweek 2,W 3–1,c7a9f859,b1278397,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-08-24,43413413
+Bundesliga,Matchweek 4,L 0–4,c7a9f859,add600ae,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-09-14,534233af
+Bundesliga,Matchweek 5,W 2–0,c7a9f859,7a41008f,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-09-21,3866da30
+Bundesliga,Matchweek 6,W 3–0,c7a9f859,0cdc4311,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-09-28,1fabc931
+Bundesliga,Matchweek 7,D 1–1,c7a9f859,acbb6a5b,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-10-05,fe29ffb1
+Bundesliga,Matchweek 8,L 0–3,c7a9f859,f0ac8ee6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-10-18,6cf7eecc
+Bundesliga,Matchweek 9,D 2–2,c7a9f859,62add3bf,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-10-26,9ee7ac90
+Bundesliga,Matchweek 10,L 1–2,c7a9f859,32f3ee20,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-11-02,8a4170d6
+Bundesliga,Matchweek 11,W 2–0,c7a9f859,4eaa11d7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-11-10,1eaa5cd9
+Bundesliga,Matchweek 12,D 1–1,c7a9f859,a486e511,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-11-23,a5d6158b
+Bundesliga,Matchweek 13,W 2–1,c7a9f859,054efa67,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-11-30,10e7a47e
+Bundesliga,Matchweek 14,W 2–1,c7a9f859,c539e393,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2019-12-07,444708eb
+Bundesliga,Matchweek 15,L 0–2,c7a9f859,bc357bf7,0,25,0,0,0,0,0,0,0,0,20,0,1,1,0.0,0.0,0.0,0,0,15,18,83.3,0,9,0,1,1,2019-12-14,cbcd18f7
+Bundesliga,Matchweek 16,L 0–1,c7a9f859,2818f8bc,0,45,0,0,0,0,0,0,0,0,48,4,0,1,0.0,0.0,0.0,0,0,38,40,95.0,2,22,1,0,0,2019-12-18,352ddf55
+Bundesliga,Matchweek 17,W 1–0,c7a9f859,a224b06a,1,44,0,0,0,0,0,0,0,0,43,2,1,0,0.0,0.0,0.0,1,0,30,38,78.9,3,19,2,0,0,2019-12-21,3660b79c
+Bundesliga,Matchweek 18,W 4–1,c7a9f859,d9f93f02,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-01-19,07577668
+Bundesliga,Matchweek 19,W 3–0,c7a9f859,b1278397,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-01-26,831d6dbd
+Premier League,Matchweek 26,W 2–1,1df6b87e,4ba7cbea,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-02-09,9dbc60d4
+Premier League,Matchweek 27,D 1–1,1df6b87e,d07537b9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-02-22,c24b02bd
+Premier League,Matchweek 29,W 1–0,1df6b87e,1c781004,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-03-07,fcdf913d
