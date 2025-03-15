@@ -1,0 +1,20 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 1,W 1–0,19538871,8cec06e1,0,23,0,0,0,0,0,0,0,0,20,0,1,1,0.0,0.0,0.1,2,0,11,16,68.8,2,13,5,2,0,2023-08-14,f1ecda2c
+Premier League,Matchweek 2,L 0–2,19538871,361ca564,0,25,0,0,0,0,0,0,0,0,18,1,0,0,0.0,0.0,0.0,0,0,13,14,92.9,1,11,1,5,3,2023-08-19,4bb62251
+Premier League,Matchweek 3,W 3–2,19538871,e4a775cb,0,31,0,0,0,0,0,0,0,0,13,0,0,0,0.0,0.0,0.0,2,1,10,13,76.9,1,14,4,0,0,2023-08-26,70d9b1ab
+Bundesliga,Matchweek 17,W 3–0,add600ae,6a6967fc,0,36,0,1,0,0,1,0,0,0,27,0,0,1,0.1,0.1,1.3,3,1,13,21,61.9,0,19,2,2,2,2024-01-13,4ec40540
+Bundesliga,Matchweek 18,W 4–0,add600ae,bc357bf7,1,65,0,0,0,0,0,0,0,0,42,1,1,0,0.0,0.0,0.1,5,3,22,28,78.6,2,33,5,10,4,2024-01-20,7aed9153
+Bundesliga,Matchweek 19,W 3–1,add600ae,b42c6323,1,82,0,0,0,0,0,0,0,0,51,1,0,1,0.0,0.0,0.0,4,0,36,45,80.0,6,42,7,6,4,2024-01-28,d5fb6e78
+Bundesliga,Matchweek 21,W 3–0,add600ae,a486e511,0,3,0,0,0,0,3,1,0,0,6,0,0,0,0.4,0.4,0.0,1,0,3,3,100.0,0,4,0,0,0,2024-02-09,d8ec709e
+Bundesliga,Matchweek 22,D 1–1,add600ae,4eaa11d7,1,78,0,0,0,0,0,0,0,0,57,0,0,0,0.0,0.0,0.1,3,0,42,48,87.5,9,39,4,8,2,2024-02-17,8834fb75
+Bundesliga,Matchweek 23,L 2–3,add600ae,033ea6b8,1,74,0,0,0,0,0,0,0,0,53,0,0,3,0.0,0.0,0.2,7,0,40,46,87.0,6,39,6,5,4,2024-02-25,9da49b22
+Bundesliga,Matchweek 24,W 2–0,add600ae,7a41008f,1,87,0,0,0,0,1,0,0,0,51,0,0,0,0.0,0.0,0.1,1,0,34,41,82.9,3,36,5,6,2,2024-03-02,a5477209
+Bundesliga,Matchweek 25,W 2–1,add600ae,62add3bf,1,73,1,0,0,0,1,1,0,0,49,1,0,1,0.1,0.1,0.0,3,1,31,40,77.5,6,29,4,5,2,2024-03-09,93f65055
+Bundesliga,Matchweek 26,W 3–1,add600ae,f0ac8ee6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-03-17,fc260c9c
+Bundesliga,Matchweek 27,W 2–0,add600ae,054efa67,1,83,0,0,0,0,0,0,0,0,37,0,1,2,0.0,0.0,0.1,1,0,24,30,80.0,5,27,4,5,4,2024-03-30,2214f825
+Bundesliga,Matchweek 28,L 0–1,add600ae,598bc722,1,90,0,0,0,0,1,1,0,0,68,1,1,1,0.1,0.1,0.4,9,0,49,62,79.0,5,48,6,4,3,2024-04-06,7f40218d
+Bundesliga,Matchweek 30,D 1–1,add600ae,c7a9f859,1,69,0,0,0,0,0,0,0,0,32,0,0,0,0.0,0.0,0.0,1,0,21,26,80.8,2,22,2,4,2,2024-04-21,24b5202b
+Bundesliga,Matchweek 31,L 1–4,add600ae,acbb6a5b,1,90,1,0,0,0,1,1,1,0,63,1,0,0,0.0,0.0,0.2,4,0,44,55,80.0,10,43,6,7,4,2024-04-27,9813cba6
+Bundesliga,Matchweek 32,W 5–1,add600ae,0cdc4311,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-05-04,973a53e2
+Bundesliga,Matchweek 33,L 0–3,add600ae,a224b06a,0,45,0,0,0,0,0,0,0,0,39,0,1,1,0.0,0.0,0.0,0,0,25,29,86.2,3,27,2,4,0,2024-05-11,23d95a33
+Bundesliga,Matchweek 34,W 4–0,add600ae,6a6967fc,1,72,0,1,0,0,1,0,0,0,47,0,0,1,0.0,0.0,0.5,9,1,30,38,78.9,5,37,8,4,3,2024-05-18,14f21084

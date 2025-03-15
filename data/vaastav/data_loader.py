@@ -3,12 +3,16 @@ import numpy as np
 import requests
 import csv
 import pandas as pd
+from utils.team_matcher import TeamMatcher
 
 BASE_URL = "https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data/"
 
 class DataLoader():
   def __init__(self, season):  
     self.season = season
+    self.POSITIONS = {1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD'}
+
+    self.team_matcher = TeamMatcher()
 
   ### FULL SEASON ###
   """
@@ -26,7 +30,7 @@ class DataLoader():
   def sanitize_season_data(self, data_df):
     # Ensure data_df is in DataFrame format (if not already)
     if not isinstance(data_df, pd.DataFrame):
-        data_df = pd.DataFrame(data_df[1:], columns=data_df[0])  # Adjust if raw data isn't already a DataFrame
+      data_df = pd.DataFrame(data_df[1:], columns=data_df[0])  # Adjust if raw data isn't already a DataFrame
 
     # Convert DataFrame values to numeric where possible
     sanitized_df = self.convert_df_to_numeric(data_df)
@@ -36,9 +40,45 @@ class DataLoader():
   def get_merged_gw_data(self):
     raw_data = self.fetch_merged_gw()
 
-    data = self.sanitize_gw_data(raw_data)
+    gw_data = self.sanitize_gw_data(raw_data)
 
-    return data
+    if 'team' not in gw_data.columns:
+      players_raw = self.fetch_players_raw()
+      players_raw['id'] = players_raw['id'].astype(int)
+      players_raw['team'] = players_raw['team'].astype(int)
+      
+      missing_teams = players_raw[['id', 'team']]
+
+      gw_data = gw_data.merge(
+        missing_teams,
+        how='left',
+        left_on='id',
+        right_on='id'
+      )
+    else:
+      gw_data['team'] = gw_data['team'].apply(lambda x: self.team_matcher.get_fpl_team(x, self.season, key_type='name')["FPL"][self.season]['id'])
+    
+    if 'position' not in gw_data.columns:
+      players_raw = self.fetch_players_raw()
+      players_raw['id'] = players_raw['id'].astype(int)
+      players_raw['element_type'] = players_raw['element_type'].astype(int)
+      
+      missing_positions = players_raw[['id', 'element_type']]
+      missing_positions = missing_positions.rename(columns={'element_type': 'position'})
+      
+      gw_data = gw_data.merge(
+        missing_positions,
+        how='left',
+        left_on='id',
+        right_on='id'
+      )
+      gw_data['position'] = gw_data['position'].apply(lambda x: self.POSITIONS[x])
+
+    # To take into account for the COVID disruptions
+    if self.season == '2019-20':
+      gw_data = gw_data[gw_data['GW'] <= 29]
+
+    return gw_data
 
   """
   Sanitizes the gw data by filtering the relevant columns provided by the GW_COLS constants.
@@ -107,15 +147,12 @@ class DataLoader():
     raw_data = self.fetch_players()
 
     players_df = pd.DataFrame(raw_data)
-
-    # Temp
-    POSITIONS = {1: 'GK', 2: 'DEF', 3: 'MID', 4: 'FWD'}
     
     # TODO: handle managers
     players_df = players_df[players_df['element_type'] <= 4]
     players_df = players_df.rename(columns={'element_type': 'position', 'now_cost': 'cost'})
 
-    players_df['position'] = players_df['position'].apply(lambda x: POSITIONS[x])
+    players_df['position'] = players_df['position'].apply(lambda x: self.POSITIONS[x])
     return players_df
 
   ### FETCH DATA ###

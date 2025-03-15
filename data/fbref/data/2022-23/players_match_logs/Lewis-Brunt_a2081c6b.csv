@@ -1,0 +1,8 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 5,L 0–1,a2d435b3,19538871,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-09-01,c1f25d02
+Premier League,Matchweek 18,L 1–2,a2d435b3,822bd0ba,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-12-30,c5e4ccf5
+Premier League,Matchweek 19,L 0–1,a2d435b3,fd962109,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-01-03,12e0894b
+Premier League,Matchweek 20,L 0–2,a2d435b3,e4a775cb,0,23,0,0,0,0,0,0,0,0,23,0,0,0,0.0,0.0,0.0,0,0,17,21,81.0,0,9,0,0,0,2023-01-14,95d3b457
+Premier League,Matchweek 21,D 2–2,a2d435b3,d07537b9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-01-21,bcbbc55f
+Premier League,Matchweek 22,W 4–2,a2d435b3,8602292d,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-02-04,76a2a22c
+Premier League,Matchweek 28,D 1–1,a2d435b3,cd051869,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-03-18,7647948e

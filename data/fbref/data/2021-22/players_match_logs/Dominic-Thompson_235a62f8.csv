@@ -1,0 +1,14 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 3,D 1–1,cd051869,8602292d,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-08-28,a08ef96c
+Premier League,Matchweek 4,L 0–1,cd051869,d07537b9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-09-11,19a03697
+Premier League,Matchweek 5,W 2–0,cd051869,8cec06e1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-09-18,fd1d60f4
+Premier League,Matchweek 8,L 0–1,cd051869,cff3d9bb,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-10-16,866cfb1f
+Premier League,Matchweek 11,L 1–2,cd051869,1c781004,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-11-06,0f029791
+Premier League,Matchweek 12,D 3–3,cd051869,b2b47a98,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-11-20,adbf56bc
+Premier League,Matchweek 13,W 1–0,cd051869,d3fd31cc,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-11-28,286c4c1c
+Premier League,Matchweek 15,D 2–2,cd051869,5bfb9659,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-12-05,175160b7
+Premier League,Matchweek 16,W 2–1,cd051869,2abfe087,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-12-10,49a36a4e
+Premier League,Matchweek 19,L 0–2,cd051869,d07537b9,1,65,0,0,0,0,1,0,0,0,31,0,0,0,0.1,0.1,0.0,1,0,15,25,60.0,0,12,0,1,0,2021-12-26,1f64133b
+Premier League,Matchweek 20,L 0–1,cd051869,b8fd03ef,1,81,0,0,0,0,0,0,0,0,26,1,2,2,0.0,0.0,0.0,0,0,6,16,37.5,0,13,0,1,0,2021-12-29,1a0df937
+Premier League,Matchweek 21,W 2–1,cd051869,8602292d,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-01-02,dfaa1817
+Premier League,Matchweek 18,L 1–4,cd051869,33c895d4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-01-11,0859817d

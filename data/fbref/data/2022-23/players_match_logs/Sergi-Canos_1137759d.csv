@@ -1,0 +1,13 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 8,L 0–3,cd051869,18bb7c10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-09-18,fd5626e6
+Premier League,Matchweek 10,L 1–5,cd051869,b2b47a98,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-10-08,7dd42d3f
+Premier League,Matchweek 11,W 2–0,cd051869,d07537b9,0,11,0,0,0,0,0,0,0,0,8,0,0,2,0.0,0.0,0.0,1,0,3,4,75.0,1,4,0,2,2,2022-10-14,69409682
+Premier League,Matchweek 12,D 0–0,cd051869,cff3d9bb,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-10-19,b7a32aeb
+Premier League,Matchweek 13,L 0–4,cd051869,8602292d,0,45,0,0,0,0,0,0,0,0,27,0,0,0,0.0,0.0,0.0,1,0,14,23,60.9,1,16,3,3,2,2022-10-23,7764ca02
+Premier League,Matchweek 14,D 1–1,cd051869,8cec06e1,0,8,0,0,0,0,0,0,0,0,6,0,0,0,0.0,0.0,0.0,1,0,3,6,50.0,0,3,1,0,0,2022-10-29,41e403d3
+Premier League,Matchweek 15,D 2–2,cd051869,e4a775cb,0,10,0,0,0,0,1,0,0,0,10,0,0,1,0.1,0.1,0.0,0,0,2,5,40.0,0,3,0,1,0,2022-11-05,12251835
+Premier League,Matchweek 16,W 2–1,cd051869,b8fd03ef,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-11-12,28b60c1b
+Premier League,Matchweek 17,D 2–2,cd051869,361ca564,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-12-26,14e4f648
+Premier League,Matchweek 18,W 2–0,cd051869,7c21e445,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-12-30,56acbbbe
+Premier League,Matchweek 19,W 3–1,cd051869,822bd0ba,0,3,0,0,0,0,0,0,0,0,6,0,0,0,0.0,0.0,0.0,0,0,1,5,20.0,0,3,0,0,0,2023-01-02,af6aa183
+Premier League,Matchweek 20,W 2–0,cd051869,4ba7cbea,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-01-14,3f992264

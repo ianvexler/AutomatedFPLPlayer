@@ -1,0 +1,10 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 5,D 1–1,5bfb9659,b2b47a98,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-09-17,aad7d38a
+Premier League,Matchweek 7,W 1–0,5bfb9659,2abfe087,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-10-02,be9d8a45
+Premier League,Matchweek 8,L 0–1,5bfb9659,33c895d4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-10-16,8bde822c
+Premier League,Matchweek 11,D 1–1,5bfb9659,a2d435b3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-11-07,8fd004c6
+Premier League,Matchweek 12,L 1–2,5bfb9659,361ca564,0,4,0,0,0,0,0,0,0,0,5,0,0,0,0.0,0.0,0.0,0,0,2,3,66.7,0,3,0,0,0,2021-11-21,a74a684e
+Premier League,Matchweek 16,L 2–3,5bfb9659,cff3d9bb,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-12-11,6ad3036b
+Premier League,Matchweek 22,W 3–2,5bfb9659,7c21e445,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-01-16,62c16969
+Premier League,Matchweek 23,L 0–1,5bfb9659,b2b47a98,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-01-22,07df6328
+Premier League,Matchweek 24,D 3–3,5bfb9659,8602292d,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-02-09,f1e84229

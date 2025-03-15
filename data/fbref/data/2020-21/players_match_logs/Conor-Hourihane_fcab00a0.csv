@@ -1,0 +1,16 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 2,W 1–0,8602292d,1df6b87e,1,61,0,0,0,0,1,0,0,0,69,0,0,1,0.1,0.1,0.3,4,0,52,66,78.8,14,48,1,0,0,2020-09-21,98b4b5b6
+Premier League,Matchweek 3,W 3–0,8602292d,fd962109,1,75,1,1,0,0,2,1,0,0,34,0,0,1,0.4,0.4,0.4,2,1,21,28,75.0,3,8,0,0,0,2020-09-28,6b258be0
+Premier League,Matchweek 4,W 7–2,8602292d,822bd0ba,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-10-04,14a7771b
+Premier League,Matchweek 5,W 1–0,8602292d,a2d435b3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-10-18,7751d8c1
+Premier League,Matchweek 6,L 0–3,8602292d,5bfb9659,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-10-23,873ab775
+Premier League,Matchweek 7,L 3–4,8602292d,33c895d4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-11-01,235264ac
+Premier League,Matchweek 8,W 3–0,8602292d,18bb7c10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-11-08,90fd3597
+Premier League,Matchweek 9,L 1–2,8602292d,d07537b9,0,16,0,0,0,0,0,0,0,0,20,0,0,0,0.0,0.0,0.0,0,0,14,20,70.0,2,11,0,0,0,2020-11-21,dea0df40
+Premier League,Matchweek 10,L 1–2,8602292d,7c21e445,1,73,0,0,0,0,2,1,0,0,54,0,0,1,0.2,0.2,0.0,2,0,35,50,70.0,4,15,0,0,0,2020-11-30,2f67603c
+Premier League,Matchweek 12,W 1–0,8602292d,8cec06e1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-12-12,f809a014
+Premier League,Matchweek 13,D 0–0,8602292d,943e8050,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-12-17,5d89f60c
+Premier League,Matchweek 14,W 3–0,8602292d,60c6b05f,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-12-20,4bbe55ff
+Premier League,Matchweek 15,W 3–0,8602292d,47c64c55,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-12-26,537b6ef8
+Premier League,Matchweek 16,D 1–1,8602292d,cff3d9bb,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-12-28,ac7d1071
+Premier League,Matchweek 17,L 1–2,8602292d,19538871,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-01-01,0ae3a66d

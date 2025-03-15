@@ -1,0 +1,12 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 1,W 1–0,d3fd31cc,361ca564,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-09-13,fc7f9aa1
+Premier League,Matchweek 2,W 5–2,d3fd31cc,60c6b05f,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-09-19,45bd1880
+Premier League,Matchweek 3,W 2–1,d3fd31cc,47c64c55,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-09-26,7387a72e
+Premier League,Matchweek 7,L 1–2,d3fd31cc,b2b47a98,1,76,0,0,0,0,0,0,0,0,59,2,0,0,0.0,0.0,0.0,1,0,41,52,78.8,1,20,2,0,0,2020-11-01,448a43ee
+Premier League,Matchweek 12,W 1–0,d3fd31cc,cff3d9bb,0,1,0,0,0,0,0,0,0,0,6,0,1,0,0.0,0.0,0.0,0,0,4,4,100.0,0,4,0,0,0,2020-12-12,4847e3c3
+Premier League,Matchweek 13,W 2–0,d3fd31cc,a2d435b3,0,1,0,0,0,0,0,0,0,0,2,0,0,0,0.0,0.0,0.0,0,0,2,2,100.0,0,2,0,0,0,2020-12-16,b30c816c
+Premier League,Matchweek 14,W 2–1,d3fd31cc,18bb7c10,0,1,0,0,0,0,0,0,0,0,2,0,0,0,0.0,0.0,0.0,0,0,0,1,0.0,0,1,0,0,0,2020-12-19,72fa1993
+Premier League,Matchweek 15,W 1–0,d3fd31cc,1df6b87e,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-12-26,870d9436
+Premier League,Matchweek 18,W 2–1,d3fd31cc,8cec06e1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-01-12,8cbb9119
+Premier League,Matchweek 20,D 1–1,d3fd31cc,a2d435b3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-01-27,3e4ff1e0
+Premier League,Matchweek 21,L 0–2,d3fd31cc,b2b47a98,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-01-30,88053fb0

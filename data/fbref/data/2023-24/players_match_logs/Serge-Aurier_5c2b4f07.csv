@@ -1,0 +1,14 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 1,L 1–2,e4a775cb,18bb7c10,1,90,0,0,0,0,0,0,0,0,20,2,1,0,0.0,0.0,0.0,0,0,6,12,50.0,1,11,0,1,0,2023-08-12,26a7f90c
+Premier League,Matchweek 2,W 2–1,e4a775cb,1df6b87e,1,90,0,2,0,0,1,0,1,0,88,1,0,2,0.0,0.0,0.4,4,2,59,76,77.6,10,46,4,2,0,2023-08-18,a0a93f71
+Premier League,Matchweek 3,L 2–3,e4a775cb,19538871,1,90,0,0,0,0,0,0,1,0,51,1,1,1,0.0,0.0,0.0,2,0,20,34,58.8,4,15,1,4,1,2023-08-26,70d9b1ab
+Premier League,Matchweek 4,W 1–0,e4a775cb,cff3d9bb,1,71,0,0,0,0,0,0,0,0,39,3,0,0,0.0,0.0,0.0,0,0,20,29,69.0,3,16,0,2,0,2023-09-02,44e89d37
+Premier League,Matchweek 6,L 0–2,e4a775cb,b8fd03ef,Y*,55,0,0,0,0,0,0,0,0,34,0,0,0,0.0,0.0,0.0,0,0,28,32,87.5,2,24,0,0,0,2023-09-23,5dc7e234
+Premier League,Matchweek 7,D 1–1,e4a775cb,cd051869,Y*,90,0,0,0,0,0,0,0,0,59,3,1,3,0.0,0.0,0.0,0,0,41,49,83.7,2,24,1,1,0,2023-10-01,923467c5
+Premier League,Matchweek 8,D 0–0,e4a775cb,47c64c55,Y*,45,0,0,0,0,2,1,0,0,56,0,1,0,0.0,0.0,0.0,1,0,41,47,87.2,4,32,1,1,1,2023-10-07,1828106c
+Premier League,Matchweek 9,D 2–2,e4a775cb,e297cd13,Y*,87,0,0,0,0,1,0,0,0,44,3,1,2,0.0,0.0,0.0,1,0,29,32,90.6,4,16,1,0,0,2023-10-21,d1671efa
+Premier League,Matchweek 10,L 0–3,e4a775cb,822bd0ba,Y*,90,0,0,0,0,0,0,0,0,53,1,2,1,0.0,0.0,0.0,2,0,26,40,65.0,3,18,2,1,0,2023-10-29,79bf0c7f
+Premier League,Matchweek 11,W 2–0,e4a775cb,8602292d,0,20,0,0,0,0,0,0,0,0,11,1,0,0,0.0,0.0,0.0,0,0,2,6,33.3,2,1,0,0,0,2023-11-05,ac18f108
+Premier League,Matchweek 12,L 2–3,e4a775cb,7c21e445,0,15,0,0,0,0,1,0,0,0,13,0,0,1,0.0,0.0,0.0,1,0,7,9,77.8,1,4,0,0,0,2023-11-12,76b8e568
+Premier League,Matchweek 13,L 2–3,e4a775cb,d07537b9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-11-25,36be5cee
+Premier League,Matchweek 14,L 0–1,e4a775cb,d3fd31cc,1,90,0,0,0,0,1,0,0,0,100,5,2,0,0.0,0.0,0.0,4,0,69,82,84.1,11,42,0,2,1,2023-12-02,0486198b

@@ -1,0 +1,8 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 1,W 4–3,822bd0ba,5bfb9659,1,90,0,0,0,0,0,0,0,0,61,1,2,1,0.0,0.0,0.0,0,0,42,54,77.8,8,33,1,2,2,2020-09-12,21b58926
+Premier League,Matchweek 3,W 3–1,822bd0ba,18bb7c10,1,90,0,0,0,0,0,0,0,0,128,0,0,1,0.0,0.0,0.0,1,0,115,125,92.0,4,96,0,2,2,2020-09-28,ebe4e309
+Premier League,Matchweek 4,L 2–7,822bd0ba,8602292d,1,60,0,0,0,0,0,0,0,0,69,0,0,0,0.0,0.0,0.0,0,0,56,63,88.9,7,53,2,0,0,2020-10-04,14a7771b
+Premier League,Matchweek 5,D 2–2,822bd0ba,d3fd31cc,0,80,0,0,0,0,0,0,0,0,51,0,0,0,0.0,0.0,0.0,0,0,37,45,82.2,1,26,0,0,0,2020-10-17,6da04e2d
+Premier League,Matchweek 6,W 2–1,822bd0ba,1df6b87e,1,90,0,0,0,0,0,0,0,0,104,1,2,1,0.0,0.0,0.0,1,0,85,90,94.4,11,74,0,0,0,2020-10-24,0bc8d984
+Premier League,Matchweek 7,W 2–1,822bd0ba,7c21e445,1,90,0,0,0,0,0,0,0,0,117,1,0,0,0.0,0.0,0.0,1,0,104,113,92.0,7,96,1,0,0,2020-10-31,56ad8025
+Premier League,Matchweek 8,D 1–1,822bd0ba,b8fd03ef,1,90,0,0,0,0,0,0,0,0,73,0,0,0,0.0,0.0,0.0,0,0,61,68,89.7,0,53,0,0,0,2020-11-08,26382194

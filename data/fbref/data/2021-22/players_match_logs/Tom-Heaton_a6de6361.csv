@@ -1,0 +1,15 @@
+comp,round,result,squad,opponent,start,min,performance_sota,performance_ga,performance_saves,performance_save%,performance_cs,performance_psxg,penalty kicks_pkatt,penalty kicks_pka,penalty kicks_pksv,penalty kicks_pkm,launched_cmp,launched_att,launched_cmp%,passes_att (gk),passes_thr,passes_launch%,passes_avglen,goal kicks_att,goal kicks_launch%,goal kicks_avglen,crosses_opp,crosses_stp,crosses_stp%,sweeper_#opa,sweeper_avgdist,date,match_id
+Premier League,Matchweek 1,W 5–1,19538871,5bfb9659,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-08-14,e62685d4
+Premier League,Matchweek 2,D 1–1,19538871,33c895d4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-08-22,345b3989
+Premier League,Matchweek 3,W 1–0,19538871,8cec06e1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-08-29,871109e6
+Premier League,Matchweek 4,W 4–1,19538871,b2b47a98,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-09-11,7794fd6c
+Premier League,Matchweek 5,W 2–1,19538871,7c21e445,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-09-19,2daea068
+Premier League,Matchweek 6,L 0–1,19538871,8602292d,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-09-25,7c21232e
+Premier League,Matchweek 12,L 1–4,19538871,2abfe087,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-11-20,31a03035
+Premier League,Matchweek 16,W 1–0,19538871,1c781004,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-12-11,11a67612
+Premier League,Matchweek 22,D 2–2,19538871,8602292d,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-01-15,745dc664
+Premier League,Matchweek 17,W 3–1,19538871,cd051869,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-01-19,f7c0bd68
+Premier League,Matchweek 18,W 2–0,19538871,d07537b9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-02-15,a1fb5fa2
+Premier League,Matchweek 32,L 0–1,19538871,d3fd31cc,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-04-09,f976e20a
+Premier League,Matchweek 37,D 1–1,19538871,cff3d9bb,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-04-28,39f0deaa
+Premier League,Matchweek 38,L 0–1,19538871,47c64c55,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-05-22,19173099

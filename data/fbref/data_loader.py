@@ -10,21 +10,20 @@ import time
 import unicodedata
 
 class DataLoader:
-  def __init__(self, season, no_cache=False):
+  def __init__(self, season, no_cache=False, timeout=3):
     self.season = season
     self.fbref = sd.FBref(leagues=[
       'Big 5 European Leagues Combined',
-      # 'NED-Eredivisie'
     ], seasons=season)
     self.team_matcher = TeamMatcher()
 
-    self.LEAGUES = [
-      'Premier League',
-      'Serie A',
-      'Ligue 1',
-      'La Liga',
-      'Bundesliga'
-    ]
+    self.LEAGUES = {
+      'Premier League': 9,
+      'Serie A': 11,
+      'Ligue 1': 13,
+      'La Liga': 12,
+      'Bundesliga': 20
+    }
 
     self.STAT_TYPES = [
       'standard',
@@ -40,6 +39,9 @@ class DataLoader:
       'misc'
     ]
 
+    self.no_cache = no_cache
+    self.timeout = timeout
+
   def get_leagues(self):
     df = self.fbref.read_leagues()
     self.save_data_to_csv(df, 'data', 'leagues.csv')
@@ -54,6 +56,7 @@ class DataLoader:
       # Mutes warning logs from Soccerdata
       with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=FutureWarning)
+        # url = f"https://fbref.com/en/comps/Big5/{self.season}/stats/players/{self.season}-Big-5-European-Leagues-Stats"
         df = self.fbref.read_player_season_stats(stat)
         
         for league in df.index.get_level_values('league').unique():
@@ -74,12 +77,7 @@ class DataLoader:
   
   ### CUSTOM SCRAPPERS ###
 
-  def get_game_schedule(self):
-    season_str = self.format_season_str(self.season)
-    # url = f"https://fbref.com/en/squads/{fbref_id}/{season_str}/{team_url_name}-Stats"
-    # url = f"https://fbref.com/en/comps/12/{season_str}/schedule/{season_str}-La-Liga-Scores-and-Fixtures"
-    
-  def get_player_match_logs(self):
+  def get_player_match_logs(self, debug=False):
     season_str = self.format_season_str(self.season)
     player_ids_df = self.get_players_ids()
 
@@ -106,7 +104,12 @@ class DataLoader:
           stat_type = 'summary'
         else: 
           stat_type = 'keeper'
+
         url = f'https://fbref.com/en/players/{player_id}/matchlogs/{season_str}/{stat_type}/{normalized_name}-Match-Logs'
+
+        if debug:
+          print(f"Fetching: {url}")
+
         response = requests.get(url)
 
         dfs = pd.read_html(url, extract_links='all')
@@ -117,34 +120,19 @@ class DataLoader:
         player_df = player_df.iloc[:, 1:]
         player_df.columns = [self.reformat_column_name(col) for col in player_df.columns]
         
-        # TODO: Remove other cols        
+        # TODO: Remove other cols
         player_df = player_df.drop(columns=['day', 'venue', 'pos', 'match report'])
-
-        # Extracts the id from tuple second item
-        def extract_team_id(x):
-          if isinstance(x, tuple) and x[1] is not None:
-            match = re.search(r"en/squads/([a-fA-F0-9]+)", x[1])
-            return match.group(1) if match else x[1]
-
-        # Extracts the first value in each tuple
-        def extract_first_value(x):
-          if isinstance(x, tuple) and x[0] is not None:
-            if x[0] == 'On matchday squad, but did not play':
-              return 0
-            
-            match = re.search(r"\((\d+),?\)", x[0])
-            return float(match.group(1)) if match else x[0]
 
         # Reformat every cell in df
         for col in player_df.columns:
           if col in ['squad', 'opponent']:
-            player_df[col] = player_df[col].apply(extract_team_id)
+            player_df[col] = player_df[col].apply(self.extract_team_id)
           else:
-            player_df[col] = player_df[col].apply(extract_first_value)
+            player_df[col] = player_df[col].apply(self.extract_first_value)
 
         # Format start value
         def convert_start_value(x):
-          return 1 if x == "Y" else 0 if x == "N" else x
+          return 1 if x == "Y" or x == "Y*" else 0 if x == "N" else x
         player_df['start'] = player_df['start'].apply(convert_start_value)
 
         # Adds the match data
@@ -158,28 +146,46 @@ class DataLoader:
         player_df['match_id'] = match_data.apply(extract_match_id)  
 
         # Filter out data thats not from league competitions
-        player_df = player_df[player_df['comp'].isin(self.LEAGUES)]
+        player_df = player_df[player_df['comp'].isin(self.LEAGUES.keys())]
 
         # Drop rows with Nan data
         player_df = player_df.dropna()
-
-        player_df.to_csv(f'{normalized_name}.csv')
         
         self.save_data_to_csv(player_df, subdirectory, filename)
-        time.sleep(20)
+        time.sleep(self.timeout)
+
+      if not 'id' in player_df.columns:
+        player_df['id'] = player_id
 
       players_df = pd.concat([players_df, player_df], ignore_index=True)
+    
     return players_df
+
+  # Extracts the id from tuple second item
+  def extract_team_id(self, x):
+    if isinstance(x, tuple) and x[1] is not None:
+      match = re.search(r"en/squads/([a-fA-F0-9]+)", x[1])
+      return match.group(1) if match else x[1]
+
+  # Extracts the first value in each tuple
+  def extract_first_value(self, x):
+    if isinstance(x, tuple) and x[0] is not None:
+      if x[0] == 'On matchday squad, but did not play':
+        return 0
+
+      match = re.search(r"\((\d+),?\)", x[0])
+      return float(match.group(1)) if match else x[0]
 
   def reformat_column_name(self, col):
     """Formats column names based on the given tuple structure."""
+    
     if isinstance(col, tuple) and len(col) == 2:
       first, second = col
       if first == ('', None):
         return second[0].lower()
       elif isinstance(first, tuple) and isinstance(second, tuple):
         return f"{first[0].lower()}_{second[0].lower()}"
-      return col
+      return col[0]
 
   # Gets FBref player ids
   def get_players_ids(self, debug=False):
@@ -225,37 +231,54 @@ class DataLoader:
         team_df = team_df.dropna(subset=['id'])
 
         self.save_data_to_csv(team_df, subdirectory, filename)
-        time.sleep(20)
+        time.sleep(self.timeout)
       
       players_df = pd.concat([players_df, team_df], ignore_index=True)
 
     players_df = players_df.drop_duplicates(subset=['id'], keep='first')
     return players_df
 
-  def get_player_stats(self):
-    # TODO: Loop through all stat types
-    stat_type = 'stats'
-    
-    url = f"https://fbref.com/en/comps/Big5/{self.season}/{stat_type}/players/{self.season}-Big-5-European-Leagues-Stats"
+  def get_league_team_stats(self, debug=False):
+    season_str = self.format_season_str(self.season)
+    leagues_team_df = pd.DataFrame()
 
-    dfs = pd.read_html(url, extract_links='all')
-    df = dfs[0]
+    for league, league_code in self.LEAGUES.items():
+      subdirectory = f'data/{self.season}/leagues'
+      filename = f"{league}.csv"
+      script_dir = os.path.dirname(os.path.abspath(__file__))
+      file_path = os.path.join(script_dir, subdirectory, filename)
 
-    df = self.format_df(df, stat_type)
+      if os.path.exists(file_path):
+        if debug:
+          print(f"Loading: {file_path}")
+        league_df = pd.read_csv(file_path, header=[0])
 
-    # Groups the dfs by league and team
-    idx = pd.IndexSlice
-    league_series = df.loc[:, idx[:, :, 'League']].squeeze()
-    team_series = df.loc[:, idx[:, :, 'Team']].squeeze()
+      else:
+        league_url = league.replace(' ', '-')
+        url = f"https://fbref.com/en/comps/{league_code}/{season_str}/{season_str}-{league_url}-Stats"
+        
+        if debug:
+          print(f"Fetching: {url}")
 
-    grouped = df.groupby([league_series, team_series])
+        dfs = pd.read_html(url, extract_links='all')
+        league_df = dfs[0]
 
-    # Saves each df into a df
-    for (league, team), team_df in grouped:
-      self.save_data_to_csv(team_df, f"data/{self.season}/player_season_stats/leagues/{league}", f"{team}.csv")
+        league_df = league_df.iloc[:, 1:13].copy()
+        league_df.columns = [self.reformat_column_name(col) for col in league_df.columns]
 
-    return df
-  
+        for col in league_df.columns:
+          if col in ['squad']:
+            league_df[col] = league_df[col].apply(self.extract_team_id)
+          else:
+            league_df[col] = league_df[col].apply(self.extract_first_value)
+
+        self.save_data_to_csv(league_df, subdirectory, filename)
+        time.sleep(self.timeout)
+      
+      league_df["league"] = league
+      leagues_team_df = pd.concat([leagues_team_df, league_df], ignore_index=True)
+    return leagues_team_df
+
   def save_df_to_csv(self, current_df: pd.DataFrame, subdirectory, filename):
     # Get the directory of the current script file
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -278,123 +301,6 @@ class DataLoader:
     match = re.search(pattern, cell[1])
 
     return match.group(1)
-  
-  def format_df(self, df: pd.DataFrame, stat_type):
-    column_headers = self.extract_column_headers(df, stat_type)
-
-    df.columns = pd.MultiIndex.from_tuples(column_headers)
-    
-    df = df.fillna(0)
-
-    players_list = df[(None, None, 'Player')].to_list()
-    player_ids = list(map(self.extract_player_id, players_list))
-
-    df = self.add_player_id_to_df(df, player_ids)
-
-    df_formatted = df.map(self.extract_first_element)
-    df_formatted = self.format_cols_and_cells(df_formatted)
-
-    return df_formatted
-  
-  # Function to extract values from a tuple of tuples or a single tuple
-  def extract_value(self, input_data):
-    extracted_parts = []
-
-    # Check if input_data is a single tuple or a tuple of tuples
-    if isinstance(input_data, tuple) and isinstance(input_data[0], tuple):
-      # Iterate through each tuple in the tuple of tuples
-      for item in input_data:
-        if item[1] is None and item[0].strip():
-          extracted_parts.append(item[0].strip())
-    elif isinstance(input_data, tuple) and len(input_data) == 2:
-      # Handle the single tuple case
-      if input_data[1] is None and input_data[0].strip():
-        extracted_parts.append(input_data[0].strip())
-
-    return extracted_parts
-
-  """
-  Formats the columns in a df. E.g.:
-    - ('xG', None): 'xG'
-    - (('xG', None), ('Per 90 Minutes', None)): 'xG (Per 90 Minutes)'
-
-  Returns:
-    List of strings with all formatted cells
-  """
-  def extract_column_headers(self, df: pd.DataFrame, stat_type):
-    columns = []
-    
-    for col in df.columns:
-      values = self.extract_value(col)
-        
-      if (len(values) == 2):
-        column_tuple = (stat_type.capitalize(), values[0], values[1])
-
-      else:
-        column_tuple = (None, None, values[0])
-        
-      columns.append(column_tuple)
-        
-    return columns
-  
-  def format_cols_and_cells(self, df):
-    df_formatted = df.drop(columns=[
-      (np.nan, np.nan, 'Comp'), 
-      (np.nan, np.nan, 'Rk'), 
-      (np.nan, np.nan, 'Pos'), 
-      (np.nan, np.nan, 'Matches')
-    ], axis=1)    
-    
-    df_formatted.insert(6, (np.nan, np.nan, 'Position'), df[(np.nan, np.nan, 'Pos')].str[:2])
-    df_formatted.insert(7, (np.nan, np.nan, 'Alt Position'), df[(np.nan, np.nan, 'Pos')].str[3:])
-    df_formatted.insert(4, (np.nan, np.nan, 'League'), df[(np.nan, np.nan, 'Comp')].str[3:])
-    df_formatted.insert(4, (np.nan, np.nan, 'Team'), df[(np.nan, np.nan, 'Squad')])
-    
-    df_formatted[(np.nan, np.nan, 'Nation')] = df[(np.nan, np.nan, 'Nation')].str.split(' ').str.get(1)
-    
-    return df_formatted
-  
-  def extract_player_id(self, cell: tuple):
-    if cell[1] is None:
-        return None
-    pattern = r'/players/([^/]+)/'
-
-    match = re.search(pattern, cell[1])
-
-    if match:
-        return match.group(1)
-    else:
-        return None
-  
-  def add_player_id_to_df(self, df, player_id):
-    # Tuple where the Player ID is stored using None for the levels
-    player_id_tuple = (np.nan, np.nan, 'Player ID')
-  
-    # Convert player_id to a list if it's a single value for consistency
-    if not isinstance(player_id, (list, pd.Series)):
-      player_id = [player_id] * len(df)
-    
-    # Ensure the player_id column exists
-    if player_id_tuple in df.columns:
-      # Update or assign player_id values
-      df[player_id_tuple] = player_id
-    else:
-      # Add the player_id column for the first time
-      df[player_id_tuple] = player_id
-
-    # Drop duplicates based on player_id and keep the last occurrence
-    df = df.drop_duplicates(subset=[player_id_tuple], keep='last')
-    
-    # Drop rows where player_id is None
-    df = df.dropna(subset=[player_id_tuple])
-
-    # Reorder columns to make Player ID the third column
-    cols = df.columns.tolist()
-    if player_id_tuple in cols:
-      cols.insert(2, cols.pop(cols.index(player_id_tuple)))
-    df = df[cols]
-    
-    return df
   
   # Extracts first item in tuple
   def extract_first_element(self, cell):

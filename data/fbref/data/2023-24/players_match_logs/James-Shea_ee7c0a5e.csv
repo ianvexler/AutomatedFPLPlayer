@@ -1,0 +1,15 @@
+comp,round,result,squad,opponent,start,min,performance_sota,performance_ga,performance_saves,performance_save%,performance_cs,performance_psxg,penalty kicks_pkatt,penalty kicks_pka,penalty kicks_pksv,penalty kicks_pkm,launched_cmp,launched_att,launched_cmp%,passes_att (gk),passes_thr,passes_launch%,passes_avglen,goal kicks_att,goal kicks_launch%,goal kicks_avglen,crosses_opp,crosses_stp,crosses_stp%,sweeper_#opa,sweeper_avgdist,date,match_id
+Premier League,Matchweek 1,L 1–4,e297cd13,d07537b9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-08-12,56a137f7
+Premier League,Matchweek 19,W 3–2,e297cd13,1df6b87e,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-12-26,6269b2e3
+Premier League,Matchweek 27,L 2–3,e297cd13,8602292d,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-03-02,59f4adc0
+Premier League,Matchweek 28,D 1–1,e297cd13,47c64c55,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-03-09,fd693c8e
+Premier League,Matchweek 17,L 3–4,e297cd13,4ba7cbea,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-03-13,a32a8157
+Premier League,Matchweek 29,D 1–1,e297cd13,e4a775cb,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-03-16,76d09384
+Premier League,Matchweek 30,L 1–2,e297cd13,361ca564,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-03-30,6397e2af
+Premier League,Matchweek 31,L 0–2,e297cd13,18bb7c10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-04-03,77d7e2d6
+Premier League,Matchweek 32,W 2–1,e297cd13,4ba7cbea,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-04-06,08114c35
+Premier League,Matchweek 33,L 1–5,e297cd13,b8fd03ef,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-04-13,40128bc4
+Premier League,Matchweek 34,L 1–5,e297cd13,cd051869,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-04-20,c98abeb4
+Premier League,Matchweek 35,L 1–2,e297cd13,8cec06e1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-04-27,55d68500
+Premier League,Matchweek 36,D 1–1,e297cd13,d3fd31cc,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-05-03,76d10c7d
+Premier League,Matchweek 38,L 2–4,e297cd13,fd962109,0,15,2,0,2,100.0,0,0.1,0,0,0,0,3,6,50.0,6,1,83.3,50.8,3,33.3,37.3,3,0,0.0,1,19.0,2024-05-19,0fde9d70

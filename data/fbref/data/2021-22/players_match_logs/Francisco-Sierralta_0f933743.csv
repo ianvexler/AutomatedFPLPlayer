@@ -1,0 +1,17 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 1,W 3–2,2abfe087,8602292d,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-08-14,814b563c
+Premier League,Matchweek 2,L 0–2,2abfe087,d07537b9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-08-21,072af2f8
+Premier League,Matchweek 3,L 0–1,2abfe087,361ca564,1,90,0,0,0,0,0,0,0,0,62,1,0,0,0.0,0.0,0.0,0,0,52,55,94.5,0,31,0,0,0,2021-08-29,3cd9a733
+Premier League,Matchweek 4,L 0–2,2abfe087,8cec06e1,1,90,0,0,0,0,0,0,0,0,65,2,0,1,0.0,0.0,0.0,2,0,52,53,98.1,1,46,0,0,0,2021-09-11,09db0909
+Premier League,Matchweek 7,L 0–1,2abfe087,5bfb9659,1,67,0,0,0,0,0,0,0,0,30,0,1,2,0.0,0.0,0.0,0,0,9,20,45.0,1,12,1,2,2,2021-10-02,be9d8a45
+Premier League,Matchweek 11,L 0–1,2abfe087,18bb7c10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-11-07,e0208fcf
+Premier League,Matchweek 20,L 1–4,2abfe087,7c21e445,1,90,0,0,0,0,1,1,0,0,53,2,3,1,0.1,0.1,0.0,0,0,14,32,43.8,0,15,0,0,0,2021-12-28,b56fd899
+Premier League,Matchweek 21,L 0–1,2abfe087,361ca564,1,90,0,0,0,0,0,0,0,0,38,2,2,3,0.0,0.0,0.0,0,0,15,23,65.2,0,14,0,0,0,2022-01-01,9c831c07
+Premier League,Matchweek 22,D 1–1,2abfe087,b2b47a98,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-01-15,64dd3e3f
+Premier League,Matchweek 23,L 0–3,2abfe087,1c781004,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-01-21,5c592680
+Premier League,Matchweek 28,L 2–3,2abfe087,18bb7c10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-03-06,9d5abf8b
+Premier League,Matchweek 19,L 0–4,2abfe087,8cec06e1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-03-10,d0ee0e9a
+Premier League,Matchweek 32,L 0–3,2abfe087,5bfb9659,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-04-09,b18deecf
+Premier League,Matchweek 30,D 0–0,2abfe087,d3fd31cc,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-05-11,948fa2e3
+Premier League,Matchweek 37,L 1–5,2abfe087,a2d435b3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-05-15,5a142f6f
+Premier League,Matchweek 38,L 1–2,2abfe087,cff3d9bb,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-05-22,df85b298

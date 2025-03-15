@@ -1,0 +1,5 @@
+comp,round,result,squad,opponent,start,min,performance_sota,performance_ga,performance_saves,performance_save%,performance_cs,performance_psxg,penalty kicks_pkatt,penalty kicks_pka,penalty kicks_pksv,penalty kicks_pkm,launched_cmp,launched_att,launched_cmp%,passes_att (gk),passes_thr,passes_launch%,passes_avglen,goal kicks_att,goal kicks_launch%,goal kicks_avglen,crosses_opp,crosses_stp,crosses_stp%,sweeper_#opa,sweeper_avgdist,date,match_id
+Premier League,Matchweek 14,W 1–0,b8fd03ef,33c895d4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-12-19,8d4a02ae
+Premier League,Matchweek 17,W 3–1,b8fd03ef,cff3d9bb,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-01-03,85507602
+Premier League,Matchweek 30,W 2–0,b8fd03ef,a2d435b3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-04-03,d798017f
+Premier League,Matchweek 36,W 4–3,b8fd03ef,b2b47a98,1,90,5,3,1,60.0,0,2.4,2,1,1,0,0,1,0.0,14,6,0.0,18.9,2,50.0,29.5,10,0,0.0,0,16.5,2021-05-14,27601c16

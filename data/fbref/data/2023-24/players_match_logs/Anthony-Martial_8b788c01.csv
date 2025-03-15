@@ -1,0 +1,17 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 1,W 1–0,19538871,8cec06e1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-08-14,f1ecda2c
+Premier League,Matchweek 2,L 0–2,19538871,361ca564,0,6,0,0,0,0,0,0,0,0,8,1,0,0,0.0,0.0,0.0,1,0,6,6,100.0,1,6,0,1,0,2023-08-19,4bb62251
+Premier League,Matchweek 3,W 3–2,19538871,e4a775cb,1,59,0,0,0,0,1,0,0,0,19,0,0,1,0.0,0.0,0.0,1,0,13,15,86.7,1,14,1,0,0,2023-08-26,70d9b1ab
+Premier League,Matchweek 4,L 1–3,19538871,18bb7c10,1,66,0,0,0,0,1,1,0,0,17,0,0,0,0.0,0.0,0.0,1,0,11,12,91.7,2,10,1,0,0,2023-09-03,74125d47
+Premier League,Matchweek 5,L 1–3,19538871,d07537b9,0,27,0,0,0,0,0,0,0,0,10,1,0,0,0.0,0.0,0.0,0,0,7,10,70.0,0,7,0,1,1,2023-09-16,ddcf2857
+Premier League,Matchweek 6,W 1–0,19538871,943e8050,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-09-23,8e26793d
+Premier League,Matchweek 7,L 0–1,19538871,47c64c55,0,14,0,0,0,0,0,0,0,0,14,0,0,0,0.0,0.0,0.1,2,0,12,13,92.3,2,9,1,0,0,2023-09-30,ef2b7ab9
+Premier League,Matchweek 8,W 2–1,19538871,cd051869,0,20,0,0,0,0,1,1,0,0,9,0,0,0,0.2,0.2,0.0,0,0,7,7,100.0,1,5,0,0,0,2023-10-07,5006142a
+Premier League,Matchweek 9,W 2–1,19538871,1df6b87e,0,28,0,0,0,0,0,0,0,0,12,1,0,1,0.0,0.0,0.0,0,0,6,9,66.7,0,10,0,0,0,2023-10-21,d95b42eb
+Premier League,Matchweek 10,L 0–3,19538871,b8fd03ef,0,5,0,0,0,0,0,0,0,0,0,0,0,0,0.0,0.0,0.0,0,0,0,0,,0,0,0,0,0,2023-10-29,f6bfec82
+Premier League,Matchweek 11,W 1–0,19538871,fd962109,0,12,0,0,0,0,1,0,0,0,6,0,0,0,0.2,0.2,0.0,1,0,2,3,66.7,0,4,0,0,0,2023-11-04,31273be0
+Premier League,Matchweek 12,W 1–0,19538871,e297cd13,0,12,0,0,0,0,0,0,0,0,3,0,0,0,0.0,0.0,0.0,0,0,1,2,50.0,0,2,0,0,0,2023-11-11,4b9f3f25
+Premier League,Matchweek 13,W 3–0,19538871,d3fd31cc,1,84,1,0,0,0,1,1,0,0,32,1,0,1,0.8,0.8,0.0,1,1,16,24,66.7,2,11,1,3,1,2023-11-26,f82a83dd
+Premier League,Matchweek 14,L 0–1,19538871,b2b47a98,1,60,0,0,0,0,0,0,0,0,17,0,0,0,0.0,0.0,0.0,0,0,9,13,69.2,0,7,2,1,0,2023-12-02,66a1f3ac
+Premier League,Matchweek 15,W 2–1,19538871,cff3d9bb,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-12-06,49f486f6
+Premier League,Matchweek 16,L 0–3,19538871,4ba7cbea,1,55,0,0,0,0,1,1,0,0,31,0,0,1,0.0,0.0,0.1,4,0,19,25,76.0,3,20,0,0,0,2023-12-09,0760a568

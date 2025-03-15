@@ -97,7 +97,7 @@ class PlayerMatcher:
 
     return data
   
-  def create_player_dict(self, start_year=20):
+  def create_player_dict(self, start_year=17):
     # Restart player dict
     self.player_dict = {}
 

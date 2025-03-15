@@ -15,6 +15,7 @@ class LSTMModel:
     self.time_steps = time_steps
     self.position = position
     self.include_prev_season = include_prev_season
+    self.multi_layer = multi_layer
 
   def build_model(self):
     feature_selector = FeatureSelector()

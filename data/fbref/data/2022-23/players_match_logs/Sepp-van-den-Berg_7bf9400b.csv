@@ -1,0 +1,15 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 1,D 2–2,822bd0ba,fd962109,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-08-06,6713c1dc
+Premier League,Matchweek 2,D 1–1,822bd0ba,47c64c55,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-08-15,b3c6f709
+Premier League,Matchweek 3,L 1–2,822bd0ba,19538871,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-08-22,3c9a8f71
+Premier League,Matchweek 4,W 9–0,822bd0ba,4ba7cbea,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-08-27,de515487
+Bundesliga,Matchweek 5,D 1–1,c539e393,598bc722,1,90,0,0,0,0,1,0,0,0,67,0,2,0,0.3,0.3,0.0,1,0,52,58,89.7,3,43,1,0,0,2022-09-03,0d221ece
+Bundesliga,Matchweek 6,W 3–1,c539e393,b42c6323,1,90,0,0,0,0,1,0,0,0,53,0,3,1,0.2,0.2,0.0,0,0,31,40,77.5,2,24,0,0,0,2022-09-10,b14cfbae
+Bundesliga,Matchweek 7,L 0–1,c539e393,add600ae,1,90,0,0,0,0,1,0,1,0,46,2,1,1,0.0,0.0,0.0,0,0,27,32,84.4,0,18,0,0,0,2022-09-17,5bae3507
+Bundesliga,Matchweek 8,L 2–3,c539e393,0cdc4311,1,52,0,0,0,0,0,0,0,0,28,0,2,2,0.0,0.0,0.0,1,0,17,22,77.3,0,14,0,0,0,2022-10-02,2d3719fb
+Bundesliga,Matchweek 29,L 0–4,c539e393,a486e511,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-04-23,f0286cc7
+Bundesliga,Matchweek 30,W 2–1,c539e393,62add3bf,0,14,1,0,0,0,1,1,1,0,10,0,0,0,0.1,0.1,0.0,0,0,6,7,85.7,0,4,0,0,0,2023-04-29,d5da6439
+Bundesliga,Matchweek 31,W 3–2,c539e393,a224b06a,1,90,0,0,0,0,0,0,0,0,56,1,0,1,0.0,0.0,0.0,0,0,34,41,82.9,3,21,0,1,1,2023-05-05,6b6e2610
+Bundesliga,Matchweek 32,L 0–6,c539e393,054efa67,1,90,0,0,0,0,1,0,0,0,51,1,1,2,0.1,0.1,0.1,1,0,33,39,84.6,2,27,0,3,0,2023-05-13,fe6503dd
+Bundesliga,Matchweek 33,D 2–2,c539e393,f0ac8ee6,1,90,0,0,0,0,0,0,0,0,62,1,4,0,0.0,0.0,0.0,0,0,46,54,85.2,1,39,0,0,0,2023-05-20,076b76d0
+Bundesliga,Matchweek 34,L 2–4,c539e393,acbb6a5b,1,90,0,0,0,0,0,0,0,0,46,0,0,1,0.0,0.0,0.0,0,0,31,41,75.6,1,33,0,0,0,2023-05-27,2f8cd3bf

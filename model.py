@@ -25,8 +25,9 @@ class Model:
     time_steps=7, 
     train=False, 
     include_prev_season=False,
-    model_type = ModelType.LSTM
-  ):
+    model_type = ModelType.LSTM,
+    include_fbref=False,
+    training_years=3):
     self.model_type = model_type
 
     self.gw_data = gw_data.sort_values(by=['id', 'kickoff_time'])  # Gameweek-level data
@@ -40,6 +41,8 @@ class Model:
 
     self.time_steps = time_steps
     self.include_prev_season = include_prev_season
+    self.include_fbref = include_fbref
+    self.training_years = training_years
 
     self.models = {
       'GK': self._set_model('GK'),
@@ -55,7 +58,7 @@ class Model:
       'FWD': FeatureScaler('FWD', self.model_type)
     }
 
-    self.DIRECTORY = f"{self.model_type.value}/steps_{self.time_steps}_prev_season_{self.include_prev_season}"
+    self.DIRECTORY = f"{self.model_type.value}/steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}"
     
     if not train:
       for position in self.models:
@@ -63,7 +66,7 @@ class Model:
 
         self.models[position] = self._load_model(position)
         
-        features = self.feature_selector.get_features_for_position(position, self.include_prev_season)      
+        features = self.feature_selector.get_features_for_position(position, self.include_prev_season, self.include_fbref)      
         scaler = self.scalers[position]
         scaler.load_scalers(features)
   
@@ -133,34 +136,42 @@ class Model:
     start_year, end_year = self.season.split('-')
     start_year, end_year = int(start_year), int(end_year)
 
+    past_start_year = start_year - self.training_years
+
     data_loader = DataLoader()
     all_data = []
     required_columns = None
 
-    while True:
-      try:
-        prev_season = f"{start_year - 1}-{end_year - 1}"
-        print(f"Trying to load data for season: {prev_season}")
+    # Train using data from n years in the past
+    while start_year >= past_start_year:
+      prev_season = f"{start_year - 1}-{end_year - 1}"
+      print(f"Loading training data for season: {prev_season}")
 
-        season_data = data_loader.get_merged_gw_data(prev_season, self.time_steps, self.include_prev_season)
+      # TODO: Add option to not include team data
+      season_data = data_loader.get_merged_gw_data(
+        prev_season, 
+        time_steps=self.time_steps, 
+        include_season=self.include_prev_season,
+        include_teams=True,
+        include_fbref=self.include_fbref)
 
-        # Ensure the data has the required columns
-        if all_data:
-          required_columns = all_data[0].columns
-          missing_columns = set(required_columns) - set(season_data.columns)
+      # Ensure the data has the required columns
+      if all_data:
+        required_columns = all_data[0].columns
+        missing_columns = set(required_columns) - set(season_data.columns)
 
-          if missing_columns:
-            print(f"Missing columns in {prev_season}: {missing_columns}")
-            for col in missing_columns:
-              season_data[col] = 0
+        if missing_columns:
+          print(f"Missing columns in {prev_season}: {missing_columns}")
+          for col in missing_columns:
+            season_data[col] = 0
 
-        all_data.append(season_data)
-        start_year -= 1
-        end_year -= 1
+      all_data.append(season_data)
 
-      except Exception as e:
-        print(f"Stopping at {prev_season} due to error: {e}\n")
-        break
+      # Move to the previous season
+      start_year -= 1
+      end_year -= 1
+
+    return all_data 
 
     # Concatenate all collected data and return
     if all_data:
@@ -176,7 +187,7 @@ class Model:
     # Filter data per position
     position_gw_data = training_data[training_data['position'] == position]
     
-    features = self.feature_selector.get_features_for_position(position, self.include_prev_season)
+    features = self.feature_selector.get_features_for_position(position, self.include_prev_season, self.include_fbref)
     feature_scaler = self._fit_scaler(position_gw_data, features, position)
 
     # Iterate on every game for every player
@@ -348,7 +359,7 @@ class Model:
 
     player_data = self._add_gw_decay(player_data, kickoff_time)
 
-    features = self.feature_selector.get_features_for_position(position, self.include_prev_season)
+    features = self.feature_selector.get_features_for_position(position, self.include_prev_season, self.include_fbref)
     player_data = player_data[features]
 
     scaler = self.scalers[position]
@@ -418,6 +429,7 @@ if __name__=='__main__':
   parser.add_argument('--prev_season', action='store_true', help='Set this flag to include prev season data. Defaults to false.')
   parser.add_argument('--model', type=str, help='The model to use', choices=[m.value for m in ModelType])
   parser.add_argument('--no_train', action='store_true', help='')
+  parser.add_argument('--fbref', action='store_true', help='')
   
   args = parser.parse_args()
 
@@ -432,8 +444,7 @@ if __name__=='__main__':
   fixtures_data = data_loader.get_fixtures(args.season)
   teams_data = data_loader.get_teams_data(args.season)
   players_data = data_loader.get_players_data(args.season)
-  gw_data = data_loader.get_merged_gw_data(args.season, args.steps, include_season=args.prev_season)
-
+  gw_data = data_loader.get_merged_gw_data(args.season, args.steps, include_season=args.prev_season, include_fbref=args.fbref)
 
   model = Model(
     gw_data=gw_data,
@@ -444,7 +455,8 @@ if __name__=='__main__':
     time_steps=args.steps,
     include_prev_season=args.prev_season,
     model_type=model_type,
-    train=(not args.no_train))
+    train=(not args.no_train),
+    include_fbref=args.fbref)
 
   if not args.no_train:
     model.train()

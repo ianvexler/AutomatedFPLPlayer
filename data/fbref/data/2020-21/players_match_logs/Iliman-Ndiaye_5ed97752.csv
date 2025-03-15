@@ -1,0 +1,8 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 22,W 2–1,1df6b87e,60c6b05f,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-02-02,2d3d863d
+Premier League,Matchweek 26,L 0–2,1df6b87e,822bd0ba,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-02-28,3826d9aa
+Premier League,Matchweek 29,W 1–0,1df6b87e,8602292d,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-03-03,3a9c1c4d
+Premier League,Matchweek 27,L 0–2,1df6b87e,33c895d4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-03-06,9d08bb4e
+Premier League,Matchweek 28,L 0–5,1df6b87e,a2d435b3,0,12,0,0,0,0,0,0,0,0,7,1,0,0,0.0,0.0,0.0,0,0,3,3,100.0,0,2,0,0,0,2021-03-14,d3bc5214
+Premier League,Matchweek 30,L 1–2,1df6b87e,5bfb9659,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-04-03,c4ed64b9
+Premier League,Matchweek 31,L 0–3,1df6b87e,18bb7c10,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-04-11,34395b54

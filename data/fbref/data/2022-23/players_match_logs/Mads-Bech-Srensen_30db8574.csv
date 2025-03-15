@@ -1,0 +1,12 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 1,D 2–2,cd051869,a2d435b3,0,8,0,0,0,0,0,0,0,0,8,0,1,0,0.0,0.0,0.0,1,0,4,6,66.7,1,1,0,0,0,2022-08-07,3249ba27
+Premier League,Matchweek 2,W 4–0,cd051869,19538871,0,11,0,0,0,0,0,0,0,0,5,0,0,0,0.0,0.0,0.0,0,0,2,4,50.0,0,1,0,0,0,2022-08-13,04712d4e
+Premier League,Matchweek 3,L 2–3,cd051869,fd962109,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-08-20,a107c037
+Premier League,Matchweek 4,D 1–1,cd051869,d3fd31cc,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0.0,0.0,0.0,0,0,1,1,100.0,0,0,0,0,0,2022-08-27,db59fc65
+Premier League,Matchweek 5,D 1–1,cd051869,47c64c55,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-08-30,e1d6440f
+Ligue 1,Matchweek 6,L 0–1,132ebc33,fd6114db,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-09-04,cd865a2a
+Ligue 1,Matchweek 7,W 1–0,132ebc33,7a54bb4f,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-09-11,e7c831c2
+Ligue 1,Matchweek 9,L 1–2,132ebc33,e2d8892c,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-10-01,36ac65e1
+Ligue 1,Matchweek 11,D 1–1,132ebc33,5ae09109,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-10-16,a9ffc8fd
+Premier League,Matchweek 19,W 3–1,cd051869,822bd0ba,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0.0,0.0,0.0,0,0,0,0,,0,0,0,0,0,2023-01-02,af6aa183
+Premier League,Matchweek 20,W 2–0,cd051869,4ba7cbea,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-01-14,3f992264

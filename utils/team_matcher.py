@@ -14,7 +14,7 @@ class TeamMatcher:
     self.FILENAME = 'team_ids.json'
     self.team_dict = self.load_dict()
 
-    self.FPL_OVERRIDE = {
+    self.FBREF_OVERRIDE = {
       "Spurs": "Tottenham Hotspur",
       "Man Utd": "Manchester Utd",
       "Man City": "Manchester City"
@@ -24,25 +24,25 @@ class TeamMatcher:
       "Wolves": "Wolverhampton Wanderers FC"
     }
 
-  def get_fpl_teams(self, start_year=20):
+    self.ELO_OVERRIDE = {
+      "Man Utd": "Man United",
+      "Spurs": "Tottenham"
+    }
+
+  def get_fpl_teams(self):
     teams_df = pd.DataFrame()
 
     # Fetch FPL team data
-    for start_year in range(start_year, 25):
-      season = f"20{start_year:02d}-{(start_year + 1) % 100:02d}"
-      response = requests.get(f"https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/refs/heads/master/data/{season}/teams.csv")
-      response.raise_for_status()
-      
-      season_df = pd.read_csv(io.StringIO(response.text))
-      season_df["season"] = season
-      
-      if teams_df.empty:
-        teams_df = season_df.copy()
-      else:
-        teams_df = pd.concat([teams_df, season_df], ignore_index=True)
+    response = requests.get("https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/58de8250c856e3476d45557422b257a3659b2b26/data/master_team_list.csv")
+    response.raise_for_status()
+    teams_df = pd.read_csv(io.StringIO(response.text))
+  
+    # Drop the 2016-17 season
+    teams_df = teams_df[teams_df['season'] != '2016-17']
 
     teams_df = teams_df.rename(columns={
-      "name": "name"
+      "team": "id",
+      "team_name": "name"
     })
     return teams_df
 
@@ -55,7 +55,7 @@ class TeamMatcher:
     return club_elo_teams
 
   def get_fbref_teams(self):
-    seasons = [f"{year}-{str(year+1)[-2:]}" for year in range(2020, 2025)]
+    seasons = [f"{year}-{str(year+1)[-2:]}" for year in range(2017, 2025)]
 
     # Fetch Club Elo team names
     with warnings.catch_warnings():
@@ -88,10 +88,14 @@ class TeamMatcher:
 
   def find_closest_elo_match(self, team_name, team_list):
     # Find the closest match for a team name in a list of team names
+    team_name = self.ELO_OVERRIDE.get(team_name, team_name)
+
     closest_matches = difflib.get_close_matches(team_name, team_list, n=1, cutoff=0.6)
     return closest_matches[0] if closest_matches else None
 
   def find_closest_fbref_match(self, team_name, fbref_teams, fbref_details):
+    team_name = self.FBREF_OVERRIDE.get(team_name, team_name)
+
     closest_matches = process.extractOne(team_name, fbref_teams, scorer=fuzz.partial_ratio, score_cutoff=70)
     
     if closest_matches:
@@ -140,10 +144,8 @@ class TeamMatcher:
 
     # Match FPL teams to closest Club Elo teams
     for fpl_team_name in fpl_team_names:
-      team_name = self.FPL_OVERRIDE.get(fpl_team_name, fpl_team_name)
-
-      closest_club_elo_team = self.find_closest_elo_match(team_name, club_elo_teams)
-      closest_fbref_team = self.find_closest_fbref_match(team_name, fbref_teams, fbref_details)
+      closest_club_elo_team = self.find_closest_elo_match(fpl_team_name, club_elo_teams)
+      closest_fbref_team = self.find_closest_fbref_match(fpl_team_name, fbref_teams, fbref_details)
 
       fpl_team_entries = fpl_teams[fpl_teams["name"] == fpl_team_name]
 

@@ -1,0 +1,17 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 8,D 2–2,b2b47a98,7c21e445,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2023-10-08,017c9ca5
+La Liga,Matchweek 23,W 3–0,f25da7fb,03c57e2b,1,72,0,0,0,0,0,0,0,0,26,2,0,4,0.0,0.0,0.0,1,0,9,14,64.3,2,5,0,0,0,2024-02-04,b8fec464
+La Liga,Matchweek 24,L 2–3,f25da7fb,7848bd64,1,86,0,1,0,0,1,0,0,0,59,3,0,3,0.1,0.1,0.2,1,1,31,46,67.4,2,19,0,4,2,2024-02-11,93f25b56
+La Liga,Matchweek 26,D 2–2,f25da7fb,ee7c297c,1,74,0,0,0,0,0,0,1,0,25,3,0,1,0.0,0.0,0.0,0,0,8,17,47.1,2,9,1,1,0,2024-02-25,81b6bcdb
+La Liga,Matchweek 27,W 1–0,f25da7fb,78ecf4bb,1,90,0,0,0,0,0,0,0,0,87,2,1,1,0.0,0.0,0.0,2,0,69,79,87.3,6,54,2,1,1,2024-03-01,7ab6dcd9
+La Liga,Matchweek 28,L 0–4,f25da7fb,53a2f082,1,90,0,0,0,0,0,0,1,0,44,0,0,1,0.0,0.0,0.0,1,0,27,38,71.1,1,24,2,0,0,2024-03-10,e829e739
+La Liga,Matchweek 29,W 2–1,f25da7fb,ad2be733,1,27,0,0,0,0,0,0,0,0,19,0,0,1,0.0,0.0,0.0,0,0,12,16,75.0,1,11,0,0,0,2024-03-17,677dc25e
+La Liga,Matchweek 30,D 0–0,f25da7fb,98e8af82,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-03-31,b407fe75
+La Liga,Matchweek 31,L 1–2,f25da7fb,fc536746,1,64,0,0,0,0,0,0,0,0,47,1,0,1,0.0,0.0,0.0,0,0,39,41,95.1,2,23,0,1,1,2024-04-12,a7ba44ee
+La Liga,Matchweek 32,W 4–1,f25da7fb,0049d422,0,13,0,0,0,0,0,0,0,0,10,0,0,0,0.0,0.0,0.0,0,0,7,9,77.8,1,9,0,0,0,2024-04-20,a3ba5e25
+La Liga,Matchweek 33,L 0–3,f25da7fb,8d6fd021,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-04-27,ffe34927
+La Liga,Matchweek 34,W 3–2,f25da7fb,2a8183b3,1,45,0,0,0,0,0,0,1,0,40,1,1,0,0.0,0.0,0.0,1,0,36,38,94.7,3,25,0,0,0,2024-05-05,429fcafb
+La Liga,Matchweek 35,L 0–1,f25da7fb,db3b9613,0,3,0,0,0,0,0,0,0,0,6,0,0,1,0.0,0.0,0.0,0,0,5,5,100.0,0,4,0,0,0,2024-05-12,b2f7f5e0
+La Liga,Matchweek 36,W 2–1,f25da7fb,2b390eca,1,90,0,0,0,0,0,0,0,0,91,0,1,1,0.0,0.0,0.0,1,0,74,86,86.0,4,54,0,0,0,2024-05-15,15d304e7
+La Liga,Matchweek 37,W 2–1,f25da7fb,a0435291,1,90,0,0,0,0,0,0,0,0,56,3,0,0,0.0,0.0,0.0,0,0,40,47,85.1,1,19,0,1,0,2024-05-19,bcfed537
+La Liga,Matchweek 38,D 2–2,f25da7fb,dcc91a7b,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2024-05-26,f43e7cfe

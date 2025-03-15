@@ -1,0 +1,27 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 2,W 3–0,d07537b9,b2b47a98,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-09-20,845f6a86
+Premier League,Matchweek 3,L 2–3,d07537b9,19538871,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-09-26,21495573
+Premier League,Matchweek 4,L 2–4,d07537b9,d3fd31cc,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-10-03,3cbb397e
+Premier League,Matchweek 5,D 1–1,d07537b9,47c64c55,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-10-18,e96818bc
+Premier League,Matchweek 6,D 1–1,d07537b9,60c6b05f,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-10-26,26452511
+Premier League,Matchweek 7,L 1–2,d07537b9,361ca564,0,26,0,0,0,0,0,0,0,0,22,1,0,0,0.0,0.0,0.0,0,0,12,16,75.0,0,10,0,1,0,2020-11-01,1d01ff0c
+Premier League,Matchweek 8,D 0–0,d07537b9,943e8050,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-11-06,c23d7844
+Premier League,Matchweek 11,L 1–2,d07537b9,33c895d4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-12-07,32356abc
+Premier League,Matchweek 15,D 2–2,d07537b9,7c21e445,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2020-12-27,7ba8c6e9
+Premier League,Matchweek 16,L 0–1,d07537b9,18bb7c10,1,90,0,0,0,0,4,0,0,0,51,3,0,1,0.4,0.4,0.1,5,0,30,38,78.9,6,27,0,2,0,2020-12-29,fdca0bef
+Premier League,Matchweek 17,D 3–3,d07537b9,8cec06e1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-01-02,abeb80b7
+Premier League,Matchweek 18,L 0–1,d07537b9,b8fd03ef,1,90,0,0,0,0,0,0,0,0,40,6,1,1,0.0,0.0,0.0,0,0,19,31,61.3,3,26,2,0,0,2021-01-13,9926f1f0
+Bundesliga,Regular season,W 2–0,50f2a074,80beba99,0,29,0,0,0,0,1,0,0,0,,,1,,,,,,,,,,,,,,,2021-01-24,d1aaf2cb
+Bundesliga,Regular season,W 3–0,50f2a074,8bb8811f,1,55,0,0,0,0,1,0,0,0,,,0,,,,,,,,,,,,,,,2021-01-27,c4eecb6c
+Bundesliga,Regular season,W 3–1,50f2a074,d7d06475,0,25,0,0,0,0,0,0,0,0,,,1,,,,,,,,,,,,,,,2021-03-13,e1442047
+Bundesliga,Regular season,W 1–0,50f2a074,d20821dd,0,25,0,0,0,0,0,0,0,0,,,0,,,,,,,,,,,,,,,2021-03-20,8c81c06d
+Bundesliga,Championship round,W 3–1,50f2a074,3f4fe568,0,25,0,0,0,0,0,0,1,0,,,0,,,,,,,,,,,,,,,2021-04-04,e79fb751
+Bundesliga,Championship round,W 3–0,50f2a074,912e4c40,0,17,0,0,0,0,0,0,0,0,,,0,,,,,,,,,,,,,,,2021-04-11,4987533c
+Bundesliga,Championship round,W 2–0,50f2a074,d20821dd,0,26,0,0,0,0,0,0,0,0,,,0,,,,,,,,,,,,,,,2021-04-18,8965450e
+Bundesliga,Championship round,L 2–3,50f2a074,c63dd2d5,1,90,0,0,0,0,0,0,1,0,,,2,,,,,,,,,,,,,,,2021-04-21,2ac7a320
+Bundesliga,Championship round,W 2–1,50f2a074,426658a6,0,17,0,0,0,0,1,1,0,0,,,1,,,,,,,,,,,,,,,2021-04-25,0da4ce53
+Bundesliga,Championship round,D 1–1,50f2a074,426658a6,1,90,0,0,0,0,1,0,0,0,,,2,,,,,,,,,,,,,,,2021-04-28,a655acf7
+Bundesliga,Championship round,W 3–1,50f2a074,3f4fe568,0,7,0,0,0,0,0,0,0,0,,,0,,,,,,,,,,,,,,,2021-05-09,9bee9aa7
+Bundesliga,Championship round,W 2–0,50f2a074,912e4c40,0,14,0,0,0,0,0,0,0,0,,,0,,,,,,,,,,,,,,,2021-05-12,dbda831a
+Bundesliga,Championship round,W 5–2,50f2a074,d20821dd,1,90,0,0,0,0,0,0,0,0,,,0,,,,,,,,,,,,,,,2021-05-16,e39dacd0
+Bundesliga,Championship round,W 4–0,50f2a074,c63dd2d5,1,90,1,0,0,0,3,1,1,0,,,0,,,,,,,,,,,,,,,2021-05-22,a7aaeefb

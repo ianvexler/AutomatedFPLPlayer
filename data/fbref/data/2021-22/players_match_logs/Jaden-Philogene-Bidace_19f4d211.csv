@@ -1,0 +1,10 @@
+comp,round,result,squad,opponent,start,min,performance_gls,performance_ast,performance_pk,performance_pkatt,performance_sh,performance_sot,performance_crdy,performance_crdr,performance_touches,performance_tkl,performance_int,performance_blocks,expected_xg,expected_npxg,expected_xag,sca_sca,sca_gca,passes_cmp,passes_att,passes_cmp%,passes_prgp,carries_carries,carries_prgc,take-ons_att,take-ons_succ,date,match_id
+Premier League,Matchweek 1,L 2–3,8602292d,2abfe087,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-08-14,814b563c
+Premier League,Matchweek 2,W 2–0,8602292d,b2b47a98,0,5,0,0,0,0,0,0,0,0,3,0,0,0,0.0,0.0,0.0,1,0,0,2,0.0,0,3,0,0,0,2021-08-21,662d4074
+Premier League,Matchweek 3,D 1–1,8602292d,cd051869,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-08-28,a08ef96c
+Premier League,Matchweek 7,L 1–2,8602292d,361ca564,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-10-03,7bb0a43c
+Premier League,Matchweek 8,L 2–3,8602292d,8cec06e1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-10-16,a1668499
+Premier League,Matchweek 11,L 0–1,8602292d,33c895d4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-11-05,868bd31f
+Premier League,Matchweek 15,W 2–1,8602292d,a2d435b3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-12-05,49cc65ac
+Premier League,Matchweek 17,W 2–0,8602292d,1c781004,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2021-12-14,c78a1d7d
+Premier League,Matchweek 21,L 1–2,8602292d,cd051869,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2022-01-02,dfaa1817
