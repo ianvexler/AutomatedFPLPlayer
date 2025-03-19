@@ -117,28 +117,36 @@ class Team:
         float: The overall fitness score of the player.
     """    
     # Base Fitness Score
-    # Points per million metric (ensures cost-effective selections).
+
     cost = player['cost']
 
     player_entries = gw_data[gw_data['id'] == player['id']]
     expected_points = player_entries[self.TARGET].sum()
     
-    return expected_points
-
     base_fitness = expected_points / cost if cost > 0 else 0
 
     # Transfer Trend Adjustment
-    # Players with high net transfers in (bandwagons) get a small boost.
-    
-    # TODO: Maybe move somewhere else to optimize
+      
     min_balance = gw_data['transfers_balance'].min()
     max_balance = gw_data['transfers_balance'].max()
     transfers_balance = player['transfers_balance']
 
     transfer_trend_bonus = (transfers_balance - min_balance) / (max_balance - min_balance)
 
+    playing_time_weight = player_entries['minutes'].sum() / (90 * len(player_entries))
+    fitness_score *= playing_time_weight
+
+    # TODO: Include fixture difficulty??
+
     # Compute Overall Fitness Score
-    fitness_score = (base_fitness + transfer_trend_bonus + expected_points)
+    fitness_score = (
+      base_fitness + transfer_trend_bonus + expected_points +
+      (playing_time_weight * 0.5) + 
+      (1 / fixture_adjustment) +
+      (recent_form * 0.5) + 
+      (bonus_points * 0.3) +
+      (goal_involvement * 0.4)
+    )
     return fitness_score
 
   # TODO: Have to consider double gameweeks

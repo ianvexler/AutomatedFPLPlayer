@@ -6,6 +6,8 @@ from utils.team_matcher import TeamMatcher
 from utils.player_matcher import PlayerMatcher
 import pandas as pd
 
+import sys 
+
 class DataLoader:
   def __init__(self):
     self.feature_selector = FeatureSelector()
@@ -24,27 +26,28 @@ class DataLoader:
 
     return data
 
-  def get_merged_gw_data(self, season, time_steps=0, include_season=True, include_teams=True, include_fbref=True):
+  def get_merged_gw_data(self, season, time_steps=0, include_season=True, include_teams=True, include_fbref=True, include_prev_gws=True):
     prev_season = self._decrement_season(season)
 
     seasons_gw_data = []
 
-    for s in [season, prev_season]:  
+    seasons = [season]
+
+    if include_prev_gws:
+      seasons.append(prev_season)
+
+    for s in seasons:
       vaastav = Vaastav(s)
       gw_data = vaastav.get_merged_gw_data()
-      season_data = vaastav.get_full_season_data()
 
       if include_teams:
         teams_data = self.get_teams_data(s)
         gw_data = self._add_teams_data_to_gw_data(gw_data, teams_data)
 
       if include_season:
+        season_data = vaastav.get_full_season_data()
         season_data = self.get_season_data(s)
         gw_data = self._add_season_data_to_gw_data(gw_data, season_data)
-
-      if include_fbref:
-        fbref_data = self.get_fbref_gw_data(s)
-        gw_data = self._add_fbref_gw_data_to_gw_data(gw_data, fbref_data, season)
 
       # Formats data from previous season
       if not s == season:
@@ -89,9 +92,13 @@ class DataLoader:
           except:
             data_to_remove.append(index)
 
-
         gw_data = gw_data.drop(data_to_remove).reset_index(drop=True)
       
+      # Add FBref match log data
+      if include_fbref:
+        fbref_data = self.get_fbref_gw_data(s)
+        gw_data = self._add_fbref_gw_data_to_gw_data(gw_data, fbref_data, season)
+
       seasons_gw_data.append(gw_data)
 
     # Concats both seasons data into one df
@@ -110,7 +117,7 @@ class DataLoader:
     return match_logs_df
 
   def _add_fbref_gw_data_to_gw_data(self, gw_data, fbref_data, season):
-    merged_data = [] 
+    merged_data = []
 
     for _, player_data in gw_data.iterrows():
       player_id = player_data['id']
@@ -126,13 +133,12 @@ class DataLoader:
 
         # Find matching FBref rows by date
         matching_fbref_data = fbref_player_data[fbref_player_data['date'] == player_kickoff_date]
-        
+
         # Use FBref data if available, otherwise fill with 0s
         if not matching_fbref_data.empty:
           fbref_stats = matching_fbref_data.iloc[0].to_dict()
         else:
-          fbref_stats = {col: 0 for col in fbref_data.columns if col != 'id'}  # Fill FBref stats with 0s
-          
+          fbref_stats = {col: 0 for col in fbref_data.columns if col != 'id'}  # Fill FBref stats with 0s   
       except:
         fbref_stats = {col: 0 for col in fbref_data.columns if col != 'id'}  # If no FBref ID, fill with 0s
 
@@ -169,8 +175,8 @@ class DataLoader:
       right_on='away_team_id'
     )
 
-    team_name_to_id = teams_data.set_index('name')['id'].to_dict()
-    gw_data['team'] = gw_data['team'].map(team_name_to_id)
+    # team_name_to_id = teams_data.set_index('name')['id'].to_dict()
+    # gw_data['team'] = gw_data['team'].map(team_name_to_id)
     
     gw_data = gw_data.drop(columns=['home_team_id', 'home_team_name', 'away_team_id', 'away_team_name'], errors='ignore')
 

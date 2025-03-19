@@ -57,7 +57,7 @@ class DataLoader():
       )
     else:
       gw_data['team'] = gw_data['team'].apply(lambda x: self.team_matcher.get_fpl_team(x, self.season, key_type='name')["FPL"][self.season]['id'])
-    
+
     if 'position' not in gw_data.columns:
       players_raw = self.fetch_players_raw()
       players_raw['id'] = players_raw['id'].astype(int)

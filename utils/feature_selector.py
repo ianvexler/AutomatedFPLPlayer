@@ -36,7 +36,7 @@ class FeatureSelector:
     self.BASELINE = 'xP'
     self.COST = 'cost'
 
-  def get_features_for_position(self, position, include_prev_season=False, include_season=False, include_fbref=False):
+  def get_features_for_position(self, position, include_prev_season=False, include_fbref=False, include_season=False):
     # Initialize features
     features = self.GW_TEAM_FEATURES + self.ADDITIONAL_FEATURES + self.CUSTOM_FEATURES
 
@@ -49,12 +49,11 @@ class FeatureSelector:
     # Choose between FBref or default FPL features
     if include_fbref:
       fbref_features = self.position_fbref_features(position)
-      features += fbref_features + self.TARGET  # Ensure target is included
+      features += fbref_features + [self.TARGET]  # Ensure target is included
     else:
       features += self.features[position]  # Default FPL features
 
     return features
-
 
   def position_fbref_features(self, position):
     match position:
@@ -62,27 +61,25 @@ class FeatureSelector:
         return [
           "performance_cs", "performance_saves", "performance_ga", "minutes",
           "penalty kicks_pksv", "performance_psxg", "performance_save%", 
-          "goal kicks_launch%", "form", "total_points", "points_per_game"
+          "goal kicks_launch%"
         ]
       case 'DEF':
         return [
           "performance_tkl", "performance_int", "performance_blocks", "performance_crdy",
           "performance_gls", "performance_ast", "expected_xg", "expected_xag",
-          "sca_sca", "carries_prgc", "form", "total_points", "points_per_game", "yellow_cards", "threat"
+          "sca_sca", "carries_prgc"
         ]
       case 'MID':
         return [
           "performance_gls", "performance_ast", "expected_xg", "expected_xag",
           "sca_sca", "sca_gca", "passes_cmp%", "passes_prgp",
-          "carries_carries", "carries_prgc", "take-ons_att", "take-ons_succ",
-          "form", "total_points", "points_per_game", "yellow_cards", "threat"
+          "carries_carries", "carries_prgc", "take-ons_att", "take-ons_succ"
         ]
       case 'FWD':
         return [
           "performance_gls", "performance_ast", "performance_sh", "performance_sot",
           "expected_xg", "expected_npxg", "expected_xag", "sca_sca", "sca_gca",
-          "carries_prgc", "take-ons_att", "take-ons_succ",
-          "form", "total_points", "points_per_game", "yellow_cards", "threat"
+          "carries_prgc", "take-ons_att", "take-ons_succ"
         ]
       case _:
         raise Exception(f"Invalid position provided: {position}")
