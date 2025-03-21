@@ -39,7 +39,6 @@ class DataLoader():
   ### GWs Merged ###
   def get_merged_gw_data(self):
     raw_data = self.fetch_merged_gw()
-
     gw_data = self.sanitize_gw_data(raw_data)
 
     if 'team' not in gw_data.columns:
@@ -73,11 +72,11 @@ class DataLoader():
         right_on='id'
       )
       gw_data['position'] = gw_data['position'].apply(lambda x: self.POSITIONS[x])
-
+      
     # To take into account for the COVID disruptions
     if self.season == '2019-20':
       gw_data = gw_data[gw_data['GW'] <= 29]
-
+  
     return gw_data
 
   """
@@ -93,7 +92,7 @@ class DataLoader():
     # Ensure data_df is in DataFrame format (if not already)
     if not isinstance(data_df, pd.DataFrame):
       data_df = pd.DataFrame(data_df[1:], columns=data_df[0]) # Adjust if raw data isn't already a DataFrame
-
+    
     # Select only the columns that are in GW_COLS
     sanitized_df = data_df.rename(columns={'element': 'id', 'value': 'cost'})
 
@@ -104,6 +103,11 @@ class DataLoader():
     sanitized_df['kickoff_time'] = pd.to_datetime(sanitized_df['kickoff_time'], format='ISO8601', utc=True)
 
     sanitized_df['season'] = self.season
+
+    # Ensure GKs are not named GKPs
+    if 'position' in sanitized_df.columns:
+      sanitized_df.loc[sanitized_df['position'] == 'GKP', 'position'] = 'GK'
+
     return sanitized_df
 
   ### Teams ###
@@ -153,6 +157,7 @@ class DataLoader():
     players_df = players_df.rename(columns={'element_type': 'position', 'now_cost': 'cost'})
 
     players_df['position'] = players_df['position'].apply(lambda x: self.POSITIONS[x])
+    
     return players_df
 
   ### FETCH DATA ###

@@ -108,7 +108,7 @@ class Team:
 
     return total_points
 
-  def _calc_player_fitness(self, gw_data, player, extra_transfers=0, weight_future=0.8):
+  def _calc_player_fitness(self, gw_data, player, weight_future=0.8):
     """
     Computes a player's fitness score based on predicted points, price, form, fixtures, 
     playing time consistency, captaincy potential, transfer trends, and additional transfers.
@@ -117,36 +117,26 @@ class Team:
         float: The overall fitness score of the player.
     """    
     # Base Fitness Score
-
     cost = player['cost']
-
     player_entries = gw_data[gw_data['id'] == player['id']]
     expected_points = player_entries[self.TARGET].sum()
     
     base_fitness = expected_points / cost if cost > 0 else 0
 
     # Transfer Trend Adjustment
-      
     min_balance = gw_data['transfers_balance'].min()
     max_balance = gw_data['transfers_balance'].max()
     transfers_balance = player['transfers_balance']
+  
+    # Avoid division by zero
+    if max_balance > min_balance:
+      transfer_trend_bonus = (transfers_balance - min_balance) / (max_balance - min_balance)
+    else:
+      transfer_trend_bonus = 0
 
-    transfer_trend_bonus = (transfers_balance - min_balance) / (max_balance - min_balance)
+    # Combine Metrics into Final Score
+    fitness_score = base_fitness * weight_future + transfer_trend_bonus * (1 - weight_future)
 
-    playing_time_weight = player_entries['minutes'].sum() / (90 * len(player_entries))
-    fitness_score *= playing_time_weight
-
-    # TODO: Include fixture difficulty??
-
-    # Compute Overall Fitness Score
-    fitness_score = (
-      base_fitness + transfer_trend_bonus + expected_points +
-      (playing_time_weight * 0.5) + 
-      (1 / fixture_adjustment) +
-      (recent_form * 0.5) + 
-      (bonus_points * 0.3) +
-      (goal_involvement * 0.4)
-    )
     return fitness_score
 
   # TODO: Have to consider double gameweeks

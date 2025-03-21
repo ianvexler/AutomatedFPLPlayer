@@ -5,28 +5,64 @@ from utils.feature_selector import FeatureSelector
 from utils.team_matcher import TeamMatcher
 from utils.player_matcher import PlayerMatcher
 import pandas as pd
+import pickle
+from pathlib import Path
 
 import sys 
 
 class DataLoader:
-  def __init__(self):
+  def __init__(self, no_cache=False):
     self.feature_selector = FeatureSelector()
     self.team_matcher = TeamMatcher()
     self.player_matcher = PlayerMatcher()
+    self.no_cache = no_cache
+
+    directory = Path("data/cached")
+    directory.mkdir(parents=True, exist_ok=True)
+    self.CACHE_DIR = directory
 
   def get_season_data(self, season):
+    data_path = self._get_cache_path(f"season_{season}.pkl")
+    
+    # Load if it already exists
+    if self._should_load_cached(data_path):
+      return self._load_cached_data(data_path)
+
     data_loader = Vaastav(season)
     data = data_loader.get_full_season_data()
 
+    self._save_cached_data(data_path, data)
     return data
 
   def get_id_dict_data(self, season):
+    data_path = self._get_cache_path(f"id_dict_{season}.pkl")
+    
+    # Load if it already exists
+    if self._should_load_cached(data_path):
+      return self._load_cached_data(data_path)
+
     data_loader = Vaastav(season)
     data = data_loader.get_id_dict_data()
 
+    self._save_cached_data(data_path, data)
     return data
 
-  def get_merged_gw_data(self, season, time_steps=0, include_season=True, include_teams=True, include_fbref=True, include_prev_gws=True):
+  def get_merged_gw_data(
+    self, 
+    season, 
+    time_steps=0, 
+    include_prev_season=True, 
+    include_fbref=True, 
+    include_prev_gws=True, 
+    include_season_aggs=True
+  ):
+    file_name = f"steps_{time_steps}_prev_season_{include_prev_season}_fbref_{include_fbref}_season_aggs_{include_season_aggs}"
+    data_path = self._get_cache_path(f"merged_gw_{season}_{file_name}.pkl")
+    
+    # Load if it already exists
+    if self._should_load_cached(data_path):
+      return self._load_cached_data(data_path)
+
     prev_season = self._decrement_season(season)
 
     seasons_gw_data = []
@@ -40,11 +76,11 @@ class DataLoader:
       vaastav = Vaastav(s)
       gw_data = vaastav.get_merged_gw_data()
 
-      if include_teams:
-        teams_data = self.get_teams_data(s)
-        gw_data = self._add_teams_data_to_gw_data(gw_data, teams_data)
+      # Include teams data
+      teams_data = self.get_teams_data(s)
+      gw_data = self._add_teams_data_to_gw_data(gw_data, teams_data)
 
-      if include_season:
+      if include_prev_season:
         season_data = vaastav.get_full_season_data()
         season_data = self.get_season_data(s)
         gw_data = self._add_season_data_to_gw_data(gw_data, season_data)
@@ -94,6 +130,9 @@ class DataLoader:
 
         gw_data = gw_data.drop(data_to_remove).reset_index(drop=True)
       
+      if include_season_aggs:
+        gw_data = self._add_aggs_data_to_gw_data(gw_data)
+
       # Add FBref match log data
       if include_fbref:
         fbref_data = self.get_fbref_gw_data(s)
@@ -104,8 +143,11 @@ class DataLoader:
     # Concats both seasons data into one df
     merged_data = pd.concat(seasons_gw_data, ignore_index=True)
     merged_data['kickoff_time'] = pd.to_datetime(merged_data['kickoff_time'], errors='coerce') 
-      
-    return merged_data.sort_values(by='GW', ascending=True)
+
+    merged_data = merged_data.sort_values(by='GW', ascending=True)
+
+    self._save_cached_data(data_path, merged_data)
+    return merged_data
     
   def get_fbref_gw_data(self, season):
     fbref = FBref(season)
@@ -198,22 +240,75 @@ class DataLoader:
 
     return gw_data
 
+  # Adds season aggregates up to each GW
+  def _add_aggs_data_to_gw_data(self, gw_data):
+    agg_funcs = ['mean']
+
+    # Iterate through each player's row in gw_data
+    for index, player_data in gw_data.iterrows():
+      player_id = player_data['id']
+      player_pos = player_data['position']
+      current_gw = player_data['GW']
+
+      # Get all past gameweeks for this player
+      player_gw_data = gw_data[(gw_data['id'] == player_id) & (gw_data['GW'] < current_gw)]
+
+      # Get relevant FPL features
+      fpl_features = self.feature_selector.features[player_pos]
+      
+      if not player_gw_data.empty:
+        # Compute aggregates for each feature
+        for agg in agg_funcs:
+          agg_values = getattr(player_gw_data[fpl_features], agg)()  # Compute mean, sum, etc.
+
+          # Assign aggregate values to the current row
+          for feature, value in agg_values.items():
+            gw_data.loc[index, f"{agg}_{feature}"] = value  # Add column dynamically
+      else:
+        # If no past data, fill aggregates with 0
+        for agg in agg_funcs:
+          for feature in fpl_features:
+            gw_data.loc[index, f"{agg}_{feature}"] = 0
+
+    return gw_data    
+
   def get_fixtures(self, season):
+    data_path = self._get_cache_path(f"fixtures_{season}.pkl")
+    
+    # Load if it already exists
+    if self._should_load_cached(data_path):
+      return self._load_cached_data(data_path)
+
     data_loader = Vaastav(season)
     data = data_loader.get_fixtures_data()
 
+    self._save_cached_data(data_path, data)
     return data
 
   def get_teams_data(self, season):
+    data_path = self._get_cache_path(f"teams_data_{season}.pkl")
+
+    # Load if it already exists
+    if self._should_load_cached(data_path):
+      return self._load_cached_data(data_path)
+
     data_loader = Vaastav(season)
     data = data_loader.get_teams_data()
 
+    self._save_cached_data(data_path, data)
     return data
 
   def get_players_data(self, season):
+    data_path = self._get_cache_path(f"players_data_{season}.pkl")
+
+    # Load if it already exists
+    if self._should_load_cached(data_path):
+      return self._load_cached_data(data_path)
+
     data_loader = Vaastav(season)
     data = data_loader.get_players_data()
 
+    self._save_cached_data(data_path, data)
     return data
 
   def _decrement_season(self, season):
@@ -221,3 +316,18 @@ class DataLoader:
     new_start = int(start_year) - 1
     new_end = int(end_year) - 1
     return f"{new_start}-{new_end}"
+
+  def _get_cache_path(self, file_name):
+    return self.CACHE_DIR / f"{file_name}.pkl"
+
+  def _load_cached_data(self, data_path):
+    print(f"Loading cached data from: {data_path}\n")
+    with open(data_path, "rb") as f:
+      return pickle.load(f)
+
+  def _save_cached_data(self, data_path, data):
+    with open(data_path, "wb") as f:
+      pickle.dump(data, f)
+
+  def _should_load_cached(self, data_path):
+    return (not self.no_cache) and data_path.exists()

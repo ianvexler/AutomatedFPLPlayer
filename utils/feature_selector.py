@@ -25,10 +25,10 @@ class FeatureSelector:
     self.CUSTOM_FEATURES = ['gw_decay']
 
     self.features = {
-      'GK': ['saves', 'penalties_saved', 'clean_sheets', 'goals_conceded', 'total_points'],
-      'DEF': ['assists', 'goals_scored', 'clean_sheets', 'total_points', 'goals_conceded'],
-      'MID': ['assists', 'goals_scored', 'total_points'],
-      'FWD': ['assists', 'goals_scored', 'total_points']
+      'GK': ['saves', 'penalties_saved', 'clean_sheets', 'goals_conceded', 'total_points', 'minutes'],
+      'DEF': ['assists', 'goals_scored', 'clean_sheets', 'total_points', 'goals_conceded', 'minutes'],
+      'MID': ['assists', 'goals_scored', 'total_points', 'minutes'],
+      'FWD': ['assists', 'goals_scored', 'total_points', 'minutes']
     }
 
     self.TARGET = 'total_points'
@@ -36,7 +36,7 @@ class FeatureSelector:
     self.BASELINE = 'xP'
     self.COST = 'cost'
 
-  def get_features_for_position(self, position, include_prev_season=False, include_fbref=False, include_season=False):
+  def get_features_for_position(self, position, include_prev_season=False, include_fbref=False, include_season=False, include_season_aggs=False):
     # Initialize features
     features = self.GW_TEAM_FEATURES + self.ADDITIONAL_FEATURES + self.CUSTOM_FEATURES
 
@@ -45,6 +45,14 @@ class FeatureSelector:
       season_features = self.position_season_features(position)
       prev_season_features = [f'prev_season_{feature}' for feature in season_features]
       features += prev_season_features
+
+    if include_season_aggs:
+      agg_funcs = ['mean']
+      for agg in agg_funcs:
+        agg_features = []
+        for feature in self.features[position]:
+          agg_features.append(f"{agg}_{feature}")
+        features += agg_features
 
     # Choose between FBref or default FPL features
     if include_fbref:
@@ -88,53 +96,24 @@ class FeatureSelector:
   def position_season_features(self, position):
     match position:
       case 'GK':
-        # return [
-        #   "clean_sheets", "saves", "expected_goals_conceded", "goals_conceded", "minutes",
-        #   "penalties_saved", "bonus", "bps", "influence", "expected_goals_conceded_per_90",
-        #   "saves_per_90", "clean_sheets_per_90", "starts", "red_cards", "yellow_cards", "form",
-        #   "total_points", "points_per_game", "starts_per_90"
-        # ]
         return [
           "clean_sheets", "saves", "goals_conceded", "minutes",
           "penalties_saved", "influence", "yellow_cards", "form",
           "total_points", "points_per_game"
         ]
       case 'DEF':
-        # return [
-        #   "clean_sheets", "goals_conceded", "expected_goals_conceded", "minutes", "goals_scored",
-        #   "assists", "bonus", "bps", "influence", "creativity", "expected_assists",
-        #   "expected_goals", "expected_goal_involvements", "clean_sheets_per_90", "expected_goals_conceded_per_90",
-        #   "goals_conceded_per_90", "expected_assists_per_90", "expected_goals_per_90",
-        #   "expected_goal_involvements_per_90", "own_goals", "starts", "starts_per_90",
-        #   "form", "total_points", "points_per_game", "yellow_cards", "red_cards", "threat"
-        # ]
         return [
           "clean_sheets", "goals_conceded", "minutes", "goals_scored",
           "assists", "influence", "creativity", "form", "total_points", 
           "points_per_game", "yellow_cards", "threat"
         ]
       case 'MID':
-        # return [
-        #   "goals_scored", "assists", "bonus", "bps", "influence", "creativity", "expected_assists",
-        #   "expected_goals", "expected_goal_involvements", "minutes", "goals_conceded",
-        #   "expected_goals_conceded", "goals_conceded_per_90", "expected_goals_per_90", "expected_assists_per_90",
-        #   "expected_goal_involvements_per_90", "clean_sheets", "clean_sheets_per_90", "penalties_missed",
-        #   "own_goals", "starts", "starts_per_90", "form", "total_points", "points_per_game",
-        #   "yellow_cards", "red_cards", "threat", "ict_index"
-        # ]
         return [
           "goals_scored", "assists", "influence", "creativity", "minutes", "goals_conceded",
           "clean_sheets", "form", "total_points", "points_per_game",
           "yellow_cards", "threat"
         ]
       case 'FWD':
-        # return [
-        #   "goals_scored", "assists", "bonus", "bps", "influence", "creativity", "expected_assists",
-        #   "expected_goals", "expected_goal_involvements", "minutes", "goals_conceded", "expected_goals_conceded",
-        #   "goals_conceded_per_90", "expected_goals_per_90", "expected_assists_per_90",
-        #   "expected_goal_involvements_per_90", "penalties_missed", "own_goals", "starts", "starts_per_90",
-        #   "form", "total_points", "points_per_game", "yellow_cards", "red_cards", "threat", "ict_index"
-        # ]
         return [
           "goals_scored", "assists", "influence", "creativity", "minutes", 
           "form", "total_points", "points_per_game", "yellow_cards", "threat"

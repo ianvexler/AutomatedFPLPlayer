@@ -30,7 +30,10 @@ class Model:
     include_prev_season=False,
     model_type = ModelType.LSTM,
     include_fbref=False,
-    training_years=3):
+    training_years=3,
+    include_season_aggs=False,
+    no_cache=False
+  ):
     self.model_type = model_type
 
     self.gw_data = gw_data.sort_values(by=['id', 'kickoff_time'])  # Gameweek-level data
@@ -45,7 +48,10 @@ class Model:
     self.time_steps = time_steps
     self.include_prev_season = include_prev_season
     self.include_fbref = include_fbref
+    self.include_season_aggs = include_season_aggs
+    
     self.training_years = training_years
+    self.no_cache = no_cache
 
     self.models = {
       'GK': self._set_model('GK'),
@@ -61,17 +67,14 @@ class Model:
       'FWD': FeatureScaler('FWD', self.model_type)
     }
 
-    self.DIRECTORY = f"{self.model_type.value}/steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}"
+    self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}"
+    self.DIRECTORY = f"{self.model_type.value}/{self.FILE_NAME}"
     
     if not train:
       for position in self.models:
         self.models[position] = self._load_model(position)
         
-        features = self.feature_selector.get_features_for_position(
-          position, 
-          include_prev_season=self.include_prev_season, 
-          include_fbref=self.include_fbref
-        )      
+        features = self._get_position_features(position)   
         scaler = self.scalers[position]
         scaler.load_scalers(features)
   
@@ -86,13 +89,18 @@ class Model:
       case ModelType.XGBOOST.value:
           return XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=5)
       case ModelType.LSTM.value:
-        return LSTMModel(self.time_steps, position, self.include_prev_season, self.include_fbref).build_model()
-      case ModelType.ML_LSTM.value:
-        return LSTMModel(self.time_steps, position, self.include_prev_season, self.include_fbref, multi_layer=True).build_model()
+        return LSTMModel(
+          time_steps=self.time_steps, 
+          position=position, 
+          include_prev_season=self.include_prev_season, 
+          include_fbref=self.include_fbref,
+          include_season_aggs=self.include_season_aggs
+        ).build_model()
     raise Exception(f'No model matches {self.model_type}')
 
   def train(self):
     training_data = self._get_training_data()
+    training_data.to_csv('training.csv')
 
     for position in ['GK', 'DEF', 'MID', 'FWD']:
       print(f"Training model and fitting scalers for {position}\n")
@@ -105,16 +113,13 @@ class Model:
         raise ValueError(f"Found NaN values in training data for {position}")
       
       if self._is_model_sequential():
-        early_stopping = EarlyStopping(monitor='val_loss', patience=7, restore_best_weights=True)
+        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
         lr_schedule = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1)
 
-        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0005), 
-          loss='mse', 
-          metrics=['mae'])
-
+        print(f"Total number of training samples: {len(y)}")
         model.fit(X, y, 
           validation_split=0.2, 
-          epochs=80, 
+          epochs=50, 
           batch_size=128,
           callbacks=[early_stopping, lr_schedule])
       else:
@@ -154,7 +159,7 @@ class Model:
 
     past_start_year = start_year - self.training_years
 
-    data_loader = DataLoader()
+    data_loader = DataLoader(self.no_cache)
     all_data = []
     required_columns = None
 
@@ -168,14 +173,13 @@ class Model:
       # Do not include prev gws from COVID season
       include_prev_gws = True if (start_year - 2) != 19 else False
 
-      # TODO: Add option to not include team data
       season_data = data_loader.get_merged_gw_data(
         prev_season, 
         time_steps=self.time_steps, 
-        include_season=self.include_prev_season,
-        include_teams=True,
+        include_prev_season=self.include_prev_season,
         include_fbref=self.include_fbref,
-        include_prev_gws=include_prev_gws)
+        include_prev_gws=include_prev_gws,
+        include_season_aggs=self.include_season_aggs)
 
       # Ensure the data has the required columns
       if all_data:
@@ -183,7 +187,7 @@ class Model:
         missing_columns = set(required_columns) - set(season_data.columns)
 
         if missing_columns:
-          print(f"Missing columns in {prev_season}: {missing_columns}")          
+          # print(f"Missing columns in {prev_season}: {missing_columns}")
           season_data = season_data.reindex(columns=required_columns, fill_value=0)
 
       if not include_prev_gws:
@@ -199,51 +203,51 @@ class Model:
     # Concatenate all collected data and return
     if all_data:
       training_data = pd.concat(all_data, ignore_index=True)
-      print(f"Total number of training samples: {total_samples}")
       return training_data.drop_duplicates()
     else:
       raise ValueError("No valid training data could be loaded.\n")
 
-  def _prepare_training_sequences(self, training_data, position):
-    X = []
-    y = []
-
-    # Filter data per position
-    position_gw_data = training_data[training_data['position'] == position]
-
-    features = self.feature_selector.get_features_for_position(
+  def _get_position_features(self, position):
+    return self.feature_selector.get_features_for_position(
       position, 
       include_prev_season=self.include_prev_season, 
-      include_fbref=self.include_fbref
+      include_fbref=self.include_fbref, 
+      include_season_aggs=self.include_season_aggs
     )
+
+  def _prepare_training_sequences(self, training_data, position):
+    X, y = [], []
+
+    # Filter data for the specific position
+    position_gw_data = training_data[training_data['position'] == position]
+
+    features = self._get_position_features(position)
     feature_scaler = self._fit_scaler(position_gw_data, features, position)
 
-    # Iterate on every game for every player
+    # Iterate over all players in this position
     for player_id, player_data in position_gw_data.groupby('id'):
-      season_kickoffs = (player_data[player_data['GW'] >= 1])['kickoff_time'].tolist()
+      season_kickoffs = player_data[player_data['GW'] >= 1]['kickoff_time'].tolist()
 
       for kickoff_time in season_kickoffs:
-        # Use all feature columns for input
         X_sequence = self._get_player_sequence(player_data, position, kickoff_time)
-        
+
         if np.isnan(X_sequence).sum() > 0:
-          raise ValueError("NaN detected in player sequence")
-        
+          raise ValueError(f"NaN detected in player sequence for player {player_id} at {kickoff_time}")
+
         if X_sequence.shape[0] < self.time_steps:
           continue
 
-        # Get the target of current sequence
+        # Get target
         target_game_data = player_data[player_data['kickoff_time'] == kickoff_time].iloc[0]
         y_target = target_game_data[self.target]
         scaled_target = self.scalers[position].transform(y_target, 'total_points', target=True)
-        
-        # Flatten if not LSTM
+
         if not self._is_model_sequential():
           X_sequence = X_sequence.flatten()
-   
+
         X.append(X_sequence)
         y.append(scaled_target)
-    
+
     return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)
 
   def _fit_scaler(self, position_gw_data, features, position):
@@ -359,27 +363,15 @@ class Model:
     return predictions
 
   def _predict_performances(self, data, position):
-    # Debugging: Check if the model is still loaded
-    if position not in self.models or self.models[position] is None:
-      raise ValueError(f"Error: Model for {position} is None before calling predict!")
-
-    predictions = self.models[position].predict(data)
+    # reduce_retracing=True avoids excessive tf.function retracing when input shapes vary
+    predictions = self.models[position].predict(data, reduce_retracing=True)
 
     prediction_df = pd.DataFrame(predictions, columns=[self.target])
 
     scaler = self.scalers[position]
     predictions_unscaled = scaler.inverse_transform(prediction_df, 'target')
 
-    return np.array(predictions_unscaled).flatten()
-
-    predictions = self.models[position].predict(data)
-
-    prediction_df = pd.DataFrame(predictions, columns=[self.target])
-
-    scaler = self.scalers[position]
-    predictions_unscaled = scaler.inverse_transform(prediction_df, 'target')
-    
-    return np.array(predictions_unscaled).flatten()
+    return np.round(np.array(predictions_unscaled).flatten(), 2)
 
   # To be applied to every sequence
   def _add_gw_decay(self, player_data, kickoff_time):
@@ -401,12 +393,7 @@ class Model:
     player_data = player_data[player_data['kickoff_time'] < kickoff_time].tail(self.time_steps)
 
     # Get list of features for this position
-    features = self.feature_selector.get_features_for_position(
-      position, 
-      include_prev_season=self.include_prev_season, 
-      include_fbref=self.include_fbref
-    )
-    
+    features = self._get_position_features(position)
     n_features = len(features)  # Total number of features per timestep
 
     # If no past data available, return a zero-filled array
@@ -444,7 +431,7 @@ class Model:
     return position
   
   def _is_model_sequential(self):
-    return self.model_type in { ModelType.LSTM, ModelType.ML_LSTM }
+    return self.model_type in { ModelType.LSTM }
   
   def _format_and_save_match_prediction(self, predictions, home_team_id, away_team_id, gw_data, current_gw):
     directory = f"predictions/{self.DIRECTORY}/matches/{self.season}"
@@ -494,12 +481,14 @@ class Model:
 if __name__=='__main__':
   parser = argparse.ArgumentParser(description='Run the model with optional training.')
   parser.add_argument('--steps', type=int, nargs='?', const=5, default=5, help='Time step for data window. Defaults to 7 if not provided or null.')
-  parser.add_argument('--season', type=str, nargs='?', default='2024-25', help='Season to simulate in the format 20xx-yy')
+  parser.add_argument('--season', type=str, nargs='?', default='2024-25', help='Season to simulate in the format 20xx-yy.')
   parser.add_argument('--prev_season', action='store_true', help='Set this flag to include prev season data. Defaults to false.')
   parser.add_argument('--model', type=str, help='The model to use', choices=[m.value for m in ModelType])
-  parser.add_argument('--no_train', action='store_true', help='')
-  parser.add_argument('--fbref', action='store_true', help='Include FBref data')
-  
+  parser.add_argument('--no_train', action='store_true', help='Use if model is already trained.')
+  parser.add_argument('--fbref', action='store_true', help='Include FBref data.')
+  parser.add_argument('--season_aggs', action='store_true', help='Include season aggregate data.')
+  parser.add_argument('--no_cache', action='store_true', help="Don't use cached Data Loader data")
+
   args = parser.parse_args()
 
   try:
@@ -508,12 +497,18 @@ if __name__=='__main__':
     print(f"Error: Invalid model type '{args.model}'. Choose from {', '.join(m.value for m in ModelType)}")
     exit(1)
 
-  data_loader = DataLoader()
+  data_loader = DataLoader(no_cache=args.no_cache)
   
   fixtures_data = data_loader.get_fixtures(args.season)
   teams_data = data_loader.get_teams_data(args.season)
   players_data = data_loader.get_players_data(args.season)
-  gw_data = data_loader.get_merged_gw_data(args.season, args.steps, include_season=args.prev_season, include_fbref=args.fbref)
+  gw_data = data_loader.get_merged_gw_data(
+    args.season, 
+    args.steps, 
+    include_prev_season=args.prev_season, 
+    include_fbref=args.fbref,
+    include_season_aggs=args.season_aggs
+  )
 
   model = Model(
     gw_data=gw_data,
@@ -525,7 +520,10 @@ if __name__=='__main__':
     include_prev_season=args.prev_season,
     model_type=model_type,
     train=(not args.no_train),
-    include_fbref=args.fbref)
+    include_fbref=args.fbref,
+    include_season_aggs=args.season_aggs,
+    no_cache=args.no_cache
+  )
 
   if not args.no_train:
     model.train()

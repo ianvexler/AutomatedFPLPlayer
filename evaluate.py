@@ -12,14 +12,18 @@ from pathlib import Path
 from tabulate import tabulate
 
 class Evaluate:
-  def __init__(self, season, steps, model_type, include_prev_season=False, include_fbref=False):
+  def __init__(self, season, time_steps, model_type, include_prev_season=False, include_fbref=False, include_season_aggs=False):
     self.season = season
-    self.steps = steps
+    self.time_steps = time_steps
     self.model_type = model_type
     self.feature_selector = FeatureSelector()
     self.include_prev_season = include_prev_season
     self.include_fbref = include_fbref
+    self.include_season_aggs = include_season_aggs
+
     self.evaluation_results = []  # Stores results for CSV export
+
+    self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}"
 
   def evaluate_model(self):
     self.feature_selector = FeatureSelector()
@@ -44,7 +48,7 @@ class Evaluate:
 
     self.evaluation_results.append(["Overall", "General", round(ae, 2), round(mse, 2), round(baseline_ae, 2), round(baseline_mse, 2)])
     
-    self.evaluate_grouped_by_points(evaluation_df)
+    # self.evaluate_grouclped_by_points(evaluation_df)
     self.evaluate_grouped_by_costs(evaluation_df)
     self.export_evaluation_to_csv()
 
@@ -66,13 +70,17 @@ class Evaluate:
       include_groups=False
     )
 
+    print('\nExpected')
+    self.log_grouped_errors(grouped_errors, 'points')
+
     baseline_errors = evaluation_df.groupby('points_group').apply(
       lambda df: pd.Series(self.score_model(df, self.feature_selector.BASELINE),
                            index=['AE', 'MAE', 'MSE', 'RMSE']),
       include_groups=False
     )
 
-    self.log_grouped_errors(grouped_errors, 'points', baseline_errors)
+    print('\nBaseline')
+    self.log_grouped_errors(baseline_errors, 'points')
 
   def evaluate_grouped_by_costs(self, evaluation_df):
     print("\n--- Evaluation Grouped by Costs ---")
@@ -92,18 +100,22 @@ class Evaluate:
       include_groups=False
     )
 
+    print('\nExpected')
+    self.log_grouped_errors(grouped_errors, 'cost')
+
     baseline_errors = evaluation_df.groupby('cost_group', group_keys=False).apply(
       lambda df: pd.Series(self.score_model(df, self.feature_selector.BASELINE),
                            index=['AE', 'MAE', 'MSE', 'RMSE']),
       include_groups=False
     )
 
-    self.log_grouped_errors(grouped_errors, 'cost', baseline_errors)
+    print('\nBaseline')
+    self.log_grouped_errors(baseline_errors, 'cost')
 
   def export_evaluation_to_csv(self):
     evaluations_dir = "evaluations"
     os.makedirs(evaluations_dir, exist_ok=True)
-    csv_filename = f"evaluation_{self.season}_steps_{self.steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}.csv"
+    csv_filename = f"evaluation_{self.season}_{self.FILE_NAME}.csv"
     csv_path = os.path.join(evaluations_dir, csv_filename)
 
     df = pd.DataFrame(self.evaluation_results, columns=["Group", "Metric", "Model AE", "Model MSE", "Baseline AE", "Baseline MSE"])
@@ -119,19 +131,21 @@ class Evaluate:
     mse = mean_squared_error(targets, expected)
     rmse = np.sqrt(mse)
     
-    return ae, mae, mse, rmse
+    return np.round(ae, 2), np.round(mae, 2), np.round(mse, 2), np.round(rmse, 2)
 
-  def log_grouped_errors(self, grouped_errors, label, baseline_errors):
-    print("\n" + tabulate(grouped_errors.join(baseline_errors, lsuffix='_model', rsuffix='_baseline'), headers='keys', tablefmt='pretty'))
+  def log_grouped_errors(self, grouped_errors, label):
+    print(tabulate(grouped_errors, headers='keys', tablefmt='pretty'))
 
   def _load_predictions(self):
-    directory = f'predictions/{self.model_type.value}/steps_{self.steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}/gws/{self.season}'
+    predictions_dir = f"{self.model_type.value}/{self.FILE_NAME}"
+    directory = f'predictions/{predictions_dir}/gws/{self.season}'
+    
     if os.path.exists(directory):
       path = Path(directory)
       predictions_df = pd.concat([pd.read_csv(csv_file) for csv_file in path.glob("*.csv")], ignore_index=True)
       return predictions_df
     else:
-      raise Exception(f"Predictions for {self.season}, {self.steps} steps, prev season {self.include_prev_season}, fbref {self.include_fbref} not found")
+      raise Exception(f"Predictions not found")
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Run the model evaluation.')
@@ -140,6 +154,7 @@ if __name__ == "__main__":
   parser.add_argument('--prev_season', action='store_true')
   parser.add_argument('--model', type=str, choices=[m.value for m in ModelType])
   parser.add_argument('--fbref', action='store_true')
+  parser.add_argument('--season_aggs', action='store_true')
   args = parser.parse_args()
-  evaluate = Evaluate(args.season, args.steps, ModelType(args.model), args.prev_season, args.fbref)
+  evaluate = Evaluate(args.season, args.steps, ModelType(args.model), args.prev_season, args.fbref, args.season_aggs)
   evaluate.evaluate_model()
