@@ -9,16 +9,17 @@ from sklearn.multioutput import MultiOutputRegressor
 class FeatureSelector:
   def __init__(self):
     self.MAX_GW = 38
-    self.TEAM_FEATURES = ['strength', 'strength_overall_home', 
-      'strength_overall_away',	'strength_attack_home',	'strength_attack_away',	
-      'strength_defence_home', 'strength_defence_away'
+
+    base_team_features = [
+      'strength',
+      'strength_overall_home',
+      'strength_overall_away',
+      'strength_attack_home',
+      'strength_attack_away',
+      'strength_defence_home',
+      'strength_defence_away'
     ]
-    self.GW_TEAM_FEATURES = ['home_team_strength', 'home_team_strength_overall_home', 
-      'home_team_strength_overall_away', 'home_team_strength_attack_home', 'home_team_strength_attack_away', 
-      'home_team_strength_defence_home', 'home_team_strength_defence_away', 'away_team_strength', 
-      'away_team_strength_overall_home', 'away_team_strength_overall_away', 'away_team_strength_attack_home', 
-      'away_team_strength_attack_away', 'away_team_strength_defence_home', 'away_team_strength_defence_away'
-    ]
+    self.TEAM_FEATURES = [f"{prefix}_{feature}" for prefix in ['home_team', 'away_team'] for feature in base_team_features]
 
     self.ADDITIONAL_FEATURES = ['was_home', 'cost']
 
@@ -36,9 +37,20 @@ class FeatureSelector:
     self.BASELINE = 'xP'
     self.COST = 'cost'
 
-  def get_features_for_position(self, position, include_prev_season=False, include_fbref=False, include_season=False, include_season_aggs=False):
+  def get_features_for_position(
+    self, 
+    position, 
+    include_prev_season=False, 
+    include_fbref=False, 
+    include_season=False, 
+    include_season_aggs=False,
+    include_teams=False
+  ):
     # Initialize features
-    features = self.GW_TEAM_FEATURES + self.ADDITIONAL_FEATURES + self.CUSTOM_FEATURES
+    features = self.ADDITIONAL_FEATURES + self.CUSTOM_FEATURES
+
+    if include_teams:
+      features += self.TEAM_FEATURES
 
     # Include previous season's features if requested
     if include_prev_season:

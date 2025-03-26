@@ -20,10 +20,6 @@ from data.data_loader import DataLoader
 class Model:
   def __init__(
     self, 
-    gw_data, 
-    teams_data, 
-    fixtures, 
-    players_data, 
     season,
     time_steps=7, 
     train=False, 
@@ -32,14 +28,11 @@ class Model:
     include_fbref=False,
     training_years=3,
     include_season_aggs=False,
+    include_teams=False,
     no_cache=False
   ):
     self.model_type = model_type
 
-    self.gw_data = gw_data.sort_values(by=['id', 'kickoff_time'])  # Gameweek-level data
-    self.teams_data = teams_data
-    self.fixtures = fixtures
-    self.players_data = players_data
     self.season = season
     self.feature_selector = FeatureSelector()
 
@@ -49,6 +42,7 @@ class Model:
     self.include_prev_season = include_prev_season
     self.include_fbref = include_fbref
     self.include_season_aggs = include_season_aggs
+    self.include_teams = include_teams
     
     self.training_years = training_years
     self.no_cache = no_cache
@@ -67,7 +61,7 @@ class Model:
       'FWD': FeatureScaler('FWD', self.model_type)
     }
 
-    self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}"
+    self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}"
     self.DIRECTORY = f"{self.model_type.value}/{self.FILE_NAME}"
     
     if not train:
@@ -91,17 +85,34 @@ class Model:
       case ModelType.LSTM.value:
         return LSTMModel(
           time_steps=self.time_steps, 
-          position=position, 
-          include_prev_season=self.include_prev_season, 
-          include_fbref=self.include_fbref,
-          include_season_aggs=self.include_season_aggs
+          position=position,
+          features=self._get_position_features(position)
         ).build_model()
     raise Exception(f'No model matches {self.model_type}')
 
+  def _load_data(self):
+    data_loader = DataLoader(no_cache=self.no_cache)
+
+    fixtures_data = data_loader.get_fixtures(self.season)
+    teams_data = data_loader.get_teams_data(self.season)
+    players_data = data_loader.get_players_data(self.season)
+    gw_data = data_loader.get_merged_gw_data(
+      self.season, 
+      self.time_steps, 
+      include_prev_season=self.include_prev_season, 
+      include_fbref=self.include_fbref,
+      include_season_aggs=self.include_season_aggs,
+      include_teams=self.include_teams
+    )
+
+    self.gw_data = gw_data.sort_values(by=['id', 'kickoff_time'])  # Gameweek-level data
+    self.teams_data = teams_data
+    self.fixtures = fixtures_data
+    self.players_data = players_data
+
   def train(self):
     training_data = self._get_training_data()
-    training_data.to_csv('training.csv')
-
+  
     for position in ['GK', 'DEF', 'MID', 'FWD']:
       print(f"Training model and fitting scalers for {position}\n")
 
@@ -179,7 +190,9 @@ class Model:
         include_prev_season=self.include_prev_season,
         include_fbref=self.include_fbref,
         include_prev_gws=include_prev_gws,
-        include_season_aggs=self.include_season_aggs)
+        include_season_aggs=self.include_season_aggs,
+        include_teams=self.include_teams
+      )
 
       # Ensure the data has the required columns
       if all_data:
@@ -212,7 +225,8 @@ class Model:
       position, 
       include_prev_season=self.include_prev_season, 
       include_fbref=self.include_fbref, 
-      include_season_aggs=self.include_season_aggs
+      include_season_aggs=self.include_season_aggs,
+      include_teams=self.include_teams
     )
 
   def _prepare_training_sequences(self, training_data, position):
@@ -260,6 +274,8 @@ class Model:
 
   def predict_season(self):
     print(f"Started Season Prediction")
+
+    self._load_data()
 
     # Initialize a dictionary to accumulate predictions for each player
     player_aggregates = {}
@@ -363,8 +379,7 @@ class Model:
     return predictions
 
   def _predict_performances(self, data, position):
-    # reduce_retracing=True avoids excessive tf.function retracing when input shapes vary
-    predictions = self.models[position].predict(data, reduce_retracing=True)
+    predictions = self.models[position].predict(data)
 
     prediction_df = pd.DataFrame(predictions, columns=[self.target])
 
@@ -487,6 +502,7 @@ if __name__=='__main__':
   parser.add_argument('--no_train', action='store_true', help='Use if model is already trained.')
   parser.add_argument('--fbref', action='store_true', help='Include FBref data.')
   parser.add_argument('--season_aggs', action='store_true', help='Include season aggregate data.')
+  parser.add_argument('--teams', action='store_true', help='Include teams data.')
   parser.add_argument('--no_cache', action='store_true', help="Don't use cached Data Loader data")
 
   args = parser.parse_args()
@@ -497,24 +513,7 @@ if __name__=='__main__':
     print(f"Error: Invalid model type '{args.model}'. Choose from {', '.join(m.value for m in ModelType)}")
     exit(1)
 
-  data_loader = DataLoader(no_cache=args.no_cache)
-  
-  fixtures_data = data_loader.get_fixtures(args.season)
-  teams_data = data_loader.get_teams_data(args.season)
-  players_data = data_loader.get_players_data(args.season)
-  gw_data = data_loader.get_merged_gw_data(
-    args.season, 
-    args.steps, 
-    include_prev_season=args.prev_season, 
-    include_fbref=args.fbref,
-    include_season_aggs=args.season_aggs
-  )
-
   model = Model(
-    gw_data=gw_data,
-    teams_data=teams_data,
-    fixtures=fixtures_data,
-    players_data=players_data,
     season=args.season,
     time_steps=args.steps,
     include_prev_season=args.prev_season,
@@ -522,6 +521,7 @@ if __name__=='__main__':
     train=(not args.no_train),
     include_fbref=args.fbref,
     include_season_aggs=args.season_aggs,
+    include_teams=args.teams,
     no_cache=args.no_cache
   )
 

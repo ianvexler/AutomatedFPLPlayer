@@ -2,18 +2,21 @@ from itertools import chain
 import random
 import numpy as np
 import pandas as pd
+from data.data_loader import DataLoader
+from utils.team_matcher import TeamMatcher
 
 class Team:
-  def __init__(self, teams_data, fixtures_data):
+  def __init__(self, season, teams_data, fixtures_data):
+    self.season = season
     self.teams_data = teams_data
     self.fixtures_data = fixtures_data
-    self.current_gw = 1
 
     # Update to expected points
     self.TARGET = 'xP'
     self.OPTIMAL_TARGET = 'total_points'
     self.POSITIONS = ['GK', 'DEF', 'MID', 'FWD']
-    self.TRANSFER_THRESHOLD = 3
+    
+    self.TRANSFER_THRESHOLD = 0.7
 
     # TODO: Experiment with differnet positions as captains
     self.CAPTAIN_POSITIONS = ['MID', 'FWD']
@@ -33,9 +36,14 @@ class Team:
       {"GK": 1, "DEF": 3, "MID": 5, "FWD": 2},  # 3-5-2
       {"GK": 1, "DEF": 3, "MID": 4, "FWD": 3},  # 3-4-3
     ]
+
+    self.data_loader = DataLoader(self.season)
         
   # Selects the initial squad trying to optimize selection
   def get_best_squad(self, gw_data, budget, optimal=False):
+    if gw_data.empty:
+      return None, None
+
     best_squad = {}
     best_squad_cost = 0
     best_squad_points = 0
@@ -74,7 +82,7 @@ class Team:
 
         target = self._get_target(optimal)
         player = self._get_best_player(gw_data, position, player_budget, squad, target)
-        
+
         # Adds player to squad
         if squad[position].empty:
           squad[position] = pd.DataFrame([player])
@@ -85,6 +93,9 @@ class Team:
         pos_budgets[position] -= player['cost']
         squad_cost += player['cost']
         squad_points += player[target]
+
+      # TODO: Maybe also include team diversity?
+      # squad_points += self.calc_team_diversity(squad)
       
       # Check if squad is better than current best
       if squad_points > best_squad_points:
@@ -108,103 +119,113 @@ class Team:
 
     return total_points
 
-  def _calc_player_fitness(self, gw_data, player, weight_future=0.8):
-    """
-    Computes a player's fitness score based on predicted points, price, form, fixtures, 
-    playing time consistency, captaincy potential, transfer trends, and additional transfers.
-
-    Returns:
-        float: The overall fitness score of the player.
-    """    
-    # Base Fitness Score
-    cost = player['cost']
-    player_entries = gw_data[gw_data['id'] == player['id']]
-    expected_points = player_entries[self.TARGET].sum()
-    
-    base_fitness = expected_points / cost if cost > 0 else 0
-
-    # Transfer Trend Adjustment
-    min_balance = gw_data['transfers_balance'].min()
-    max_balance = gw_data['transfers_balance'].max()
-    transfers_balance = player['transfers_balance']
-  
-    # Avoid division by zero
-    if max_balance > min_balance:
-      transfer_trend_bonus = (transfers_balance - min_balance) / (max_balance - min_balance)
-    else:
-      transfer_trend_bonus = 0
-
-    # Combine Metrics into Final Score
-    fitness_score = base_fitness * weight_future + transfer_trend_bonus * (1 - weight_future)
-
-    return fitness_score
-
-  # TODO: Have to consider double gameweeks
-  def _calc_fixture_fitness(
-    team_id, weight_future=0.8, 
-    home_bonus=0.5, difficulty_penalty=1.5, difficulty_bonus=1.2
+  def _calc_player_fitness(
+    self, 
+    gw_data,
+    current_gw,
+    teams_form, 
+    player,
+    points_weight=0.5, 
+    transfer_weight=0.2, 
+    value_weight=0.1,
+    team_form_weight=0.1,
+    fixture_difficulty_weight = 0.1
   ):
     """
-    Compute fixture-based fitness score, adjusted for the player's team strength.
-
-    Args:
-      team_id (float)
-      weight_future (float): Decay factor for later fixtures (e.g., 0.8 means GW1 matters more than GW3).
-      home_bonus (float): Bonus for home matches.
-      difficulty_penalty (float): Penalty per opponent difficulty level (1-5 scale, higher = harder fixture).
-      difficulty_bonus (float): Bonus when facing a weaker opponent.
-
+    Computes a player's fitness score between 0 and 1 based on:
+    - Expected points (main driver)
+    - Normalized transfer trends
+    - Normalized value (points per cost)
+    
     Returns:
-      float: Fixture fitness score.
+        float: Fitness score between 0 (worst) and 1 (best)
     """
-    team = self._get_team_from_id(team_id)
-    team_strength = team['strength']
+    player_id = player['id']
+    cost = player['cost'] if player['cost'] > 0 else 1  # avoid divide by 0
+    transfers_balance = player.get('transfers_balance', 0)
 
-    upcoming_fixtures = self._get_team_opponents(team_id)
+    # Get expected points for this player
+    player_entries = gw_data[gw_data['id'] == player_id]
+    expected_points = player_entries[self.TARGET].sum()
 
-    fixture_fitness = 0
+    # Normalize expected points across all players
+    all_expected_points = gw_data.groupby('id')[self.TARGET].sum()
+    min_ep, max_ep = all_expected_points.min(), all_expected_points.max()
+    norm_expected_points = (expected_points - min_ep) / (max_ep - min_ep) if max_ep > min_ep else 0
 
-    for i, fixture in upcoming_fixtures.iterrows():
-      is_home = int(fixture['team_h']) == team_id
-      opponent_strength = fixture["team_a"] if is_home else fixture["team_h"]
-      
-      adjusted_difficulty = opponent_strength - team_strength
+    # Normalize transfer trend
+    min_transfers = gw_data['transfers_balance'].min()
+    max_transfers = gw_data['transfers_balance'].max()
+    norm_transfer = (transfers_balance - min_transfers) / (max_transfers - min_transfers) if max_transfers > min_transfers else 0
 
-      #  Apply bonus or penalty if opponent is stronger/weaker
-      if adjusted_difficulty > 0:
-        game_fitness = 5 - (difficulty_penalty * adjusted_difficulty)
-      else:
-        game_fitness = 5 + (difficulty_bonus * abs(adjusted_difficulty))
+    # Normalize points per cost (value metric)
+    gw_data_grouped = gw_data.groupby('id').agg({
+      self.TARGET: 'sum',
+      'cost': 'first'
+    }).reset_index()
+    gw_data_grouped['ppc'] = gw_data_grouped[self.TARGET] / gw_data_grouped['cost'].replace(0, 1)
 
-      # Apply home advantage
-      game_fitness += home_bonus if is_home else 0
+    player_ppc = expected_points / cost
+    min_ppc, max_ppc = gw_data_grouped['ppc'].min(), gw_data_grouped['ppc'].max()
+    norm_ppc = (player_ppc - min_ppc) / (max_ppc - min_ppc) if max_ppc > min_ppc else 0
 
-      # Weight future fixtures with decay factor
-      game_fitness *= (weight_future ** i)
+    # Normalize fixture difficulty    
+    min_team_form = teams_form['form'].min()
+    max_team_form = teams_form['form'].max()
+    team_form = teams_form[teams_form['id'] == player['team']].iloc[0]['form']
+    norm_form = (team_form - min_team_form) / (max_team_form - min_team_form)
 
-      # Ensure non-negative fitness score
-      fixture_fitness += max(0, game_fitness)
+    # Get form of next 3 opponents
+    next_opponents = self._get_team_next_opponents(player['team'], current_gw)
+    opponent_forms = teams_form[teams_form['id'].isin(next_opponents)]
 
-    return fixture_fitness
+    avg_opponent_form = opponent_forms['form'].mean() if not opponent_forms.empty else teams_form['form'].mean()
+
+    min_form = teams_form['form'].min()
+    max_form = teams_form['form'].max()
+
+    if max_form > min_form:
+      norm_difficulty = 1 - (avg_opponent_form - min_form) / (max_form - min_form)
+    else:
+      norm_difficulty = 0
+
+    # Final weighted fitness score
+    fitness_score = (
+      norm_expected_points * points_weight +
+      norm_transfer * transfer_weight +
+      norm_ppc * value_weight +
+      norm_form * team_form_weight +
+      norm_difficulty * fixture_difficulty_weight
+    )
+
+    return round(fitness_score, 4)
 
   def _get_team_from_id(self, team_id):
     return self.teams_data[self.teams_data['id'] == team_id]
 
-  # Returns the next 3 oponents for a team
-  def _get_team_next_opponents(self, team):
+  # Returns a list of ids of the next 3 oponents for a team
+  def _get_team_next_opponents(self, team_id, gw):
+
     # Next fixtures for team
     future_team_fixtures = self.fixtures_data[
-      self.fixtures_data['team_a'] == team_id |
-      self.fixtures_data['team_b'] == team_id
+      (self.fixtures_data['team_h'] == team_id) |
+      (self.fixtures_data['team_a'] == team_id)
     ]
 
     # Next 3 gws
     future_team_fixtures = future_team_fixtures[
-      (self.fixtures_data['GW'] > self.current_gw) & 
-      (self.fixtures_data['GW'] <= (self.current_gw + 3))
+      (future_team_fixtures['GW'] > gw) & 
+      (future_team_fixtures['GW'] <= (gw + 3))
     ]
 
-    return future_team_fixtures
+    opponents = []
+    for _, fixture in future_team_fixtures.iterrows():
+      if fixture['team_h'] == team_id:
+        opponents.append(fixture['team_a'])
+      else:
+        opponents.append(fixture['team_h'])
+
+    return opponents
 
   # Returns all the teams which already have 3 players selected
   def _get_teams_capped(self, gw_data, current_team):
@@ -247,6 +268,8 @@ class Team:
 
   # TODO: Get players available given restrictions, budget and position
   def _get_filtered_players(self, gw_data, position, budget, current_team):
+    gw_data = gw_data.copy()
+
     selected_players_ids = current_team[position]['id'].tolist()
     teams_capped = self._get_teams_capped(gw_data, current_team)
 
@@ -257,21 +280,26 @@ class Team:
       (~gw_data['team'].isin(teams_capped))
     ].copy()
 
-  def _add_player_fitness_to_data(self, gw_data):
-    data = gw_data.copy()  # Ensure it's a full copy
-    data["fitness"] = gw_data.apply(lambda player: self._calc_player_fitness(gw_data, player), axis=1)
-    return data
-
   # Suggests transfers by replacing underperforming players with those predicted to improve.
-  def suggest_transfers(self, gw_data, current_team, budget):
+  def suggest_transfers(
+    self, 
+    gw_data, 
+    current_gw,
+    current_team, 
+    budget, 
+    force_transfer,
+    teams_form
+  ):
+    gw_data = gw_data.copy()
+    
+    # Apply fitness to all players and sort by fitness (best first)
+    gw_data["fitness"] = gw_data.apply(lambda player: self._calc_player_fitness(gw_data, current_gw, teams_form, player), axis=1)
+    fitness_data = gw_data.sort_values(by=['fitness'], ascending=False)
+    
     possible_transfers = []
-
+    
     # Track players already transferred in
     transferred_in = set()
-
-    # Apply fitness to all players and sort by fitness (best first)
-    fitness_data = self._add_player_fitness_to_data(gw_data)
-    fitness_data = fitness_data.sort_values(by=['fitness'], ascending=False)
 
     for position in self.POSITIONS:
       for _, selected_player in current_team[position].iterrows():
@@ -286,10 +314,10 @@ class Team:
 
         available_budget = budget + player['cost']
 
-        # Get all valid replacements sorted by self.TARGET
+        # Get all valid replacements sorted by fitness
         available_players = self._get_filtered_players(
           fitness_data, position, available_budget, current_team
-        ).sort_values(by=self.TARGET, ascending=False)
+        ).sort_values(by=['fitness'], ascending=False)
 
         # Skip if no valid transfer found
         if available_players.empty:
@@ -307,8 +335,7 @@ class Team:
           continue
 
         # Ensure the new player has a better fitness score
-        # if player_in['fitness'] > player['fitness']:
-        if self._should_transfer(player_in, player):
+        if self._should_transfer(player_in, player, force_transfer):
           fitness_difference = player_in['fitness'] - player['fitness']
 
           transferred_in.add(player_in['id'])
@@ -321,8 +348,14 @@ class Team:
     sorted_transfers = sorted(possible_transfers, key=lambda x: x['difference'], reverse=True)
     return sorted_transfers
 
-  def _should_transfer(self, player_in, player_out):
-    return player_in['fitness'] - player_out['fitness'] >= self.TRANSFER_THRESHOLD
+  def _should_transfer(self, player_in, player_out, force_transfer):
+    threshold = self.TRANSFER_THRESHOLD
+
+    # If transfer should be forced, lower threshold
+    if force_transfer:
+      threshold -= 0.2
+
+    return player_in['fitness'] - player_out['fitness'] >= threshold
 
   # Update to use prices based on data
   def _pos_min_price(self, position):
@@ -380,11 +413,14 @@ class Team:
 
       for pos, count in formation.items():
         player_ids = selected_squad[pos]['id'].tolist()
-        # Select the top players
+        
+        # Gets the predicted GW data for all players in position
         pos_players = gw_data[gw_data['id'].isin(player_ids)]
         pos_players = pos_players.sort_values(by=target, ascending=False)
         
+        # Select the players with highest expected points
         selected_players = pos_players.head(count)
+
         remaining_players = pos_players.tail(self.POS_DISTRIBUTION[pos] - count)
 
         current_team[pos] = selected_players
@@ -463,6 +499,104 @@ class Team:
         total_points += player_points
 
     return total_points
+
+  def calc_team_diversity(self, team, num_bins=11):
+    """
+    Calculates team diversity as a numeric value between 0 and 1. 
+    Based on Gullham's bin method
+
+    Returns:
+        float: Diversity score (0 means no diversity, 1 means fully diverse).
+    """
+
+    player_costs = [
+      player['cost']
+      for position in self.POSITIONS
+      for _, player in team[position].iterrows()
+    ]
+
+    bins = np.linspace(min(player_costs), max(player_costs), num_bins + 1)
+    occupied_bins = np.zeros(num_bins, dtype=bool)
+    for cost in player_costs:
+      bin_index = np.digitize(cost, bins, right=False) - 1
+      bin_index = np.clip(bin_index, 0, num_bins - 1)
+      occupied_bins[bin_index] = True
+
+    diversity_score = np.sum(occupied_bins)
+    return diversity_score
+
+  def calc_teams_form(self, fixtures, gw, time_steps=5, lambda_decay=0.02):
+    teams_form = {
+      'id': [],
+      'form': []
+    }
+
+    fixtures = fixtures.copy().sort_values(by='kickoff_time')
+    fixtures['GW'] = pd.to_numeric(fixtures['GW'], errors='coerce')
+
+    team_ids = set(fixtures['team_h']).union(set(fixtures['team_a']))
+
+    if gw == 1:
+      league_stats = self.data_loader.get_league_stats(
+        self.season, 
+        leagues='Premier League'
+      )
+      team_matcher = TeamMatcher()
+
+    # Only consider past fixtures
+    past_fixtures = fixtures[fixtures['GW'] < gw]
+
+    # Get reference time for time-decay weighting (start of GW)
+    gw_fixtures = fixtures[fixtures['GW'] == gw]
+    if not gw_fixtures.empty:
+      reference_time = gw_fixtures['kickoff_time'].min()
+    else:
+      reference_time = pd.Timestamp.now()
+
+    for team_id in team_ids:
+      team_fixtures = past_fixtures[
+          (past_fixtures['team_h'] == team_id) | (past_fixtures['team_a'] == team_id)
+      ].copy().sort_values(by='kickoff_time').tail(time_steps)
+
+      team_form = 0
+
+      if gw > 1:
+        # Compute time decay weights
+        days_since = (reference_time - team_fixtures['kickoff_time']).dt.days
+        weights = np.exp(-lambda_decay * days_since.to_numpy())
+
+        for idx, (_, fixture) in enumerate(team_fixtures.iterrows()):
+          if fixture['team_h'] == team_id:
+            team_score = fixture['team_h_score']
+            opposition_score = fixture['team_a_score']
+            is_home = True
+          else:
+            team_score = fixture['team_a_score']
+            opposition_score = fixture['team_h_score']
+            is_home = False
+
+          if pd.isna(team_score) or pd.isna(opposition_score):
+            continue 
+
+          match_boost = 1 if is_home else 1.2
+          weight = weights[idx]
+
+          if team_score > opposition_score:
+            team_form += 3 * match_boost * weight
+          elif team_score == opposition_score:
+            team_form += 1 * match_boost * weight
+
+      else:
+        team_mapping = team_matcher.get_fpl_team(team_id, self.season)
+        fbref_team_name = team_mapping['FBref']['name']
+        team_stats = league_stats[league_stats['team'] == fbref_team_name].iloc[0]
+
+        team_form = abs(team_stats['position'] - 20) + 1
+
+      teams_form['id'].append(team_id)
+      teams_form['form'].append(team_form)
+
+    return pd.DataFrame.from_dict(teams_form)
 
   def _team_after_subs(self, gw_data, team):
     available_bench = team['bench']

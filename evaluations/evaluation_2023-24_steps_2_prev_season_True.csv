@@ -1,7 +1,0 @@
-Group,Metric,Model MAE,Model MSE,Baseline MAE,Baseline MSE
-Overall,General,1.09,4.57,0.85,2.87
-Bottom 25%,points,0.53,1.21,0.33,0.65
-Top 25%,points,2.11,10.69,1.79,6.9
-Bottom 25%,cost,0.54,1.53,0.46,1.09
-Middle 50%,cost,0.9,3.07,0.72,2.08
-Top 25%,cost,1.89,9.72,1.39,5.73

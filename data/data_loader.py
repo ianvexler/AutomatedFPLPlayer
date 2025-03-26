@@ -11,18 +11,19 @@ from pathlib import Path
 import sys 
 
 class DataLoader:
-  def __init__(self, no_cache=False):
+  def __init__(self, no_cache=False, debug=False):
     self.feature_selector = FeatureSelector()
     self.team_matcher = TeamMatcher()
     self.player_matcher = PlayerMatcher()
     self.no_cache = no_cache
+    self.debug = debug
 
     directory = Path("data/cached")
     directory.mkdir(parents=True, exist_ok=True)
     self.CACHE_DIR = directory
 
   def get_season_data(self, season):
-    data_path = self._get_cache_path(f"season_{season}.pkl")
+    data_path = self._get_cache_path(f"season_{season}")
     
     # Load if it already exists
     if self._should_load_cached(data_path):
@@ -35,7 +36,7 @@ class DataLoader:
     return data
 
   def get_id_dict_data(self, season):
-    data_path = self._get_cache_path(f"id_dict_{season}.pkl")
+    data_path = self._get_cache_path(f"id_dict_{season}")
     
     # Load if it already exists
     if self._should_load_cached(data_path):
@@ -51,13 +52,14 @@ class DataLoader:
     self, 
     season, 
     time_steps=0, 
-    include_prev_season=True, 
-    include_fbref=True, 
-    include_prev_gws=True, 
-    include_season_aggs=True
+    include_prev_season=False, 
+    include_fbref=False, 
+    include_prev_gws=False, 
+    include_season_aggs=False,
+    include_teams=False
   ):
-    file_name = f"steps_{time_steps}_prev_season_{include_prev_season}_fbref_{include_fbref}_season_aggs_{include_season_aggs}"
-    data_path = self._get_cache_path(f"merged_gw_{season}_{file_name}.pkl")
+    file_name = f"steps_{time_steps}_prev_season_{include_prev_season}_fbref_{include_fbref}_season_aggs_{include_season_aggs}_teams_{include_teams}"
+    data_path = self._get_cache_path(f"merged_gw_{season}_{file_name}")
     
     # Load if it already exists
     if self._should_load_cached(data_path):
@@ -77,8 +79,9 @@ class DataLoader:
       gw_data = vaastav.get_merged_gw_data()
 
       # Include teams data
-      teams_data = self.get_teams_data(s)
-      gw_data = self._add_teams_data_to_gw_data(gw_data, teams_data)
+      if include_teams:
+        teams_data = self.get_teams_data(s)
+        gw_data = self._add_teams_data_to_gw_data(gw_data, teams_data)
 
       if include_prev_season:
         season_data = vaastav.get_full_season_data()
@@ -87,49 +90,13 @@ class DataLoader:
 
       # Formats data from previous season
       if not s == season:
-        relegated_teams = {}
+        gw_data = self._format_previous_season_gw_data(
+          gw_data=gw_data, 
+          prev_season=s, 
+          current_season=season, 
+          time_steps=time_steps
+        )
 
-        max_gw = gw_data['GW'].max()
-        gw_data = gw_data[gw_data['GW'] > max_gw - time_steps]
-        gw_data.loc[:, 'GW'] = gw_data['GW'] - 39
-
-        data_to_remove = []
-
-        # Update player & team IDs to match current season
-        for index, player in gw_data.iterrows():
-          # Player ID
-          player_id = player['id']
-
-          # TODO: Temporary while ID issues remain
-          try:
-            player_mapping = self.player_matcher.get_fpl_player(player_id, s)
-            
-            # If player doesnt have current season data
-            if season in player_mapping['FPL']:
-              # Update player ID
-              new_player_id = player_mapping['FPL'][season]['id']
-              gw_data.loc[index, 'id'] = new_player_id
-              
-              # Reassign Team ID
-              team_id = player['team']
-              team_mapping = self.team_matcher.get_fpl_team(team_id, s)
-
-              # Reassign the id to the team
-              # Checks if team got relegated
-              if season in team_mapping['FPL']:
-                new_team_id = team_mapping['FPL'][season]['id']
-                gw_data.loc[index, 'team'] = new_team_id
-              else:
-                # Assign a new id to relegated teams
-                relegated_teams.setdefault(team_id, len(relegated_teams) + 21)
-                gw_data.loc[index, 'team'] = relegated_teams[team_id]
-            else:
-              data_to_remove.append(index)
-          except:
-            data_to_remove.append(index)
-
-        gw_data = gw_data.drop(data_to_remove).reset_index(drop=True)
-      
       if include_season_aggs:
         gw_data = self._add_aggs_data_to_gw_data(gw_data)
 
@@ -272,8 +239,50 @@ class DataLoader:
 
     return gw_data    
 
+  def _format_previous_season_gw_data(self, gw_data, prev_season, current_season, time_steps):
+    relegated_teams = {}
+    max_gw = gw_data['GW'].max()
+
+    # Keep only the most recent 'time_steps' gameweeks
+    gw_data = gw_data[gw_data['GW'] > max_gw - time_steps]
+    gw_data.loc[:, 'GW'] = gw_data['GW'] - 39
+
+    data_to_remove = []
+
+    # Update player & team IDs to match current season
+    for index, player in gw_data.iterrows():
+      player_id = player['id']
+
+      try:
+        player_mapping = self.player_matcher.get_fpl_player(player_id, prev_season)
+
+        if current_season in player_mapping['FPL']:
+          # Update player ID
+          new_player_id = player_mapping['FPL'][current_season]['id']
+          gw_data.loc[index, 'id'] = new_player_id
+
+          # Update team ID
+          team_id = player['team']
+          team_mapping = self.team_matcher.get_fpl_team(team_id, prev_season)
+
+          if current_season in team_mapping['FPL']:
+            new_team_id = team_mapping['FPL'][current_season]['id']
+            gw_data.loc[index, 'team'] = new_team_id
+          else:
+            relegated_teams.setdefault(team_id, len(relegated_teams) + 21)
+            gw_data.loc[index, 'team'] = relegated_teams[team_id]
+        else:
+          data_to_remove.append(index)
+
+      except Exception as e:
+        data_to_remove.append(index)
+
+    gw_data = gw_data.drop(data_to_remove).reset_index(drop=True)
+    return gw_data
+
+
   def get_fixtures(self, season):
-    data_path = self._get_cache_path(f"fixtures_{season}.pkl")
+    data_path = self._get_cache_path(f"fixtures_{season}")
     
     # Load if it already exists
     if self._should_load_cached(data_path):
@@ -286,7 +295,7 @@ class DataLoader:
     return data
 
   def get_teams_data(self, season):
-    data_path = self._get_cache_path(f"teams_data_{season}.pkl")
+    data_path = self._get_cache_path(f"teams_data_{season}")
 
     # Load if it already exists
     if self._should_load_cached(data_path):
@@ -299,7 +308,7 @@ class DataLoader:
     return data
 
   def get_players_data(self, season):
-    data_path = self._get_cache_path(f"players_data_{season}.pkl")
+    data_path = self._get_cache_path(f"players_data_{season}")
 
     # Load if it already exists
     if self._should_load_cached(data_path):
@@ -307,6 +316,19 @@ class DataLoader:
 
     data_loader = Vaastav(season)
     data = data_loader.get_players_data()
+
+    self._save_cached_data(data_path, data)
+    return data
+
+  def get_league_stats(self, season, leagues):
+    data_path = self._get_cache_path(f"league_stats_{season}_{'_'.join(leagues) if leagues else 'all'}")
+
+    # Load if it already exists
+    if self._should_load_cached(data_path):
+      return self._load_cached_data(data_path)
+
+    data_loader = FBref(season)
+    data = data_loader.get_league_stats(leagues)
 
     self._save_cached_data(data_path, data)
     return data
@@ -321,7 +343,9 @@ class DataLoader:
     return self.CACHE_DIR / f"{file_name}.pkl"
 
   def _load_cached_data(self, data_path):
-    print(f"Loading cached data from: {data_path}\n")
+    if self.debug:
+      print(f"Loading cached data from: {data_path}\n")
+    
     with open(data_path, "rb") as f:
       return pickle.load(f)
 

@@ -238,11 +238,24 @@ class DataLoader:
     players_df = players_df.drop_duplicates(subset=['id'], keep='first')
     return players_df
 
-  def get_league_team_stats(self, debug=False):
+  def get_league_stats(self, leagues=None, debug=False):
     season_str = self.format_season_str(self.season)
     leagues_team_df = pd.DataFrame()
 
-    for league, league_code in self.LEAGUES.items():
+    available_leagues = self.LEAGUES
+    if leagues:
+      if isinstance(leagues, str):
+        leagues = [leagues]
+
+      invalid = [l for l in leagues if l not in available_leagues]
+      if invalid:
+        raise Exception(f"Invalid league(s): {invalid}. Options: {list(available_leagues.keys())}")
+
+      selected_leagues = {k: available_leagues[k] for k in leagues}
+    else:
+      selected_leagues = available_leagues
+    
+    for league, league_code in selected_leagues.items():
       subdirectory = f'data/{self.season}/leagues'
       filename = f"{league}.csv"
       script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -263,7 +276,7 @@ class DataLoader:
         dfs = pd.read_html(url, extract_links='all')
         league_df = dfs[0]
 
-        league_df = league_df.iloc[:, 1:13].copy()
+        league_df = league_df.iloc[:, 0:13].copy()
         league_df.columns = [self.reformat_column_name(col) for col in league_df.columns]
 
         for col in league_df.columns:
@@ -277,6 +290,11 @@ class DataLoader:
       
       league_df["league"] = league
       leagues_team_df = pd.concat([leagues_team_df, league_df], ignore_index=True)
+    
+    leagues_team_df = leagues_team_df.rename(columns={
+      'Squad': 'team',
+      'Rk': 'position'
+    })
     return leagues_team_df
 
   def save_df_to_csv(self, current_df: pd.DataFrame, subdirectory, filename):

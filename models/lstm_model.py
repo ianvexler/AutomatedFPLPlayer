@@ -14,29 +14,16 @@ class LSTMModel:
   def __init__(
     self, 
     time_steps, 
-    position, 
-    include_prev_season, 
-    include_fbref,
-    include_season_aggs
+    position,
+    features
   ):
     self.time_steps = time_steps
     self.position = position
-    self.include_prev_season = include_prev_season
-    self.include_fbref = include_fbref
-    self.include_season_aggs = include_season_aggs
+    self.features = features
 
   def build_model(self):
-    # Feature Selection
-    feature_selector = FeatureSelector()
-    features = feature_selector.get_features_for_position(
-      self.position, 
-      include_prev_season=self.include_prev_season, 
-      include_fbref=self.include_fbref,
-      include_season_aggs=self.include_season_aggs
-    )
-
     # Model Architecture (Single-Layer LSTM)
-    input_layer = Input(shape=(self.time_steps, len(features)))
+    input_layer = Input(shape=(self.time_steps, len(self.features)))
 
     x = LSTM(32, kernel_regularizer=l2(0.001))(input_layer)  # Lower L2 regularization
     x = Dropout(0.3)(x)  # Moderate dropout
