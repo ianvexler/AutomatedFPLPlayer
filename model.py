@@ -29,6 +29,7 @@ class Model:
     training_years=3,
     include_season_aggs=False,
     include_teams=False,
+    gw_lamda_decay=0.02,
     no_cache=False
   ):
     self.model_type = model_type
@@ -43,6 +44,7 @@ class Model:
     self.include_fbref = include_fbref
     self.include_season_aggs = include_season_aggs
     self.include_teams = include_teams
+    self.gw_lamda_decay = gw_lamda_decay
     
     self.training_years = training_years
     self.no_cache = no_cache
@@ -61,7 +63,7 @@ class Model:
       'FWD': FeatureScaler('FWD', self.model_type)
     }
 
-    self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}"
+    self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}_gw_decay_{self.gw_lamda_decay}"
     self.DIRECTORY = f"{self.model_type.value}/{self.FILE_NAME}"
     
     if not train:
@@ -390,7 +392,7 @@ class Model:
 
   # To be applied to every sequence
   def _add_gw_decay(self, player_data, kickoff_time):
-    lambda_decay = 0.02
+    lambda_decay = self.gw_lamda_decay
 
     player_data = player_data.copy()
 
@@ -496,13 +498,14 @@ class Model:
 if __name__=='__main__':
   parser = argparse.ArgumentParser(description='Run the model with optional training.')
   parser.add_argument('--steps', type=int, nargs='?', const=5, default=5, help='Time step for data window. Defaults to 7 if not provided or null.')
-  parser.add_argument('--season', type=str, nargs='?', default='2024-25', help='Season to simulate in the format 20xx-yy.')
+  parser.add_argument('--season', type=str, nargs='?', default='2023-24', help='Season to simulate in the format 20xx-yy.')
   parser.add_argument('--prev_season', action='store_true', help='Set this flag to include prev season data. Defaults to false.')
   parser.add_argument('--model', type=str, help='The model to use', choices=[m.value for m in ModelType])
   parser.add_argument('--no_train', action='store_true', help='Use if model is already trained.')
   parser.add_argument('--fbref', action='store_true', help='Include FBref data.')
   parser.add_argument('--season_aggs', action='store_true', help='Include season aggregate data.')
   parser.add_argument('--teams', action='store_true', help='Include teams data.')
+  parser.add_argument('--gw_decay', type=float, default=0.02, help='The lambda decay applied in gw decay')
   parser.add_argument('--no_cache', action='store_true', help="Don't use cached Data Loader data")
 
   args = parser.parse_args()
@@ -522,6 +525,7 @@ if __name__=='__main__':
     include_fbref=args.fbref,
     include_season_aggs=args.season_aggs,
     include_teams=args.teams,
+    gw_lamda_decay=args.gw_decay,
     no_cache=args.no_cache
   )
 

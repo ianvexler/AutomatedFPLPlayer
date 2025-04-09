@@ -16,7 +16,7 @@ The `Model` class supports several command-line arguments to customize its behav
 | Argument       | Type   | Description  |
 |---------------|--------|-------------|
 | `--steps` | `int` | Number of time steps for the data window (default: `5`). Controls how many previous gameweeks are considered for predictions. |
-| `--season` | `str` | The season to simulate, formatted as `20xx-yy` (default: `2024-25`). |
+| `--season` | `str` | The season to simulate, formatted as `20xx-yy` (default: `2023-24`). |
 | `--prev_season` | `flag` | If enabled, includes data from the previous season for better long-term trend analysis. |
 | `--season_aggs` | `flag` | If enabled, includes the season aggregates up to each row. |
 | `--fbref` | `flag` | If enabled, uses FBref data instead of FPL data. |
@@ -34,7 +34,7 @@ The `Evaluate` class supports several command-line arguments to customize its ev
 
 | Argument       | Type   | Description  |
 |---------------|--------|-------------|
-| `--season` | `str` | The season to evaluate, formatted as `20xx-yy` (default: `2024-25`). |
+| `--season` | `str` | The season to evaluate, formatted as `20xx-yy` (default: `2023-24`). |
 | `--steps` | `int` | Number of time steps used in training (default: `5`). Must match the model's configuration. |
 | `--prev_season` | `flag` | If enabled, includes data from the previous season in evaluation. |
 | `--season_aggs` | `flag` | If enabled, includes the season aggregates up to each row. |
@@ -53,7 +53,7 @@ The `Simulation` class supports several command-line arguments to customize the 
 
 | Argument       | Type   | Description  |
 |---------------|--------|-------------|
-| `--season` | `str` | The season to simulate, formatted as `20xx-yy` (default: `2024-25`). |
+| `--season` | `str` | The season to simulate, formatted as `20xx-yy` (default: `2023-24`). |
 | `--triple_captain` | `str` | Strategy for the Triple Captain chip. Options: `'double_gw'`, `'blank_gw'` (default: `'double_gw'`). |
 | `--wildcard` | `str` | Strategy for the Wildcard chip. Options: `'double_gw'`, `'blank_gw'`, `'use_asap'`, `'wait'` (default: `'double_gw'`). |
 | `--free_hit` | `str` | Strategy for the Free Hit chip. Options: `'double_gw'`, `'blank_gw'` (default: `'blank_gw'`). |

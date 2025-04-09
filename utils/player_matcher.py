@@ -1,11 +1,8 @@
-import os
 import sys
-import difflib
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-# TODO: Make this a module
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.append(parent_dir)
-
+import os
 import pandas as pd
 import requests
 import json

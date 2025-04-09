@@ -1,16 +1,10 @@
-from team import Team
+from utils.team_manager import TeamManager
 from data.data_loader import DataLoader
 import pandas as pd
-from enum import Enum
 import argparse
 import math
 from utils.model_types import ModelType
-
-class Chip(Enum):
-  TRIPLE_CAPTAIN = 'triple_captain'
-  WILDCARD = 'wildcard'
-  FREE_HIT = 'free_hit'
-  BENCH_BOOST = 'bench_boost'
+from utils.chips import Chip
 
 DEFAULT_CONFIG = { 'max_gw': 38 }
 
@@ -21,12 +15,14 @@ class Simulation:
     model=None, 
     chip_strategy=None, 
     show_optimal=False, 
+    transfers_strategy='simple',
     config=DEFAULT_CONFIG,
     debug=False
   ):
     self.season = season
     self.model = model
     self.chip_strategy = chip_strategy
+    self.transfers_strategy = transfers_strategy
     self.debug = debug
 
     self.POSITIONS = ['GK', 'DEF', 'MID', 'FWD']
@@ -37,10 +33,11 @@ class Simulation:
     self.fixtures_data = self.data_loader.get_fixtures(season)
     self.teams_data = self.data_loader.get_teams_data(season)
 
-    self.team = Team(
-      self.season,
-      self.teams_data,
-      self.fixtures_data
+    self.team_manager = TeamManager(
+      season=self.season,
+      teams_data=self.teams_data,
+      fixtures_data=self.fixtures_data,
+      transfers_strategy=self.transfers_strategy
     )
 
     self.MAX_GW = config['max_gw']
@@ -90,11 +87,11 @@ class Simulation:
 
       # Load GW data
       gw_data = self._load_predicted_gw_data(current_gw)
-      teams_form = self.team.calc_teams_form(self.fixtures_data, current_gw)
+      teams_form = self.team_manager.calc_teams_form(self.fixtures_data, current_gw)
 
       if current_gw == 1:
         # Set initial team for GW1
-        current_squad, current_squad_cost = self.team.get_best_squad(gw_data, current_budget)
+        current_squad, current_squad_cost = self.team_manager.get_best_squad(gw_data, current_budget)
         current_budget -= current_squad_cost
       
       budget_available = current_budget + current_squad_cost
@@ -105,7 +102,7 @@ class Simulation:
           print(f"Using chip: {use_chip.value.replace("_", " ").title()}\n")
 
         # Add budget to history
-        self.chip_history[use_chip.value] = f'GW{current_gw}'
+        self.chip_history[use_chip.value] = current_gw
 
       if current_gw > 1:
         if use_chip == Chip.WILDCARD:
@@ -125,7 +122,7 @@ class Simulation:
         else:
           # Suggest and perform transfers
           force_transfer = transfers_available == self.MAX_FREE_TRANSFERS
-          suggested_transfers = self.team.suggest_transfers(
+          suggested_transfers = self.team_manager.suggest_transfers(
             gw_data, 
             current_gw,
             current_squad, 
@@ -139,7 +136,7 @@ class Simulation:
           transfers_available -= len(transfers)
 
           # Add budget to history
-          self.budget_history[f'GW{current_gw}'] = current_budget
+          self.budget_history[current_gw] = current_budget
 
           for transfer in transfers:
             if self.debug:
@@ -147,17 +144,17 @@ class Simulation:
 
             # Add transfer to history
             self.transfer_history.setdefault(
-              f'GW{current_gw}', []
+              current_gw, []
             ).append(transfer)
           
       # Select best team and captain
-      selected_team = self.team.pick_team(current_squad, gw_data)
+      selected_team = self.team_manager.pick_team(current_squad, gw_data)
 
-      current_team_diversity = self.team.calc_team_diversity(selected_team)
+      current_team_diversity = self.team_manager.calc_team_diversity(selected_team)
       total_team_diversity += current_team_diversity
 
       # Add diversity to history
-      self.diversity_history[f'GW{current_gw}'] = current_team_diversity
+      self.diversity_history[current_gw] = current_team_diversity
 
       if self.debug:
         print(f"\nGW{current_gw} Squad: {self._humanize_team_logs(current_squad)}")
@@ -179,14 +176,14 @@ class Simulation:
       if use_chip == Chip.BENCH_BOOST:
         self.use_bench_boost()
 
-      gw_points = self.team.calc_team_points(
+      gw_points = self.team_manager.calc_team_points(
         gw_data,
         selected_team, 
         triple_captain=(use_chip == Chip.TRIPLE_CAPTAIN),
         bench_boost=(use_chip == Chip.BENCH_BOOST),
         )
       
-      self.point_history[f'GW{current_gw}'] = gw_points
+      self.point_history[current_gw] = gw_points
 
       total_points += gw_points
 
@@ -198,13 +195,13 @@ class Simulation:
 
       if self.show_optimal:
         # Compare to optimal
-        optimal_squad, _, = self.team.get_best_squad(gw_data, self.MAX_BUDGET, optimal=True)
+        optimal_squad, _, = self.team_manager.get_best_squad(gw_data, self.MAX_BUDGET, optimal=True)
         
         if optimal_squad:
-          optimal_team, optimal_captain = self.team.pick_team(optimal_squad, gw_data, optimal=True)
-          optimal_points = self.team.calc_team_points(gw_data, optimal_team, optimal_captain)
+          optimal_team, optimal_captain = self.team_manager.pick_team(optimal_squad, gw_data, optimal=True)
+          optimal_points = self.team_manager.calc_team_points(gw_data, optimal_team, optimal_captain)
 
-          optimal_team_diversity = self.team.calc_team_diversity(optimal_team)
+          optimal_team_diversity = self.team_manager.calc_team_diversity(optimal_team)
 
           if self.debug:
             print(f"Optimal Team: {self._humanize_team_logs(optimal_team)}")
@@ -344,8 +341,8 @@ class Simulation:
     # Get cached best squad
     cached_best_squad, _ = self._get_best_cached_squad(gw_data, budget_available, current_gw)
 
-    squad_points = self.team.calc_squad_fitness(gw_data, current_squad)
-    best_points = self.team.calc_squad_fitness(gw_data, self.cached_best_squad)
+    squad_points = self.team_manager.calc_squad_fitness(gw_data, current_squad)
+    best_points = self.team_manager.calc_squad_fitness(gw_data, self.cached_best_squad)
 
     return (best_points - squad_points) >= self.REVAMP_THRESHOLD
 
@@ -374,7 +371,7 @@ class Simulation:
         self.chips_available[chip] = False
         should_use = True
 
-    squad_points = self.team.calc_squad_fitness(gw_data, current_squad)
+    squad_points = self.team_manager.calc_squad_fitness(gw_data, current_squad)
 
     # Only use wildcard if it improves on current result
     if should_use and (cached_best_squad_cost - squad_points) >= self.REVAMP_THRESHOLD:
@@ -431,7 +428,7 @@ class Simulation:
   def _get_best_cached_squad(self, gw_data, budget_available, current_gw):
     # Cache computed best squad
     if self.cached_best_squad is None or self.cached_best_squad_gw != current_gw:
-      best_squad, best_squad_cost = self.team.get_best_squad(gw_data, budget_available)
+      best_squad, best_squad_cost = self.team_manager.get_best_squad(gw_data, budget_available)
       
       if best_squad:
         self.cached_best_squad, self.cached_best_squad_cost = best_squad, best_squad_cost
@@ -482,7 +479,7 @@ if __name__=='__main__':
   parser = argparse.ArgumentParser(description="Run the model with optional chip strategies.")
 
   parser.add_argument(
-    "--season", type=str, nargs="?", default="2024-25",
+    "--season", type=str, nargs="?", default="2023-24",
     help="Season to simulate in the format 20xx-yy."
   )
 
@@ -517,6 +514,12 @@ if __name__=='__main__':
     help="Strategy for the Bench Boost chip. Options: 'double_gw', 'with_wildcard'."
   )
 
+  transfers_strategies=['simple', 'weighted']
+  parser.add_argument(
+    "--transfers", type=str, choices=transfers_strategies, default='simple',
+    help="Strategy to calculate the fitness of transfer candidates. Options: 'simple', 'weighted'"
+  )
+
   # Config parameters
   parser.add_argument(
     "--max_gw", type=int, nargs="?", default=38,
@@ -547,6 +550,7 @@ if __name__=='__main__':
     season=args.season,
     model=args.model,
     chip_strategy=chip_strategy,
+    transfers_strategy=args.transfers,
     config=config,
     debug=True
   )

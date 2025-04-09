@@ -24,7 +24,8 @@ class ModelEvaluation:
     include_prev_season=False, 
     include_fbref=False, 
     include_season_aggs=False, 
-    include_teams=False
+    include_teams=False,
+    gw_lamda_decay=0.02
   ):
     self.season = season
     self.time_steps = time_steps
@@ -35,10 +36,11 @@ class ModelEvaluation:
     self.include_fbref = include_fbref
     self.include_season_aggs = include_season_aggs
     self.include_teams = include_teams
+    self.gw_lamda_decay = gw_lamda_decay
 
     self.evaluation_results = []  # Stores results for CSV export
 
-    self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}"
+    self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}_gw_decay_{self.gw_lamda_decay}"
 
   def evaluate(self):
     self.feature_selector = FeatureSelector()
@@ -128,7 +130,7 @@ class ModelEvaluation:
     self.log_grouped_errors(baseline_errors, 'cost')
 
   def export_evaluation_to_csv(self):
-    evaluations_dir = "evaluation/model"
+    evaluations_dir = "model"
     os.makedirs(evaluations_dir, exist_ok=True)
     csv_filename = f"evaluation_{self.season}_{self.FILE_NAME}.csv"
     csv_path = os.path.join(evaluations_dir, csv_filename)
@@ -165,12 +167,13 @@ class ModelEvaluation:
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Run the model evaluation.')
-  parser.add_argument('--season', type=str, default='2024-25')
+  parser.add_argument('--season', type=str, default='2023-24')
   parser.add_argument('--steps', type=int, default=5)
   parser.add_argument('--prev_season', action='store_true')
   parser.add_argument('--model', type=str, choices=[m.value for m in ModelType])
   parser.add_argument('--fbref', action='store_true')
   parser.add_argument('--season_aggs', action='store_true')
+  parser.add_argument('--gw_decay', type=float, default=0.02, help='The lambda decay applied in gw decay')
   parser.add_argument('--teams', action='store_true')
   
   args = parser.parse_args()
@@ -182,6 +185,7 @@ if __name__ == "__main__":
     include_prev_season=args.prev_season, 
     include_fbref=args.fbref, 
     include_season_aggs=args.season_aggs, 
+    gw_lamda_decay=args.gw_decay,
     include_teams=args.teams
   )
   model_evaluation.evaluate()
