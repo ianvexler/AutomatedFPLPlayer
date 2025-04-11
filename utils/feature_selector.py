@@ -104,7 +104,6 @@ class FeatureSelector:
       case _:
         raise Exception(f"Invalid position provided: {position}")
 
-    
   def position_season_features(self, position):
     match position:
       case 'GK':

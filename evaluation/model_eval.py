@@ -66,68 +66,80 @@ class ModelEvaluation:
     self.evaluation_results.append(["Overall", "General", round(ae, 2), round(mse, 2), round(baseline_ae, 2), round(baseline_mse, 2)])
     
     # self.evaluate_grouclped_by_points(evaluation_df)
-    self.evaluate_grouped_by_costs(evaluation_df)
+    self.evaluate_grouped_by_position_costs(evaluation_df)
     self.export_evaluation_to_csv()
 
-  def evaluate_grouped_by_points(self, evaluation_df):
-    print("\n--- Evaluation Grouped by Points ---")
-    points_q25 = evaluation_df[self.feature_selector.TARGET].quantile(0.25)
-    points_q75 = evaluation_df[self.feature_selector.TARGET].quantile(0.75)
+  def evaluate_grouped_by_position_costs(self, evaluation_df):
+    print("\n--- Evaluation Grouped by Cost Bands (Threshold-Based) ---")
 
-    evaluation_df['points_group'] = np.select(
-      [evaluation_df[self.feature_selector.TARGET] <= points_q25,
-       evaluation_df[self.feature_selector.TARGET] >= points_q75],
-      ['Bottom 25%', 'Top 25%'],
-      default='Middle 50%'
-    )
+    cost_thresholds = {
+      'GK': {'budget_max': 45, 'premium_min': 50},
+      'DEF': {'budget_max': 45, 'premium_min': 55},
+      'MID': {'budget_max': 60, 'premium_min': 85},
+      'FWD': {'budget_max': 60, 'premium_min': 90}
+    }
 
-    grouped_errors = evaluation_df.groupby('points_group').apply(
-      lambda df: pd.Series(self.score_model(df, self.feature_selector.EXPECTED),
-                           index=['AE', 'MAE', 'MSE', 'RMSE']), 
-      include_groups=False
-    )
+    positions = ['GK', 'DEF', 'MID', 'FWD']
+    all_expected_errors = []
+    all_baseline_errors = []
 
-    print('\nExpected')
-    self.log_grouped_errors(grouped_errors, 'points')
+    for pos in positions:
+      pos_df = evaluation_df[evaluation_df['position'] == pos].copy()
 
-    baseline_errors = evaluation_df.groupby('points_group').apply(
-      lambda df: pd.Series(self.score_model(df, self.feature_selector.BASELINE),
-                           index=['AE', 'MAE', 'MSE', 'RMSE']),
-      include_groups=False
-    )
+      if pos_df.empty:
+        continue
 
-    print('\nBaseline')
-    self.log_grouped_errors(baseline_errors, 'points')
+      # Ensure cost is numeric
+      pos_df[self.feature_selector.COST] = pos_df[self.feature_selector.COST].astype(float)
+      thresholds = cost_thresholds[pos]
 
-  def evaluate_grouped_by_costs(self, evaluation_df):
-    print("\n--- Evaluation Grouped by Costs ---")
-    cost_q25 = evaluation_df[self.feature_selector.COST].quantile(0.25)
-    cost_q75 = evaluation_df[self.feature_selector.COST].quantile(0.75)
+      # Assign cost band using apply
+      def get_cost_band(row):
+        cost = row[self.feature_selector.COST]
+        if cost <= thresholds['budget_max']:
+          return 'Budget'
+        elif cost >= thresholds['premium_min']:
+          return 'Premium'
+        else:
+          return 'Mid'
 
-    evaluation_df['cost_group'] = np.select(
-      [evaluation_df[self.feature_selector.COST] <= cost_q25,
-       evaluation_df[self.feature_selector.COST] >= cost_q75],
-      ['Bottom 25%', 'Top 25%'],
-      default='Middle 50%'
-    )
+      pos_df['cost_band'] = pos_df.apply(get_cost_band, axis=1)
 
-    grouped_errors = evaluation_df.groupby('cost_group').apply(
-      lambda df: pd.Series(self.score_model(df, self.feature_selector.EXPECTED),
-                           index=['AE', 'MAE', 'MSE', 'RMSE']),
-      include_groups=False
-    )
+      for band in ['Budget', 'Mid', 'Premium']:
+        group_df = pos_df[pos_df['cost_band'] == band]
+        if group_df.empty:
+          continue
 
-    print('\nExpected')
-    self.log_grouped_errors(grouped_errors, 'cost')
+        expected_errors = self.score_model(group_df, self.feature_selector.EXPECTED)
+        baseline_errors = self.score_model(group_df, self.feature_selector.BASELINE)
 
-    baseline_errors = evaluation_df.groupby('cost_group', group_keys=False).apply(
-      lambda df: pd.Series(self.score_model(df, self.feature_selector.BASELINE),
-                           index=['AE', 'MAE', 'MSE', 'RMSE']),
-      include_groups=False
-    )
+        all_expected_errors.append({
+          'Position': pos,
+          'Cost Band': band,
+          'AE': expected_errors[0],
+          'MAE': expected_errors[1],
+          'MSE': expected_errors[2],
+          'RMSE': expected_errors[3]
+        })
 
-    print('\nBaseline')
-    self.log_grouped_errors(baseline_errors, 'cost')
+        all_baseline_errors.append({
+          'Position': pos,
+          'Cost Band': band,
+          'AE': baseline_errors[0],
+          'MAE': baseline_errors[1],
+          'MSE': baseline_errors[2],
+          'RMSE': baseline_errors[3]
+        })
+
+    # Convert to DataFrames and display as joint tables
+    expected_df = pd.DataFrame(all_expected_errors)
+    baseline_df = pd.DataFrame(all_baseline_errors)
+
+    print("\n--- Expected Errors by Cost Band ---")
+    self.log_grouped_errors(expected_df, 'position-costband-expected')
+
+    print("\n--- Baseline Errors by Cost Band ---")
+    self.log_grouped_errors(baseline_df, 'position-costband-baseline')
 
   def export_evaluation_to_csv(self):
     evaluations_dir = "model"

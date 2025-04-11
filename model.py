@@ -22,7 +22,6 @@ class Model:
     self, 
     season,
     time_steps=7, 
-    train=False, 
     include_prev_season=False,
     model_type = ModelType.LSTM,
     include_fbref=False,
@@ -56,24 +55,17 @@ class Model:
       'FWD': self._set_model('FWD')
     }
 
-    self.scalers = {
-      'GK': FeatureScaler('GK', self.model_type),
-      'DEF': FeatureScaler('DEF', self.model_type),
+    if self._is_model_sequential():
+      self.scalers = {
+        'GK': FeatureScaler('GK', self.model_type),
+        'DEF': FeatureScaler('DEF', self.model_type),
       'MID': FeatureScaler('MID', self.model_type),
-      'FWD': FeatureScaler('FWD', self.model_type)
-    }
+        'FWD': FeatureScaler('FWD', self.model_type)
+      }
 
     self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}_gw_decay_{self.gw_lamda_decay}"
     self.DIRECTORY = f"{self.model_type.value}/{self.FILE_NAME}"
-    
-    if not train:
-      for position in self.models:
-        self.models[position] = self._load_model(position)
-        
-        features = self._get_position_features(position)   
-        scaler = self.scalers[position]
-        scaler.load_scalers(features)
-  
+      
   def _set_model(self, position):
     match self.model_type.value:
       case ModelType.RANDOM_FOREST.value:
@@ -137,34 +129,6 @@ class Model:
           callbacks=[early_stopping, lr_schedule])
       else:
         model.fit(X, y)
-
-      self._save_model(position)
-      print(f"  Saved model and scalers for {position}\n")
-
-  def _save_model(self, position):
-    directory = f"models/{self.DIRECTORY}"
-    os.makedirs(directory, exist_ok=True)  # Ensure directory exists
-
-    model_path = os.path.join(directory, position)
-
-    if self._is_model_sequential():
-      # Save LSTM model
-      self.models[position].save(model_path + ".keras")
-    else:
-      # Save Scikit-Learn model
-      joblib.dump(self.models[position], model_path + ".joblib")
-
-  def _load_model(self, position):
-    directory = f"models/{self.DIRECTORY}"
-    model_path = os.path.join(directory, position)
-    
-    if self._is_model_sequential():
-      # Load LSTM model
-      model = tf.keras.models.load_model(model_path + ".keras")
-    else:
-      # Load Scikit-Learn model
-      model = joblib.load(model_path + ".joblib")
-    return model 
 
   def _get_training_data(self):
     start_year, end_year = self.season.split('-')
@@ -238,7 +202,9 @@ class Model:
     position_gw_data = training_data[training_data['position'] == position]
 
     features = self._get_position_features(position)
-    feature_scaler = self._fit_scaler(position_gw_data, features, position)
+
+    if self._is_model_sequential():
+      self._fit_scaler(position_gw_data, features, position)
 
     # Iterate over all players in this position
     for player_id, player_data in position_gw_data.groupby('id'):
@@ -256,13 +222,14 @@ class Model:
         # Get target
         target_game_data = player_data[player_data['kickoff_time'] == kickoff_time].iloc[0]
         y_target = target_game_data[self.target]
-        scaled_target = self.scalers[position].transform(y_target, 'total_points', target=True)
-
-        if not self._is_model_sequential():
-          X_sequence = X_sequence.flatten()
+        
+        if self._is_model_sequential():
+          y_target = self.scalers[position].transform(y_target, 'total_points', target=True)
+        else:
+          X_sequence = X_sequence.flatten()          
 
         X.append(X_sequence)
-        y.append(scaled_target)
+        y.append(y_target)
 
     return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)
 
@@ -385,10 +352,11 @@ class Model:
 
     prediction_df = pd.DataFrame(predictions, columns=[self.target])
 
-    scaler = self.scalers[position]
-    predictions_unscaled = scaler.inverse_transform(prediction_df, 'target')
+    if self._is_model_sequential():
+      scaler = self.scalers[position]
+      predictions = scaler.inverse_transform(prediction_df, 'target')
 
-    return np.round(np.array(predictions_unscaled).flatten(), 2)
+    return np.round(np.array(predictions).flatten(), 2)
 
   # To be applied to every sequence
   def _add_gw_decay(self, player_data, kickoff_time):
@@ -426,18 +394,21 @@ class Model:
     player_data.fillna(0, inplace=True)
 
     # Scale features
-    scaler = self.scalers[position]
-    scaled_sequence = scaler.transform_data(player_data).values  # Convert to NumPy array
+    if self._is_model_sequential():
+      scaler = self.scalers[position]
+      sequence = scaler.transform_data(player_data).values  # Convert to NumPy array
+    else:
+      sequence = player_data.values
 
     # Ensure the sequence is exactly (time_steps, n_features)
-    current_length = scaled_sequence.shape[0]
+    current_length = sequence.shape[0]
 
     if current_length < self.time_steps:
       # Pad with zeros at the beginning (pre-padding) to match the required length
       padding = np.zeros((self.time_steps - current_length, n_features), dtype=np.float32)
-      scaled_sequence = np.vstack((padding, scaled_sequence))  # Stack the padding at the start
+      sequence = np.vstack((padding, sequence))  # Stack the padding at the start
 
-    return scaled_sequence  # Always (time_steps, n_features)
+    return sequence  # Always (time_steps, n_features)
 
   def _get_player_position(self, player_id):
     position = self.players_data[self.players_data['id'] == player_id].iloc[0]['position']
@@ -501,7 +472,6 @@ if __name__=='__main__':
   parser.add_argument('--season', type=str, nargs='?', default='2023-24', help='Season to simulate in the format 20xx-yy.')
   parser.add_argument('--prev_season', action='store_true', help='Set this flag to include prev season data. Defaults to false.')
   parser.add_argument('--model', type=str, help='The model to use', choices=[m.value for m in ModelType])
-  parser.add_argument('--no_train', action='store_true', help='Use if model is already trained.')
   parser.add_argument('--fbref', action='store_true', help='Include FBref data.')
   parser.add_argument('--season_aggs', action='store_true', help='Include season aggregate data.')
   parser.add_argument('--teams', action='store_true', help='Include teams data.')
@@ -521,7 +491,6 @@ if __name__=='__main__':
     time_steps=args.steps,
     include_prev_season=args.prev_season,
     model_type=model_type,
-    train=(not args.no_train),
     include_fbref=args.fbref,
     include_season_aggs=args.season_aggs,
     include_teams=args.teams,
@@ -529,6 +498,5 @@ if __name__=='__main__':
     no_cache=args.no_cache
   )
 
-  if not args.no_train:
-    model.train()
+  model.train()
   model.predict_season()
