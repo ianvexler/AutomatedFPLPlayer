@@ -95,7 +95,6 @@ class SimulationEvaluation:
         best_sim_histories['budget']
       )
 
-
   def _evaluate_transfers(self, histories, best_histories):
     transfers_eval = TransfersEvaluation(self.gw_data, self.transfers_strategy)
     return transfers_eval.evaluate(histories, best_histories)

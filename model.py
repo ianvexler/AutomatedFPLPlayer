@@ -3,6 +3,7 @@ import argparse
 import joblib
 
 import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 import tensorflow as tf
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, GradientBoostingRegressor
@@ -57,10 +58,10 @@ class Model:
 
     if self._is_model_sequential():
       self.scalers = {
-        'GK': FeatureScaler('GK', self.model_type),
-        'DEF': FeatureScaler('DEF', self.model_type),
-      'MID': FeatureScaler('MID', self.model_type),
-        'FWD': FeatureScaler('FWD', self.model_type)
+        'GK': FeatureScaler('GK'),
+        'DEF': FeatureScaler('DEF'),
+        'MID': FeatureScaler('MID'),
+        'FWD': FeatureScaler('FWD')
       }
 
     self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}_gw_decay_{self.gw_lamda_decay}"
@@ -107,12 +108,16 @@ class Model:
   def train(self):
     training_data = self._get_training_data()
   
+    pos_training_data = {}
+
     for position in ['GK', 'DEF', 'MID', 'FWD']:
       print(f"Training model and fitting scalers for {position}\n")
 
       # Train the model
       model = self.models[position]
       X, y = self._prepare_training_sequences(training_data, position)
+
+      self._save_target_distribution_plot(y, position=position)
       
       if np.isnan(X).sum() > 0 or np.isnan(y).sum() > 0:
         raise ValueError(f"Found NaN values in training data for {position}")
@@ -129,6 +134,10 @@ class Model:
           callbacks=[early_stopping, lr_schedule])
       else:
         model.fit(X, y)
+
+      pos_training_data[position] = (X, y)
+
+    return pos_training_data
 
   def _get_training_data(self):
     start_year, end_year = self.season.split('-')
@@ -226,7 +235,7 @@ class Model:
         if self._is_model_sequential():
           y_target = self.scalers[position].transform(y_target, 'total_points', target=True)
         else:
-          X_sequence = X_sequence.flatten()          
+          X_sequence = X_sequence.flatten() 
 
         X.append(X_sequence)
         y.append(y_target)
@@ -375,6 +384,8 @@ class Model:
 
     # Ensure data is sorted by kickoff time
     player_data = player_data.sort_values(by='kickoff_time')
+    
+    # Only extracts data from previous matches
     player_data = player_data[player_data['kickoff_time'] < kickoff_time].tail(self.time_steps)
 
     # Get list of features for this position
@@ -466,6 +477,26 @@ class Model:
 
     return predictions_df
 
+  def _save_target_distribution_plot(self, y, position=None):
+    y = y.copy()
+    y = self.scalers[position].inverse_transform(pd.DataFrame(y, columns=['target']), 'target')
+
+    plt.figure(figsize=(8, 5))
+    plt.hist(y, bins=20, edgecolor='black', color='skyblue')
+    plt.title(f"Distribution of Target Variable (Total Points){f' - {position}' if position else ''}")
+    plt.xlabel("Total Points")
+    plt.ylabel("Count")
+    plt.grid(True)
+
+    save_path = f"evaluation/plots/model/target_distribution/{self.FILE_NAME}"
+
+    os.makedirs(save_path, exist_ok=True)
+
+    filename = f"target_distribution_{position}.png" if position else "target_distribution.png"
+    file_path = os.path.join(save_path, filename)
+    plt.savefig(file_path, bbox_inches='tight')
+    plt.close()
+
 if __name__=='__main__':
   parser = argparse.ArgumentParser(description='Run the model with optional training.')
   parser.add_argument('--steps', type=int, nargs='?', const=5, default=5, help='Time step for data window. Defaults to 7 if not provided or null.')
@@ -495,8 +526,7 @@ if __name__=='__main__':
     include_season_aggs=args.season_aggs,
     include_teams=args.teams,
     gw_lamda_decay=args.gw_decay,
-    no_cache=args.no_cache
-  )
+    no_cache=args.no_cache)
 
   model.train()
   model.predict_season()
