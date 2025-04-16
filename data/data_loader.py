@@ -209,7 +209,7 @@ class DataLoader:
 
   # Adds season aggregates up to each GW
   def _add_aggs_data_to_gw_data(self, gw_data):
-    agg_funcs = ['mean']
+    agg_funcs = ['mean', 'sum']
 
     # Iterate through each player's row in gw_data
     for index, player_data in gw_data.iterrows():

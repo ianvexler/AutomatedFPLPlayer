@@ -46,8 +46,6 @@ class FeatureSelector:
     include_season_aggs=False,
     include_teams=False
   ):
-    # return self.top_features(position)
-
     # Initialize features
     features = self.ADDITIONAL_FEATURES + self.CUSTOM_FEATURES
 
@@ -77,25 +75,13 @@ class FeatureSelector:
 
     return features
 
-  def top_features(self, position):
-    match position:
-      case 'GK':
-        return ['total_points', 'mean_clean_sheets', 'performance_ga', 'performance_save%', 'minutes', 'cost', 'performance_psxg', 'mean_saves', 'performance_cs', 'mean_total_points']
-      case 'DEF': 
-        return ['total_points', 'performance_blocks', 'sca_sca', 'cost', 'mean_total_points', 'performance_int', 'mean_minutes', 'carries_prgc', 'performance_tkl', 'performance_crdy']
-      case 'MID': 
-        return ['total_points', 'passes_cmp%', 'sca_sca', 'carries_prgc', 'cost', 'mean_total_points', 'take-ons_att', 'carries_carries', 'mean_minutes', 'mean_goals_scored']
-      case 'FWD':
-        return ['total_points', 'expected_xg', 'cost', 'performance_sh', 'sca_sca', 'take-ons_att', 'mean_goals_scored', 'performance_sot', 'mean_minutes', 'was_home']
-      case _:
-        raise Exception(f"Invalid position provided: {position}")
-
   def position_fbref_features(self, position):
     match position:
       case 'GK':
         return [
           "performance_cs", "performance_saves", "performance_ga", "minutes",
-          "penalty kicks_pksv", "performance_psxg", "performance_save%"
+          "penalty kicks_pksv", "performance_psxg", "performance_save%", 
+          "goal kicks_launch%"
         ]
       case 'DEF':
         return [
@@ -112,7 +98,7 @@ class FeatureSelector:
       case 'FWD':
         return [
           "performance_gls", "performance_ast", "performance_sh", "performance_sot",
-          "expected_xg", "expected_xag", "sca_sca", "sca_gca",
+          "expected_xg", "expected_npxg", "expected_xag", "sca_sca", "sca_gca",
           "carries_prgc", "take-ons_att", "take-ons_succ"
         ]
       case _:

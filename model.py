@@ -479,7 +479,9 @@ class Model:
 
   def _save_target_distribution_plot(self, y, position=None):
     y = y.copy()
-    y = self.scalers[position].inverse_transform(pd.DataFrame(y, columns=['target']), 'target')
+
+    if self._is_model_sequential():
+      y = self.scalers[position].inverse_transform(pd.DataFrame(y, columns=['target']), 'target')
 
     plt.figure(figsize=(8, 5))
     plt.hist(y, bins=20, edgecolor='black', color='skyblue')
