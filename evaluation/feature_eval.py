@@ -4,7 +4,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pandas as pd
 from sklearn.metrics import mean_squared_error
-from data.data_loader import DataLoader
 from utils.feature_selector import FeatureSelector
 import argparse
 import os
@@ -64,29 +63,41 @@ class FeatureEvaluation:
     for position in ['GK', 'DEF', 'MID', 'FWD']:
       X, y = training_data[position]
     
-      important_features = self._get_permutation_importance(
-        position=position,
-        X=X,
-        y=y,
-        top_n=self.n_features)
-      
-      print(f"{position}: {important_features}")
+      for top_n in [10, 15, 20, 25, 30]:
+        important_features = self._get_permutation_importance(
+          position=position,
+          X=X,
+          y=y,
+          top_n=top_n)
+        
+        print(f"{position}: {important_features}")
 
-  def _permutation_importance_lstm(self, model, X_val, y_val, feature_names, n_repeats=5):
-    baseline = np.sqrt(mean_squared_error(y_val, model.predict(X_val)))
+  def _permutation_importance_lstm(self, model, X_val, y_val, feature_names, scaler, n_repeats=5):
+    y_val_original = y_val.flatten()
+    predictions_baseline = model.predict(X_val)
+    
+    predictions_baseline = scaler.inverse_transform(
+      pd.DataFrame(predictions_baseline, columns=['target']), 'target'
+    ).flatten()
+    
+    baseline_rmse = np.sqrt(mean_squared_error(y_val_original, predictions_baseline))
     importances = []
 
-    for i in range(X_val.shape[2]):  # For each feature
+    for i in range(X_val.shape[2]):
       scores = []
       for _ in range(n_repeats):
         X_permuted = X_val.copy()
-        np.random.shuffle(X_permuted[:, :, i])  # Shuffle the i-th feature
-        y_pred = model.predict(X_permuted)
-
-        rmse = np.sqrt(mean_squared_error(y_val, y_pred))
+        np.random.shuffle(X_permuted[:, :, i])
+        y_pred_permuted = model.predict(X_permuted)
+        
+        y_pred_permuted = scaler.inverse_transform(
+          pd.DataFrame(y_pred_permuted, columns=['target']), 'target'
+        ).flatten()
+        
+        rmse = np.sqrt(mean_squared_error(y_val_original, y_pred_permuted))
         scores.append(rmse)
-      mean_score = np.mean(scores)
-      importances.append(mean_score - baseline)
+      
+      importances.append(np.mean(scores) - baseline_rmse)
 
     return dict(sorted(zip(feature_names, importances), key=lambda x: x[1], reverse=True))
 
@@ -157,14 +168,15 @@ class FeatureEvaluation:
 
     if self._is_model_sequential():
       importance_dict = self._permutation_importance_lstm(
-        self.model.models[position], X, y, feature_names
+        self.model.models[position], X, y, feature_names, 
+        self.model.scalers[position]
       )
     else:
       importance_dict = self._permutation_importance_tree(
         self.model.models[position], X, y, feature_names
       )
 
-    save_path = f"evaluation/plots/model/permutation_importance/{self.n_features}/{self.FILE_NAME}"
+    save_path = f"evaluation/plots/model/permutation_importance/{top_n}/{self.FILE_NAME}"
     self._plot_permutation_importance(importance_dict, position=position, save_path=save_path, top_n=top_n)
 
     sorted_features = sorted(importance_dict.items(), key=lambda x: x[1], reverse=True)
@@ -205,6 +217,5 @@ if __name__=='__main__':
     include_season_aggs=args.season_aggs,
     include_teams=args.teams,
     gw_lamda_decay=args.gw_decay,
-    n_features=args.n_features,
-  )
+    n_features=args.n_features)
   model_evaluation.evaluate()

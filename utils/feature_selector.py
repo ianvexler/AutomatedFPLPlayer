@@ -19,7 +19,7 @@ class FeatureSelector:
       'strength_defence_home',
       'strength_defence_away'
     ]
-    self.TEAM_FEATURES = [f"{prefix}_{feature}" for prefix in ['home_team', 'away_team'] for feature in base_team_features]
+    self.TEAM_FEATURES = [f"{prefix}_{feature}" for prefix in ['team', 'opponent_team'] for feature in base_team_features]
 
     self.ADDITIONAL_FEATURES = ['was_home', 'cost']
 
