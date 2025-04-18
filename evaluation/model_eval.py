@@ -167,7 +167,7 @@ class ModelEvaluation:
 
   def _load_predictions(self):
     project_root = Path(__file__).resolve().parent.parent
-    predictions_dir = f"{self.model_type.value}/{self.FILE_NAME}"
+    predictions_dir = f"{self.model_type.value}/top_25/{self.FILE_NAME}"
     directory = project_root / 'predictions' / predictions_dir / 'gws' / self.season
 
     if directory.exists():

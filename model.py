@@ -30,6 +30,7 @@ class Model:
     include_season_aggs=False,
     include_teams=False,
     gw_lamda_decay=0.02,
+    top_features=None,
     no_cache=False
   ):
     self.model_type = model_type
@@ -45,6 +46,7 @@ class Model:
     self.include_season_aggs = include_season_aggs
     self.include_teams = include_teams
     self.gw_lamda_decay = gw_lamda_decay
+    self.top_features = top_features
     
     self.training_years = training_years
     self.no_cache = no_cache
@@ -65,7 +67,7 @@ class Model:
       }
 
     self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}_gw_decay_{self.gw_lamda_decay}"
-    self.DIRECTORY = f"{self.model_type.value}/{self.FILE_NAME}"
+    self.DIRECTORY = f"{self.model_type.value}/top_{self.top_features}/{self.FILE_NAME}"
       
   def _set_model(self, position):
     match self.model_type.value:
@@ -201,8 +203,8 @@ class Model:
       include_prev_season=self.include_prev_season, 
       include_fbref=self.include_fbref, 
       include_season_aggs=self.include_season_aggs,
-      include_teams=self.include_teams
-    )
+      include_teams=self.include_teams,
+      top_n=self.top_features)
 
   def _prepare_training_sequences(self, training_data, position):
     X, y = [], []
@@ -510,6 +512,7 @@ if __name__=='__main__':
   parser.add_argument('--teams', action='store_true', help='Include teams data.')
   parser.add_argument('--gw_decay', type=float, default=0.02, help='The lambda decay applied in gw decay')
   parser.add_argument('--no_cache', action='store_true', help="Don't use cached Data Loader data")
+  parser.add_argument('--top_features', type=int, nargs='?', const=5, default=5, help='Time step for data window. Defaults to 7 if not provided or null.')
 
   args = parser.parse_args()
 
@@ -528,6 +531,7 @@ if __name__=='__main__':
     include_season_aggs=args.season_aggs,
     include_teams=args.teams,
     gw_lamda_decay=args.gw_decay,
+    top_features=args.top_features,
     no_cache=args.no_cache)
 
   model.train()

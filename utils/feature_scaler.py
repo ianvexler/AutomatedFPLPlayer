@@ -11,8 +11,8 @@ class FeatureScaler:
     self.position = position
     self.scalers = {}  # Dictionary to store scalers per feature
 
-    self.NO_SCALE = ['gw_decay']
-    # self.NO_SCALE = ['gw_decay', 'was_home']
+    # self.NO_SCALE = ['gw_decay']
+    self.NO_SCALE = ['gw_decay', 'was_home']
 
     self.feature_selector = FeatureSelector()
 
