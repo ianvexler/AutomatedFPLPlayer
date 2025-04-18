@@ -6,3 +6,5 @@ class ModelType(Enum):
   GRADIENT_BOOST = 'gradient_boost'
   XGBOOST = 'xgboost'
   LSTM = 'lstm'
+  ML_LSTM = 'ml_lstm'
+  BI_LSTM = 'bi_lstm'

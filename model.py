@@ -8,7 +8,6 @@ import pandas as pd
 import tensorflow as tf
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, GradientBoostingRegressor
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from xgboost import XGBRegressor
 
@@ -79,12 +78,15 @@ class Model:
         return GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=5)
       case ModelType.XGBOOST.value:
           return XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=5)
-      case ModelType.LSTM.value:
-        return LSTMModel(
+
+    if self._is_model_sequential():
+      return LSTMModel(
           time_steps=self.time_steps, 
           position=position,
-          features=self._get_position_features(position)
+          features=self._get_position_features(position),
+          model_type=self.model_type
         ).build_model()
+      
     raise Exception(f'No model matches {self.model_type}')
 
   def _load_data(self):
@@ -432,7 +434,7 @@ class Model:
     return position
   
   def _is_model_sequential(self):
-    return self.model_type in { ModelType.LSTM }
+    return self.model_type in { ModelType.LSTM, ModelType.ML_LSTM, ModelType.BI_LSTM }
   
   def _format_and_save_match_prediction(self, predictions, home_team_id, away_team_id, gw_data, current_gw):
     directory = f"predictions/{self.DIRECTORY}/matches/{self.season}"

@@ -185,7 +185,7 @@ class FeatureEvaluation:
     return top_features
 
   def _is_model_sequential(self):
-    return self.model_type in { ModelType.LSTM }
+    return self.model_type in { ModelType.LSTM, ModelType.ML_LSTM, ModelType.BI_LSTM }
 
 if __name__=='__main__':
   parser = argparse.ArgumentParser(description='Run the model with optional training.')
