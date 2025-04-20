@@ -3,11 +3,11 @@ import argparse
 import joblib
 
 import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 import tensorflow as tf
 from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, GradientBoostingRegressor
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from xgboost import XGBRegressor
 
@@ -29,7 +29,9 @@ class Model:
     include_season_aggs=False,
     include_teams=False,
     gw_lamda_decay=0.02,
-    no_cache=False
+    top_features=None,
+    no_cache=False,
+    lstm_config=None
   ):
     self.model_type = model_type
 
@@ -44,9 +46,12 @@ class Model:
     self.include_season_aggs = include_season_aggs
     self.include_teams = include_teams
     self.gw_lamda_decay = gw_lamda_decay
+    self.top_features = top_features
     
     self.training_years = training_years
     self.no_cache = no_cache
+
+    self.lstm_config = lstm_config
 
     self.models = {
       'GK': self._set_model('GK'),
@@ -57,14 +62,14 @@ class Model:
 
     if self._is_model_sequential():
       self.scalers = {
-        'GK': FeatureScaler('GK', self.model_type),
-        'DEF': FeatureScaler('DEF', self.model_type),
-      'MID': FeatureScaler('MID', self.model_type),
-        'FWD': FeatureScaler('FWD', self.model_type)
+        'GK': FeatureScaler('GK'),
+        'DEF': FeatureScaler('DEF'),
+        'MID': FeatureScaler('MID'),
+        'FWD': FeatureScaler('FWD')
       }
 
     self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}_gw_decay_{self.gw_lamda_decay}"
-    self.DIRECTORY = f"{self.model_type.value}/{self.FILE_NAME}"
+    self.DIRECTORY = f"{self.model_type.value}/best_2/{self.FILE_NAME}"
       
   def _set_model(self, position):
     match self.model_type.value:
@@ -76,12 +81,16 @@ class Model:
         return GradientBoostingRegressor(n_estimators=100, learning_rate=0.1, max_depth=5)
       case ModelType.XGBOOST.value:
           return XGBRegressor(n_estimators=100, learning_rate=0.1, max_depth=5)
-      case ModelType.LSTM.value:
-        return LSTMModel(
+
+    if self._is_model_sequential():
+      return LSTMModel(
           time_steps=self.time_steps, 
           position=position,
-          features=self._get_position_features(position)
+          features=self._get_position_features(position),
+          model_type=self.model_type,
+          config=self.lstm_config
         ).build_model()
+      
     raise Exception(f'No model matches {self.model_type}')
 
   def _load_data(self):
@@ -107,6 +116,9 @@ class Model:
   def train(self):
     training_data = self._get_training_data()
   
+    pos_training_data = {}
+    pos_model_histories = {}
+
     for position in ['GK', 'DEF', 'MID', 'FWD']:
       print(f"Training model and fitting scalers for {position}\n")
 
@@ -122,13 +134,18 @@ class Model:
         lr_schedule = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1)
 
         print(f"Total number of training samples: {len(y)}")
-        model.fit(X, y, 
+        history = model.fit(X, y, 
           validation_split=0.2, 
           epochs=50, 
           batch_size=128,
           callbacks=[early_stopping, lr_schedule])
       else:
-        model.fit(X, y)
+        history = model.fit(X, y)
+
+      pos_model_histories[position] = history 
+      pos_training_data[position] = (X, y)
+
+    return pos_training_data, pos_model_histories
 
   def _get_training_data(self):
     start_year, end_year = self.season.split('-')
@@ -192,8 +209,8 @@ class Model:
       include_prev_season=self.include_prev_season, 
       include_fbref=self.include_fbref, 
       include_season_aggs=self.include_season_aggs,
-      include_teams=self.include_teams
-    )
+      include_teams=self.include_teams,
+      top_n=self.top_features)
 
   def _prepare_training_sequences(self, training_data, position):
     X, y = [], []
@@ -226,7 +243,7 @@ class Model:
         if self._is_model_sequential():
           y_target = self.scalers[position].transform(y_target, 'total_points', target=True)
         else:
-          X_sequence = X_sequence.flatten()          
+          X_sequence = X_sequence.flatten() 
 
         X.append(X_sequence)
         y.append(y_target)
@@ -375,6 +392,8 @@ class Model:
 
     # Ensure data is sorted by kickoff time
     player_data = player_data.sort_values(by='kickoff_time')
+    
+    # Only extracts data from previous matches
     player_data = player_data[player_data['kickoff_time'] < kickoff_time].tail(self.time_steps)
 
     # Get list of features for this position
@@ -419,7 +438,7 @@ class Model:
     return position
   
   def _is_model_sequential(self):
-    return self.model_type in { ModelType.LSTM }
+    return self.model_type in { ModelType.LSTM, ModelType.ML_LSTM, ModelType.BI_LSTM }
   
   def _format_and_save_match_prediction(self, predictions, home_team_id, away_team_id, gw_data, current_gw):
     directory = f"predictions/{self.DIRECTORY}/matches/{self.season}"
@@ -477,6 +496,7 @@ if __name__=='__main__':
   parser.add_argument('--teams', action='store_true', help='Include teams data.')
   parser.add_argument('--gw_decay', type=float, default=0.02, help='The lambda decay applied in gw decay')
   parser.add_argument('--no_cache', action='store_true', help="Don't use cached Data Loader data")
+  parser.add_argument('--top_features', type=int, nargs='?', const=5, default=5, help='Time step for data window. Defaults to 7 if not provided or null.')
 
   args = parser.parse_args()
 
@@ -495,8 +515,8 @@ if __name__=='__main__':
     include_season_aggs=args.season_aggs,
     include_teams=args.teams,
     gw_lamda_decay=args.gw_decay,
-    no_cache=args.no_cache
-  )
+    top_features=args.top_features,
+    no_cache=args.no_cache)
 
   model.train()
   model.predict_season()

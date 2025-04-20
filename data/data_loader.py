@@ -158,40 +158,38 @@ class DataLoader:
     return pd.DataFrame(merged_data)
 
   def _add_teams_data_to_gw_data(self, gw_data, teams_data):
-    home_data = teams_data.rename(columns=lambda x: f"home_team_{x}")
-    away_data = teams_data.rename(columns=lambda x: f"away_team_{x}")
+    team_data = teams_data.rename(columns=lambda x: f"team_{x}")
+    opponent_data = teams_data.rename(columns=lambda x: f"opponent_team_{x}")
 
     # Ensure they are the same type
     gw_data['team'] = gw_data['team'].astype(int)
     gw_data['opponent_team'] = gw_data['opponent_team'].astype(int)
     
-    home_data['home_team_id'] = home_data['home_team_id'].astype(int)
-    away_data['away_team_id'] = away_data['away_team_id'].astype(int)
+    team_data['team_id'] = team_data['team_id'].astype(int)
+    opponent_data['opponent_team_id'] = opponent_data['opponent_team_id'].astype(int)
 
     # Merge home team data on 'team' (home team name)
     gw_data = gw_data.merge(
-      home_data,
+      team_data,
       how='left',
       left_on='team',
-      right_on='home_team_id'
+      right_on='team_id'
     )
     
-    # Merge away team data on 'opposition_id' (away team ID)
+    # Merge team data on 'opponent_id'
     gw_data = gw_data.merge(
-      away_data,
+      opponent_data,
       how='left',
       left_on='opponent_team',
-      right_on='away_team_id'
+      right_on='opponent_team_id'
     )
 
-    # team_name_to_id = teams_data.set_index('name')['id'].to_dict()
-    # gw_data['team'] = gw_data['team'].map(team_name_to_id)
-    
-    gw_data = gw_data.drop(columns=['home_team_id', 'home_team_name', 'away_team_id', 'away_team_name'], errors='ignore')
+    gw_data = gw_data.drop(columns=[
+      'team_id', 'team_name', 'opponent_team_id', 'opponent_team_name'
+    ], errors='ignore')
 
     # Move total_points to the first column
     gw_data = gw_data.reindex(columns=['total_points'] + [col for col in gw_data.columns if col != 'total_points'])
-
     return gw_data
 
   def _add_season_data_to_gw_data(self, gw_data, season_data):
@@ -209,7 +207,7 @@ class DataLoader:
 
   # Adds season aggregates up to each GW
   def _add_aggs_data_to_gw_data(self, gw_data):
-    agg_funcs = ['mean']
+    agg_funcs = ['mean', 'sum']
 
     # Iterate through each player's row in gw_data
     for index, player_data in gw_data.iterrows():
