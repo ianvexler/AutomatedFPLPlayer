@@ -67,7 +67,6 @@ class ModelEvaluation:
     
     # self.evaluate_grouclped_by_points(evaluation_df)
     self.evaluate_grouped_by_position_costs(evaluation_df)
-    self.export_evaluation_to_csv()
 
   def evaluate_grouped_by_position_costs(self, evaluation_df):
     print("\n--- Evaluation Grouped by Cost Bands (Threshold-Based) ---")
@@ -140,16 +139,6 @@ class ModelEvaluation:
 
     print("\n--- Baseline Errors by Cost Band ---")
     self.log_grouped_errors(baseline_df, 'position-costband-baseline')
-
-  def export_evaluation_to_csv(self):
-    evaluations_dir = "model"
-    os.makedirs(evaluations_dir, exist_ok=True)
-    csv_filename = f"evaluation_{self.season}_{self.FILE_NAME}.csv"
-    csv_path = os.path.join(evaluations_dir, csv_filename)
-
-    df = pd.DataFrame(self.evaluation_results, columns=["Group", "Metric", "Model AE", "Model MSE", "Baseline AE", "Baseline MSE"])
-    df.to_csv(csv_path, index=False)
-    print(f"Evaluation results saved to {csv_path}")
 
   def score_model(self, evaluation_df, expected):
     targets = evaluation_df[self.feature_selector.TARGET]

@@ -30,7 +30,8 @@ class Model:
     include_teams=False,
     gw_lamda_decay=0.02,
     top_features=None,
-    no_cache=False
+    no_cache=False,
+    lstm_config=None
   ):
     self.model_type = model_type
 
@@ -50,6 +51,8 @@ class Model:
     self.training_years = training_years
     self.no_cache = no_cache
 
+    self.lstm_config = lstm_config
+
     self.models = {
       'GK': self._set_model('GK'),
       'DEF': self._set_model('DEF'),
@@ -66,7 +69,7 @@ class Model:
       }
 
     self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}_gw_decay_{self.gw_lamda_decay}"
-    self.DIRECTORY = f"{self.model_type.value}/top_{self.top_features}/{self.FILE_NAME}"
+    self.DIRECTORY = f"{self.model_type.value}/best_2/{self.FILE_NAME}"
       
   def _set_model(self, position):
     match self.model_type.value:
@@ -84,7 +87,8 @@ class Model:
           time_steps=self.time_steps, 
           position=position,
           features=self._get_position_features(position),
-          model_type=self.model_type
+          model_type=self.model_type,
+          config=self.lstm_config
         ).build_model()
       
     raise Exception(f'No model matches {self.model_type}')
@@ -113,6 +117,7 @@ class Model:
     training_data = self._get_training_data()
   
     pos_training_data = {}
+    pos_model_histories = {}
 
     for position in ['GK', 'DEF', 'MID', 'FWD']:
       print(f"Training model and fitting scalers for {position}\n")
@@ -120,8 +125,6 @@ class Model:
       # Train the model
       model = self.models[position]
       X, y = self._prepare_training_sequences(training_data, position)
-
-      self._save_target_distribution_plot(y, position=position)
       
       if np.isnan(X).sum() > 0 or np.isnan(y).sum() > 0:
         raise ValueError(f"Found NaN values in training data for {position}")
@@ -131,17 +134,18 @@ class Model:
         lr_schedule = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1)
 
         print(f"Total number of training samples: {len(y)}")
-        model.fit(X, y, 
+        history = model.fit(X, y, 
           validation_split=0.2, 
           epochs=50, 
           batch_size=128,
           callbacks=[early_stopping, lr_schedule])
       else:
-        model.fit(X, y)
+        history = model.fit(X, y)
 
+      pos_model_histories[position] = history 
       pos_training_data[position] = (X, y)
 
-    return pos_training_data
+    return pos_training_data, pos_model_histories
 
   def _get_training_data(self):
     start_year, end_year = self.season.split('-')
@@ -480,28 +484,6 @@ class Model:
     print(f"Predictions saved to {file_path}")
 
     return predictions_df
-
-  def _save_target_distribution_plot(self, y, position=None):
-    y = y.copy()
-
-    if self._is_model_sequential():
-      y = self.scalers[position].inverse_transform(pd.DataFrame(y, columns=['target']), 'target')
-
-    plt.figure(figsize=(8, 5))
-    plt.hist(y, bins=20, edgecolor='black', color='skyblue')
-    plt.title(f"Distribution of Target Variable (Total Points){f' - {position}' if position else ''}")
-    plt.xlabel("Total Points")
-    plt.ylabel("Count")
-    plt.grid(True)
-
-    save_path = f"evaluation/plots/model/target_distribution/{self.FILE_NAME}"
-
-    os.makedirs(save_path, exist_ok=True)
-
-    filename = f"target_distribution_{position}.png" if position else "target_distribution.png"
-    file_path = os.path.join(save_path, filename)
-    plt.savefig(file_path, bbox_inches='tight')
-    plt.close()
 
 if __name__=='__main__':
   parser = argparse.ArgumentParser(description='Run the model with optional training.')
