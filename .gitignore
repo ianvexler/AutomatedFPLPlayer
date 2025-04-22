@@ -134,7 +134,8 @@ bi_lstm_model.keras
 scaler.pkl
 
 evaluation/data/
-data/cached/
+evaluation/*/data/
+**/data/cached/
 
 # Ignore all content in predictions
 /predictions/

@@ -4,7 +4,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 import argparse
 import pandas as pd
-from utils.model_types import ModelType
 from utils.chips import Chip
 from data.data_loader import DataLoader
 from simulation import Simulation
@@ -41,7 +40,7 @@ class TransfersEvaluation:
 
   def evaluate(self):
     all_results = {}
-    result_dir = Path(f"saved_results/{self.season}")
+    result_dir = Path(f"data/cached/transfers/{self.season}")
     result_dir.mkdir(parents=True, exist_ok=True)
 
     if self.load_saved:
@@ -55,6 +54,7 @@ class TransfersEvaluation:
         transfer_histories = []
         teams_histories = []
         points_histories = []
+        
         best_sim_points = 0
         best_sim_histories = None
 

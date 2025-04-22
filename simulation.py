@@ -15,7 +15,7 @@ class Simulation:
     source=None, 
     chip_strategy=None, 
     show_optimal=False, 
-    transfers_strategy='simple',
+    transfers_strategy='weighted',
     config=DEFAULT_CONFIG,
     target='xP',
     debug=False
@@ -340,6 +340,8 @@ class Simulation:
     chip = Chip.WILDCARD
     if (not self._is_chip_available(chip)) or current_gw == 1:
       return False
+
+    strategy = self.chip_strategy[chip]
 
     if strategy == 'double_gw' or strategy == 'blank_gw':
       should_use = False
