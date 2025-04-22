@@ -30,7 +30,7 @@ class SimulationEvaluation:
     self.transfers_strategy = transfers_strategy
     self.evaluations = evaluations
 
-    self.gw_data = self._load_gw_data()
+    self.gw_data = self.data_loader.get_gw_predictions(season)
 
     self.ITERATIONS = iterations
 
@@ -111,17 +111,8 @@ class SimulationEvaluation:
   def _evaluate_budget(self):
     print('here')
 
-  def _load_gw_data(self):
-    # TODO: This has to be improved to match prediction file format
-    # Also has to load all gws
-    if self.model:
-      filepath = f"predictions/{model}/gws/{self.season}/GW{gw}.csv"
-      df = pd.read_csv(filepath)
-      return df
-    else:
-      data_loader = DataLoader()
-      gw_data = data_loader.get_merged_gw_data(self.season)
-      return gw_data
+  def _get_gw_data(self, gw):
+    return self.gw_data[self.gw_data['GW'] == gw]
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Run the model with optional chip strategies.")
@@ -165,12 +156,6 @@ if __name__ == "__main__":
   parser.add_argument(
     "--bench_boost", type=str, choices=valid_bench_boost_strategies, default="double_gw",
     help="Strategy for the Bench Boost chip. Options: 'double_gw', 'with_wildcard'."
-  )
-
-  transfers_strategies=['simple', 'weighted']
-  parser.add_argument(
-    "--transfers", type=str, choices=transfers_strategies, default='simple',
-    help="Strategy to calculate the fitness of transfer candidates. Options: 'simple', 'weighted'"
   )
 
   transfers_strategies=['simple', 'weighted']

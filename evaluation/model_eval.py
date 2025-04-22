@@ -25,6 +25,7 @@ class ModelEvaluation:
     include_fbref=False, 
     include_season_aggs=False, 
     include_teams=False,
+    top_features=None,
     gw_lamda_decay=0.02
   ):
     self.season = season
@@ -37,10 +38,12 @@ class ModelEvaluation:
     self.include_season_aggs = include_season_aggs
     self.include_teams = include_teams
     self.gw_lamda_decay = gw_lamda_decay
+    self.top_features = top_features
 
     self.evaluation_results = []  # Stores results for CSV export
 
-    self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}_gw_decay_{self.gw_lamda_decay}"
+    gw_decay_str = str(self.gw_lamda_decay).replace('.', '_')
+    self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}_gw_decay_{gw_decay_str}_top_features_{self.top_features}"
 
   def evaluate(self):
     self.feature_selector = FeatureSelector()
@@ -156,7 +159,7 @@ class ModelEvaluation:
 
   def _load_predictions(self):
     project_root = Path(__file__).resolve().parent.parent
-    predictions_dir = f"{self.model_type.value}/top_25/{self.FILE_NAME}"
+    predictions_dir = f"{self.model_type.value}/test/{self.FILE_NAME}"
     directory = project_root / 'predictions' / predictions_dir / 'gws' / self.season
 
     if directory.exists():
@@ -164,7 +167,7 @@ class ModelEvaluation:
       predictions_df = pd.concat([pd.read_csv(csv_file) for csv_file in path.glob("*.csv")], ignore_index=True)
       return predictions_df
     else:
-      raise Exception(f"Predictions not found")
+      raise Exception(f"Predictions not found: {self.FILE_NAME}")
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Run the model evaluation.')
@@ -176,7 +179,8 @@ if __name__ == "__main__":
   parser.add_argument('--season_aggs', action='store_true')
   parser.add_argument('--gw_decay', type=float, default=0.02, help='The lambda decay applied in gw decay')
   parser.add_argument('--teams', action='store_true')
-  
+  parser.add_argument('--top_features', type=int, nargs='?', help='Time step for data window. Defaults to 7 if not provided or null.')
+
   args = parser.parse_args()
 
   model_evaluation = ModelEvaluation(
@@ -187,6 +191,7 @@ if __name__ == "__main__":
     include_fbref=args.fbref, 
     include_season_aggs=args.season_aggs, 
     gw_lamda_decay=args.gw_decay,
+    top_features=args.top_features,
     include_teams=args.teams
   )
   model_evaluation.evaluate()

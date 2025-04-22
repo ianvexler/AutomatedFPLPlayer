@@ -134,9 +134,10 @@ bi_lstm_model.keras
 scaler.pkl
 
 evaluation/data/
+data/cached/
 
 # Ignore all content in predictions
-predictions/
+/predictions/
 
 # Ignore scalers and trained models
 # models/trained/

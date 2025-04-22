@@ -12,15 +12,25 @@ class Simulation:
   def __init__(
     self, 
     season, 
-    model=None, 
+    source=None, 
     chip_strategy=None, 
     show_optimal=False, 
     transfers_strategy='simple',
     config=DEFAULT_CONFIG,
+    target='xP',
     debug=False
   ):
     self.season = season
-    self.model = model
+
+    if not chip_strategy:
+      # Default chip strategy
+      chip_strategy = {
+        Chip.TRIPLE_CAPTAIN: 'conservative',
+        Chip.WILDCARD: 'wait',
+        Chip.FREE_HIT: 'blank_gw',
+        Chip.BENCH_BOOST: "double_gw"
+      }
+
     self.chip_strategy = chip_strategy
     self.transfers_strategy = transfers_strategy
     self.debug = debug
@@ -32,12 +42,16 @@ class Simulation:
     self.data_loader = DataLoader()
     self.fixtures_data = self.data_loader.get_fixtures(season)
     self.teams_data = self.data_loader.get_teams_data(season)
+    self.gw_data = self.data_loader.get_gw_predictions(season)
+
+    self.target = target
 
     self.team_manager = TeamManager(
       season=self.season,
       teams_data=self.teams_data,
       fixtures_data=self.fixtures_data,
-      transfers_strategy=self.transfers_strategy
+      transfers_strategy=self.transfers_strategy,
+      target=self.target
     )
 
     self.MAX_GW = config['max_gw']
@@ -60,6 +74,7 @@ class Simulation:
     self.chip_history = {}
     self.diversity_history = {}
     self.budget_history = {}
+    self.team_history = {}
 
   def simulate_season(self):
     print(f"Simulating season {self.season}\n")
@@ -86,12 +101,11 @@ class Simulation:
         self.chips_available[Chip.WILDCARD.value] = True
 
       # Load GW data
-      gw_data = self._load_predicted_gw_data(current_gw)
-      teams_form = self.team_manager.calc_teams_form(self.fixtures_data, current_gw)
+      gw_data = self._get_gw_data(current_gw)
 
       if current_gw == 1:
         # Set initial team for GW1
-        current_squad, current_squad_cost = self.team_manager.get_best_squad(gw_data, current_budget)
+        current_squad, current_squad_cost = self.team_manager.get_best_squad(gw_data, current_budget, current_gw)
         current_budget -= current_squad_cost
       
       budget_available = current_budget + current_squad_cost
@@ -127,8 +141,7 @@ class Simulation:
             current_gw,
             current_squad, 
             current_budget, 
-            force_transfer,
-            teams_form
+            force_transfer
           )
 
           transfers = suggested_transfers[:transfers_available]
@@ -138,17 +151,18 @@ class Simulation:
           # Add budget to history
           self.budget_history[current_gw] = current_budget
 
+          self.transfer_history.setdefault(current_gw, [])
+
           for transfer in transfers:
             if self.debug:
               print(f"Transfer: {transfer['out']['name']} => {transfer['in']['name']}")
 
             # Add transfer to history
-            self.transfer_history.setdefault(
-              current_gw, []
-            ).append(transfer)
+            self.transfer_history[current_gw].append(transfer)
           
       # Select best team and captain
       selected_team = self.team_manager.pick_team(current_squad, gw_data)
+      self.team_history[current_gw] = selected_team
 
       current_team_diversity = self.team_manager.calc_team_diversity(selected_team)
       total_team_diversity += current_team_diversity
@@ -195,7 +209,7 @@ class Simulation:
 
       if self.show_optimal:
         # Compare to optimal
-        optimal_squad, _, = self.team_manager.get_best_squad(gw_data, self.MAX_BUDGET, optimal=True)
+        optimal_squad, _, = self.team_manager.get_best_squad(gw_data, self.MAX_BUDGET, current_gw, optimal=True)
         
         if optimal_squad:
           optimal_team, optimal_captain = self.team_manager.pick_team(optimal_squad, gw_data, optimal=True)
@@ -232,7 +246,8 @@ class Simulation:
       'points': self.point_history,
       'chips': self.chip_history,
       'diversity': self.diversity_history,
-      'budget': self.budget_history
+      'budget': self.budget_history,
+      'teams': self.team_history
     }
 
   def _add_player_to_team(self, player, current_squad):
@@ -286,20 +301,20 @@ class Simulation:
   # Returns the chip to be used or None
   def should_use_chip(self, current_squad, budget_available, gw_data, current_gw):
     # Check if should use triple captain
-    if self.should_triple_captain(current_gw):
-      return Chip.TRIPLE_CAPTAIN
+    if self.should_wildcard(current_squad, budget_available, gw_data, current_gw):
+      return Chip.WILDCARD
+
+    # Check if should use bench boost (e.g. after wildcard)
+    if self.should_bench_boost(current_gw):
+      return Chip.BENCH_BOOST
 
     # Check if should use free hit
     if self.should_free_hit(current_squad, budget_available, gw_data, current_gw):
       return Chip.FREE_HIT
 
-    # Check if should use wildcards
-    if self.should_wildcard(current_squad, budget_available, gw_data, current_gw):
-      return Chip.WILDCARD
-
-    # Check if should use bench boost
-    if self.should_bench_boost(current_gw):
-      return Chip.BENCH_BOOST
+    # Check if should use triple captain
+    if self.should_triple_captain(current_gw):
+      return Chip.TRIPLE_CAPTAIN
 
     return None
 
@@ -326,25 +341,50 @@ class Simulation:
     if (not self._is_chip_available(chip)) or current_gw == 1:
       return False
 
-    # Key wildcard decision points
-    first_quarter = self.MAX_GW * 1/4
-    third_quarter = self.MAX_GW * 3/4
+    if strategy == 'double_gw' or strategy == 'blank_gw':
+      should_use = False
 
-    strategy = self.chip_strategy[chip]
+      if strategy == 'double_gw' and self._is_double_gameweek(current_gw):
+        self.chips_available[chip] = False
+        should_use = True
+      elif strategy == 'blank_gw' and self._is_blank_gameweek(current_gw):
+        if self._is_squad_affected_by_blank_gw(current_squad, gw_data):
+          self.chips_available[chip] = False
+          should_use = True
 
-    # Only consider wildcarding at key points or if strategy is 'asap'
-    should_first_half = current_gw >= first_quarter and current_gw < 20
-    should_second_quarter = current_gw >= third_quarter and current_gw >= 20
-    if strategy != 'asap' and not (should_first_half or should_second_quarter):
-      return False
+      if should_use:
+        _, cached_best_squad_cost = self._get_best_cached_squad(gw_data, budget_available, current_gw)
+        squad_points = self.team_manager.calc_squad_fitness(gw_data, current_squad)
 
-    # Get cached best squad
-    cached_best_squad, _ = self._get_best_cached_squad(gw_data, budget_available, current_gw)
+        # Only use wildcard if it improves on current result
+        if (cached_best_squad_cost - squad_points) >= self.REVAMP_THRESHOLD:
+          self.chips_available[chip] = False
+          return True
 
-    squad_points = self.team_manager.calc_squad_fitness(gw_data, current_squad)
-    best_points = self.team_manager.calc_squad_fitness(gw_data, self.cached_best_squad)
+        return False
 
-    return (best_points - squad_points) >= self.REVAMP_THRESHOLD
+    if strategy == 'asap' or strategy == 'wait':
+      # Key wildcard decision points
+      first_quarter = self.MAX_GW * 1/4
+      third_quarter = self.MAX_GW * 3/4
+
+      strategy = self.chip_strategy[chip]
+
+      # Only consider wildcarding at key points or if strategy is 'asap'
+      should_first_half = current_gw >= first_quarter and current_gw < 20
+      should_second_quarter = current_gw >= third_quarter and current_gw >= 20
+      if strategy != 'asap' and not (should_first_half or should_second_quarter):
+        return False
+
+      # Get cached best squad
+      cached_best_squad, _ = self._get_best_cached_squad(gw_data, budget_available, current_gw)
+
+      squad_points = self.team_manager.calc_squad_fitness(gw_data, current_squad)
+      best_points = self.team_manager.calc_squad_fitness(gw_data, self.cached_best_squad)
+
+      return (best_points - squad_points) >= self.REVAMP_THRESHOLD
+    
+    return False
 
   def use_wildcard(self):
     if self.cached_best_squad is None:
@@ -428,7 +468,7 @@ class Simulation:
   def _get_best_cached_squad(self, gw_data, budget_available, current_gw):
     # Cache computed best squad
     if self.cached_best_squad is None or self.cached_best_squad_gw != current_gw:
-      best_squad, best_squad_cost = self.team_manager.get_best_squad(gw_data, budget_available)
+      best_squad, best_squad_cost = self.team_manager.get_best_squad(gw_data, budget_available, current_gw)
       
       if best_squad:
         self.cached_best_squad, self.cached_best_squad_cost = best_squad, best_squad_cost
@@ -460,15 +500,8 @@ class Simulation:
   def _is_chip_available(self, chip):
     return self.chips_available.get(chip.value, False)
 
-  def _load_predicted_gw_data(self, gw):
-    # TODO: This has to be improved to match prediction file format
-    if self.model:
-      filepath = f"predictions/{model}/gws/{self.season}/GW{gw}.csv"
-      df = pd.read_csv(filepath)
-      return df
-    else:
-      gw_data = self.data_loader.get_merged_gw_data(self.season)
-      return gw_data[gw_data['GW'] == gw]
+  def _get_gw_data(self, gw):
+    return self.gw_data[self.gw_data['GW'] == gw]
 
   def _humanize_team_logs(self, selected_team):
     team_ids = { key: pd.DataFrame(selected_team[key])['name'].tolist() for key in selected_team }
@@ -484,8 +517,8 @@ if __name__=='__main__':
   )
 
   parser.add_argument(
-    '--model', type=str, help='The model to use', 
-    choices=[m.value for m in ModelType]
+    '--target', type=str, help='The expected points target to use', default='xP', 
+    choices=['fpl_xP', 'xP']
   )
 
   # Chip strategy arguments with validation
@@ -495,8 +528,7 @@ if __name__=='__main__':
     help="Strategy for the Triple Captain chip. Options: 'risky', 'conservative'."
   )
   
-  # TODO: Maybe include double and blank gws?
-  valid_wildcard_strategies = ["asap", "wait"]
+  valid_wildcard_strategies = ["asap", "wait", "double_gw", "blank_gw"]
   parser.add_argument(
     "--wildcard", type=str, choices=valid_wildcard_strategies, default="wait",
     help="Strategy for the Wildcard chip. Options: 'asap', 'wait'."
@@ -527,13 +559,6 @@ if __name__=='__main__':
   )
 
   args = parser.parse_args()
-
-  if args.model:
-    try:
-      model_type = ModelType(args.model)
-    except ValueError:
-      print(f"Error: Invalid model type '{args.model}'. Choose from {', '.join(m.value for m in ModelType)}")
-      exit(1)
   
   chip_strategy = {
     Chip.TRIPLE_CAPTAIN: args.triple_captain,
@@ -548,7 +573,7 @@ if __name__=='__main__':
 
   simulation = Simulation(
     season=args.season,
-    model=args.model,
+    target=args.target,
     chip_strategy=chip_strategy,
     transfers_strategy=args.transfers,
     config=config,

@@ -15,7 +15,8 @@ class TeamManager:
     season, 
     teams_data, 
     fixtures_data, 
-    transfers_strategy='simple'
+    transfers_strategy='simple',
+    target='xP'
   ):
     self.season = season
     self.teams_data = teams_data
@@ -24,7 +25,7 @@ class TeamManager:
     self.transfers_strategy = transfers_strategy
 
     # Update to expected points
-    self.TARGET = 'xP'
+    self.TARGET = target
     self.OPTIMAL_TARGET = 'total_points'
     self.POSITIONS = ['GK', 'DEF', 'MID', 'FWD']
     
@@ -53,7 +54,12 @@ class TeamManager:
     self.data_loader = DataLoader(self.season)
         
   # Selects the initial squad trying to optimize selection
-  def get_best_squad(self, gw_data, budget, optimal=False):
+  def get_best_squad(self, gw_data, budget, current_gw, optimal=False):
+    teams_form = self.calc_teams_form(current_gw)
+    
+    gw_data = gw_data.copy()
+    gw_data["fitness"] = gw_data.apply(lambda player: self._calc_player_fitness(gw_data, current_gw, teams_form, player), axis=1)
+
     if gw_data.empty:
       return None, None
 
@@ -65,7 +71,7 @@ class TeamManager:
       squad = {}
       pos_budgets = {}
 
-      squad_split = self._random_squad_split()
+      squad_split = self._random_squad_split(gw_data)
 
       for position in self.POSITIONS:
         # Initializes dict with empty position
@@ -139,8 +145,7 @@ class TeamManager:
     teams_form, 
     player,
     points_weight=0.7,
-    transfer_weight=0.15, 
-    value_weight=0,
+    transfer_weight=0.15,
     fixture_difficulty_weight = 0.15
   ):
     """
@@ -173,17 +178,6 @@ class TeamManager:
     max_transfers = gw_data['transfers_balance'].max()
     norm_transfer = (transfers_balance - min_transfers) / (max_transfers - min_transfers) if max_transfers > min_transfers else 0
 
-    # Normalize points per cost (value metric)
-    gw_data_grouped = gw_data.groupby('id').agg({
-      self.TARGET: 'sum',
-      'cost': 'first'
-    }).reset_index()
-    gw_data_grouped['ppc'] = gw_data_grouped[self.TARGET] / gw_data_grouped['cost'].replace(0, 1)
-
-    player_ppc = expected_points / cost
-    min_ppc, max_ppc = gw_data_grouped['ppc'].min(), gw_data_grouped['ppc'].max()
-    norm_ppc = (player_ppc - min_ppc) / (max_ppc - min_ppc) if max_ppc > min_ppc else 0
-
     # Get form of next 3 opponents
     norm_difficulty = self._calc_opponents_form(teams_form, player, current_gw)
     
@@ -191,11 +185,10 @@ class TeamManager:
     fitness_score = (
       norm_expected_points * points_weight +
       norm_transfer * transfer_weight +
-      norm_ppc * value_weight +
       norm_difficulty * fixture_difficulty_weight
     )
 
-    return round(fitness_score, 4)
+    return round(fitness_score, 1)
 
   # Calculates the form of the next 3 opponents
   def _calc_opponents_form(
@@ -205,8 +198,10 @@ class TeamManager:
     current_gw,
     lambda_decay=0.02
   ):
+    team_id = player['team']
+    
     # Get your team's form
-    team_form = teams_form.loc[teams_form['id'] == player['team'], 'form'].iloc[0]
+    team_form = teams_form.loc[teams_form['id'] == team_id, 'form'].iloc[0]
 
     # Get forms of next opponents    
     future_team_fixtures = self.fixtures_data[
@@ -216,8 +211,8 @@ class TeamManager:
 
     # Next 3 gws
     future_team_fixtures = future_team_fixtures[
-      (future_team_fixtures['GW'] > gw) & 
-      (future_team_fixtures['GW'] <= (gw + 3))
+      (future_team_fixtures['GW'] > current_gw) & 
+      (future_team_fixtures['GW'] <= (current_gw + 3))
     ]
 
     opponent_forms = []
@@ -247,7 +242,7 @@ class TeamManager:
         opponent_forms.append(adjusted_opponent_form)
 
     # Calculate the average adjusted opponent form
-    avg_adjusted_opponent_form = np.mean(opponent_forms) if opponent_forms else teams_form['form'].mean()
+    avg_opponent_form = np.mean(opponent_forms) if opponent_forms else teams_form['form'].mean()
 
     # Relative difficulty = difference between opponent's form and team's form
     relative_form_diff = avg_opponent_form - team_form
@@ -318,14 +313,23 @@ class TeamManager:
     
     # TODO: Handle double GW
     # Group by player ID and sum their total points (handling double gameweeks)
-    # grouped_players = available_players.groupby('id', as_index=False).agg({
-    #   target: 'sum',
-    #   'cost': 'first'
-    # })
-    grouped_players = available_players
+    grouped_players = available_players.groupby('id', as_index=False).agg({
+      'fitness': 'first',
+      self.TARGET: 'sum',
+      self.OPTIMAL_TARGET: 'sum',
+      'cost': 'first',
+      'name': 'first',
+      'position': 'first',
+      'team': 'first'
+    })
+
+    if self.transfers_strategy == 'simple' or target == self.OPTIMAL_TARGET:
+      best_target = target
+    else:
+      best_target = 'fitness'
 
     # Sort players based on summed target values 
-    grouped_players = grouped_players.sort_values(by=[target], ascending=False)
+    grouped_players = grouped_players.sort_values(by=[best_target], ascending=False)
 
     # Select player with the highest combined points
     return grouped_players.iloc[0]
@@ -351,11 +355,11 @@ class TeamManager:
     current_gw,
     current_team, 
     budget, 
-    force_transfer,
-    teams_form
+    force_transfer
   ):
     gw_data = gw_data.copy()
-    
+    teams_form = self.calc_teams_form(current_gw)
+
     # Apply fitness to all players and sort by fitness (best first)
     gw_data["fitness"] = gw_data.apply(lambda player: self._calc_player_fitness(gw_data, current_gw, teams_form, player), axis=1)
     fitness_data = gw_data.sort_values(by=['fitness'], ascending=False)
@@ -381,7 +385,7 @@ class TeamManager:
         # Get all valid replacements sorted by fitness
         available_players = self._get_filtered_players(
           fitness_data, position, available_budget, current_team
-        ).sort_values(by=['fitness'], ascending=False)
+        ).sort_values(by=['fitness', 'selected', 'agg_total_points', 'cost'], ascending=False)
 
         # Skip if no valid transfer found
         if available_players.empty:
@@ -439,16 +443,62 @@ class TeamManager:
     else:
       print(f'Invalid position: {position}')
 
-  # TODO: Apply random team split
-  def _random_squad_split(self):
-    base_split = {
-      'GK': 0.1,
-      'DEF': 0.25,
-      'MID': 0.35,
-      'FWD': 0.3
+  def _random_squad_split(self, gw_data, total_budget=1000):
+    min_prices = (
+      gw_data
+      .groupby('position')['cost']
+      .min()
+      .to_dict()
+    )
+
+    # Price-based estimate
+    buffer = 0.01
+    price_based_split = {
+      pos: round((min_prices.get(pos, 40) * count) / total_budget + buffer, 3)
+      for pos, count in self.POS_DISTRIBUTION.items()
     }
 
-    return base_split
+    # Enforced minimum split
+    min_split_floor = {
+      'GK': 0.085,
+      'DEF': 0.22,
+      'MID': 0.25,
+      'FWD': 0.22
+    }
+
+    min_split = {
+      pos: max(price_based_split[pos], min_split_floor[pos])
+      for pos in self.POS_DISTRIBUTION
+    }
+
+    remaining_budget = 1.0 - sum(min_split.values())
+    positions = list(min_split.keys())
+
+    weights = [random.random() * self.POS_DISTRIBUTION[pos] for pos in positions]
+    total_weight = sum(weights)
+
+    additional_split = {
+      pos: (w / total_weight) * remaining_budget
+      for pos, w in zip(positions, weights)
+    }
+
+    combined = {
+      pos: min_split[pos] + additional_split[pos]
+      for pos in positions
+    }
+
+    rounded = {pos: round(val, 3) for pos, val in combined.items()}
+    total = sum(rounded.values())
+    diff = round(1.0 - total, 3)
+
+    if diff != 0:
+      remainders = {
+        pos: combined[pos] - rounded[pos] for pos in positions
+      }
+      adjust_pos = max(remainders, key=remainders.get) if diff > 0 else min(remainders, key=remainders.get)
+      rounded[adjust_pos] = round(rounded[adjust_pos] + diff, 3)
+
+    return rounded
 
   def pick_team(self, selected_squad, gw_data, optimal=False, triple_captain_strat=None):
     target = self._get_target(optimal)
@@ -589,13 +639,13 @@ class TeamManager:
     diversity_score = np.sum(occupied_bins)
     return diversity_score
 
-  def calc_teams_form(self, fixtures, gw, time_steps=5, lambda_decay=0.02):
+  def calc_teams_form(self, gw, time_steps=5, lambda_decay=0.02):
     teams_form = {
       'id': [],
       'form': []
     }
 
-    fixtures = fixtures.copy().sort_values(by='kickoff_time')
+    fixtures = self.fixtures_data.copy().sort_values(by='kickoff_time')
     fixtures['GW'] = pd.to_numeric(fixtures['GW'], errors='coerce')
 
     team_ids = set(fixtures['team_h']).union(set(fixtures['team_a']))

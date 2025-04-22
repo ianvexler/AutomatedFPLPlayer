@@ -1,6 +1,7 @@
 import os
 import argparse
 import joblib
+import pickle
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -68,8 +69,9 @@ class Model:
         'FWD': FeatureScaler('FWD')
       }
 
-    self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}_gw_decay_{self.gw_lamda_decay}"
-    self.DIRECTORY = f"{self.model_type.value}/best_2/{self.FILE_NAME}"
+    gw_decay_str = str(self.gw_lamda_decay).replace('.', '_')
+    self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}_gw_decay_{gw_decay_str}_top_features_{self.top_features}"
+    self.DIRECTORY = f"{self.model_type.value}/test/{self.FILE_NAME}"
       
   def _set_model(self, position):
     match self.model_type.value:
@@ -105,7 +107,8 @@ class Model:
       include_prev_season=self.include_prev_season, 
       include_fbref=self.include_fbref,
       include_season_aggs=self.include_season_aggs,
-      include_teams=self.include_teams
+      include_teams=self.include_teams,
+      include_prev_gws=True
     )
 
     self.gw_data = gw_data.sort_values(by=['id', 'kickoff_time'])  # Gameweek-level data
@@ -213,42 +216,64 @@ class Model:
       top_n=self.top_features)
 
   def _prepare_training_sequences(self, training_data, position):
-    X, y = [], []
+    cache_dir = "data/cached"
+    os.makedirs(cache_dir, exist_ok=True)
+    
+    cache_filename = os.path.join(cache_dir, f"{self.season}_{position}_{self.FILE_NAME}.pkl")
 
-    # Filter data for the specific position
-    position_gw_data = training_data[training_data['position'] == position]
+    if os.path.exists(cache_filename) and (not self.no_cache):
+      print(f"Loading cached sequences for {position} from {cache_filename}")
+      with open(cache_filename, "rb") as f:
+        data = pickle.load(f)
+        X, y = data["X"], data["y"]
 
-    features = self._get_position_features(position)
+      if self._is_model_sequential():
+        position_gw_data = training_data[training_data['position'] == position]
+        features = self._get_position_features(position)
+        self._fit_scaler(position_gw_data, features, position)
+    else:
+      print(f"Generating sequences for {position}")
+      X, y = [], []
 
-    if self._is_model_sequential():
-      self._fit_scaler(position_gw_data, features, position)
+      position_gw_data = training_data[training_data['position'] == position]
+      features = self._get_position_features(position)
 
-    # Iterate over all players in this position
-    for player_id, player_data in position_gw_data.groupby('id'):
-      season_kickoffs = player_data[player_data['GW'] >= 1]['kickoff_time'].tolist()
+      if self._is_model_sequential():
+        self._fit_scaler(position_gw_data, features, position)
 
-      for kickoff_time in season_kickoffs:
-        X_sequence = self._get_player_sequence(player_data, position, kickoff_time)
+      for player_id, player_data in position_gw_data.groupby('id'):
+        season_kickoffs = player_data[player_data['GW'] >= 1]['kickoff_time'].tolist()
 
-        if np.isnan(X_sequence).sum() > 0:
-          raise ValueError(f"NaN detected in player sequence for player {player_id} at {kickoff_time}")
+        for kickoff_time in season_kickoffs:
+          sequence = self._get_player_sequence(player_data, position, kickoff_time)
 
-        if X_sequence.shape[0] < self.time_steps:
-          continue
+          if sequence.shape[0] < self.time_steps:
+            continue
 
-        # Get target
-        target_game_data = player_data[player_data['kickoff_time'] == kickoff_time].iloc[0]
-        y_target = target_game_data[self.target]
-        
-        if self._is_model_sequential():
-          y_target = self.scalers[position].transform(y_target, 'total_points', target=True)
-        else:
-          X_sequence = X_sequence.flatten() 
+          if np.isnan(sequence).sum() > 0:
+            raise ValueError(f"NaN detected for {player_id} at {kickoff_time}")
 
-        X.append(X_sequence)
-        y.append(y_target)
+          target_row = player_data[player_data['kickoff_time'] == kickoff_time].iloc[0]
+          y_target = target_row[self.target]
 
-    return np.array(X, dtype=np.float32), np.array(y, dtype=np.float32)
+          if self._is_model_sequential():
+            y_target = self.scalers[position].transform(y_target, 'total_points', target=True)
+
+          X.append(sequence)
+          y.append(y_target)
+
+      X = np.array(X, dtype=np.float32)
+      y = np.array(y, dtype=np.float32)
+
+      with open(cache_filename, "wb") as f:
+        pickle.dump({"X": X, "y": y}, f)
+        print(f"Saved sequence cache for {position} to {cache_filename}")
+
+    # Flatten if non-sequential
+    if not self._is_model_sequential():
+      X = X.reshape((X.shape[0], -1))
+
+    return X, y
 
   def _fit_scaler(self, position_gw_data, features, position):
     scaler = self.scalers[position]
@@ -292,7 +317,6 @@ class Model:
 
         # Predict and accumulate results for players in both teams
         predictions = self._predict_players_game(players_data, kickoff_time)
-
         self._format_and_save_match_prediction(predictions, home_team_id, away_team_id, players_gw_data, current_gw)
 
         # Add to aggregate
@@ -496,7 +520,7 @@ if __name__=='__main__':
   parser.add_argument('--teams', action='store_true', help='Include teams data.')
   parser.add_argument('--gw_decay', type=float, default=0.02, help='The lambda decay applied in gw decay')
   parser.add_argument('--no_cache', action='store_true', help="Don't use cached Data Loader data")
-  parser.add_argument('--top_features', type=int, nargs='?', const=5, default=5, help='Time step for data window. Defaults to 7 if not provided or null.')
+  parser.add_argument('--top_features', type=int, nargs='?', default=None, help='Time step for data window. Defaults to 7 if not provided or null.')
 
   args = parser.parse_args()
 

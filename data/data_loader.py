@@ -1,6 +1,7 @@
 from data.vaastav.data_loader import DataLoader as Vaastav
 from data.sofascore.data_loader import DataLoader as Sofascore
 from data.fbref.data_loader import DataLoader as FBref
+from data.predictions.data_loader import DataLoader as Predictions
 from utils.feature_selector import FeatureSelector
 from utils.team_matcher import TeamMatcher
 from utils.player_matcher import PlayerMatcher
@@ -145,7 +146,7 @@ class DataLoader:
 
         # Use FBref data if available, otherwise fill with 0s
         if not matching_fbref_data.empty:
-          fbref_stats = matching_fbref_data.iloc[0].to_dict()
+          fbref_stats = matching_fbref_data.iloc[0].drop(labels='id').to_dict()
         else:
           fbref_stats = {col: 0 for col in fbref_data.columns if col != 'id'}  # Fill FBref stats with 0s   
       except:
@@ -330,6 +331,25 @@ class DataLoader:
 
     self._save_cached_data(data_path, data)
     return data
+  
+  def get_gw_predictions(self, season):
+    data_loader = Predictions(season)
+    df = data_loader.get_gw_predictions()
+
+    # Rename columns
+    df = df.rename(columns={'xP': 'fpl_xP', 'expected_points': 'xP'})
+
+    df['GW'] = df['GW'].astype(int)
+    df = df.sort_values(['id', 'GW'])
+
+    # Add cumulative total_points per player *excluding current row*
+    df['agg_total_points'] = (
+      df.groupby('id')['total_points']
+        .transform(lambda x: x.cumsum().shift(fill_value=0))
+    )
+
+    df['xP'] = df['xP'].round(1)
+    return df
 
   def _decrement_season(self, season):
     start_year, end_year = season.split('-')
