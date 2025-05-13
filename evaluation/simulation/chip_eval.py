@@ -255,7 +255,7 @@ class ChipEvaluation:
     df = pd.DataFrame(data)
     plt.figure(figsize=(8, 6))
     sns.boxplot(x='Strategy', y='Final Points', data=df)
-    plt.title(f'{self.humanize(self.chip.value)} - Final Points Distribution by Strategy (Boxplot)', fontsize=12)
+    plt.title(f'{self.humanize(self.chip.value)} - Final Points Distribution by Strategy', fontsize=12)
     plt.xlabel('Strategy', fontsize=10)
     plt.ylabel('Final Points', fontsize=10)
     plt.xticks(fontsize=10)
