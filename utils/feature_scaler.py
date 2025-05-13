@@ -7,9 +7,11 @@ from utils.feature_selector import FeatureSelector
 
 class FeatureScaler:
   def __init__(self, position):
-    """Initialize the scaler with a position and optional thresholds."""
+    """
+    Initialize the scaler with a position and optional thresholds.
+    """
     self.position = position
-    self.scalers = {}  # Dictionary to store scalers per feature
+    self.scalers = {} 
 
     # self.NO_SCALE = ['gw_decay']
     self.NO_SCALE = ['gw_decay', 'was_home']
@@ -17,7 +19,9 @@ class FeatureScaler:
     self.feature_selector = FeatureSelector()
 
   def fit(self, data, features):
-    """Fit the selected scalers for each feature."""
+    """
+    Fit the selected scalers for each feature.
+    """
     features = list(filter(lambda x: x not in self.NO_SCALE, features))
     
     for feature in data[features].columns:
@@ -35,7 +39,9 @@ class FeatureScaler:
     self.scalers['target'].fit(target_data.to_frame())
 
   def transform_data(self, data):
-    """Apply the scalers to transform the dataset."""
+    """
+    Apply the scalers to transform the dataset.
+    """
     transformed_data = data.copy()
 
     for feature in data.columns:
@@ -53,5 +59,7 @@ class FeatureScaler:
     return self.scalers[feature_key].transform(value_df)[0][0]  
 
   def inverse_transform(self, value_df, feature_key):
-    """Apply the inverse transformation to return to the original scale for the passed features."""
+    """
+    Apply the inverse transformation to return to the original scale for the passed features.
+    """
     return self.scalers[feature_key].inverse_transform(value_df)

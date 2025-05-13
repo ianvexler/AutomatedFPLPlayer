@@ -650,7 +650,7 @@ if __name__=='__main__':
     season=args.season,
     target=args.target,
     chip_strategy=chip_strategy,
-    selection_strategy=args.transfers,
+    selection_strategy=args.selection_strat,
     config=config,
     debug=True
   )
