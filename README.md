@@ -25,19 +25,17 @@ The `Model` class is the core of the **AutomatedFPLPlayer** project, responsible
 
 The `Model` class supports several command-line arguments to customize its behavior:  
 
-| Argument       | Type   | Description  |
-|---------------|--------|-------------|
-| `--steps` | `int` | Number of time steps for the data window (default: `5`). Controls how many previous gameweeks are considered for predictions. |
-| `--season` | `str` | The season to simulate, formatted as `20xx-yy` (default: `2023-24`). |
-<!-- | `--prev_season` | `flag` | If enabled, includes data from the previous season for better long-term trend analysis. | -->
-| `--season_aggs` | `flag` | If enabled, includes the season aggregates up to each row. |
-| `--teams` | `flag` | If enabled, includes team metrics. |
-<!-- | `--fbref` | `flag` | If enabled, uses FBref data instead of FPL data. | -->
-| `--model` | `str` | Specifies the model type to use. Options: `random_forest`, `adaboost`, `gradient_boost`, `xgboost`, `lstm`, `ml_lstm`. |
-| `--no_train` | `flag` | If set, skips training and loads a pre-trained model instead. |
-| `--no_cache` | `flag` | If set, re-fetches the data rather than using the cached files. |
-| `--top_features` | `int` | If set, selects the top n features based on permuatation importance. |
-| `--gw_decay` | `int` | Override the default gw decay. |
+| Argument         | Type   | Description |
+|------------------|--------|-------------|
+| `--steps`        | `int`  | Number of time steps for the data window (default: `5`). Controls how many previous gameweeks are considered for predictions. |
+| `--season`       | `str`  | The season to simulate, formatted as `20xx-yy` (default: `2023-24`). |
+| `--season_aggs`  | `bool` | If set, includes the season aggregates up to each row. |
+| `--teams`        | `bool` | If set, includes team metrics. |
+| `--model`        | `str`  | Specifies the model type to use. Options: `random_forest`, `adaboost`, `gradient_boost`, `xgboost`, `lstm`, `ml_lstm`. |
+| `--no_train`     | `bool` | If set, skips training and loads a pre-trained model instead. |
+| `--no_cache`     | `bool` | If set, re-fetches the data rather than using the cached files. |
+| `--top_features` | `int`  | If set, selects the top `n` features based on permutation importance. |
+| `--gw_decay`     | `int`  | Overrides the default gameweek decay setting. |
 
 Predictions are automatically saved in the predictions folder
 
@@ -47,15 +45,13 @@ The `model_eval` class assesses the performance of trained models by comparing p
 
 Supports several command-line arguments to customize its evaluation process:  
 
-| Argument       | Type   | Description  |
-|---------------|--------|-------------|
-| `--season` | `str` | The season to evaluate, formatted as `20xx-yy` (default: `2023-24`). |
-| `--steps` | `int` | Number of time steps used in training (default: `5`). Must match the model's configuration. |
-<!-- | `--prev_season` | `flag` | If enabled, includes data from the previous season in evaluation. | -->
-| `--season_aggs` | `flag` | If enabled, includes the season aggregates up to each row. |
-| `--teams` | `flag` | If enabled, includes team metrics. |
-<!-- | `--fbref` | `flag` | If enabled, uses FBref data instead of FPL data. | -->
-| `--model` | `str` | Specifies the model type to evaluate. Options: `random_forest`, `adaboost`, `gradient_boost`, `xg_boost`, `lstm`, `ml_lstm`. |
+| Argument         | Type   | Description  |
+|------------------|--------|--------------|
+| `--season`       | `str`  | The season to evaluate, formatted as `20xx-yy` (default: `2023-24`). |
+| `--steps`        | `int`  | Number of time steps used in training (default: `5`). Must match the model's configuration. |
+| `--season_aggs`  | `bool` | If enabled, includes the season aggregates up to each row. |
+| `--teams`        | `bool` | If enabled, includes team metrics. |
+| `--model`        | `str`  | Specifies the model type to evaluate. Options: `random_forest`, `adaboost`, `gradient_boost`, `xg_boost`, `lstm`, `ml_lstm`. |
 
 All evaluations must have an already existing prediction
 
@@ -67,16 +63,14 @@ The `Simulation` class models a full Fantasy Premier League (FPL) season, managi
 
 The `Simulation` class supports several command-line arguments to customize the season simulation process:  
 
-| Argument       | Type   | Description  |
-|---------------|--------|-------------|
-| `--season` | `str` | The season to simulate, formatted as `20xx-yy` (default: `2023-24`). |
-| `--target` | `str` | The target expected points to use in the simulation Options: `'fpl_xP'`, `'xP'` (default: `'xP'`). |
-<!-- | `--triple_captain` | `str` | Strategy for the Triple Captain chip. Options: `'double_gw'`, `'blank_gw'` (default: `'double_gw'`). | -->
-| `--wildcard` | `str` | Strategy for the Wildcard chip. Options: `'double_gw'`, `'asap'`, `'wait'` (default: `'double_gw'`). |
-| `--free_hit` | `str` | Strategy for the Free Hit chip. Options: `'double_gw'`, `'blank_gw'` (default: `'blank_gw'`). |
-| `--bench_boost` | `str` | Strategy for the Bench Boost chip. Options: `'double_gw'`, `'with_wildcard'` (default: `'double_gw'`). |
-| `--selection_strat` | `str` | Strategy to calculate player fitness: `'simple'`, `'weighted'` (default: `'double_gw'`). |
-<!-- | `--max_gw` | `int` | The maximum gameweek to simulate (default: `38`). | -->
+| Argument           | Type   | Description  |
+|--------------------|--------|--------------|
+| `--season`         | `str`  | The season to simulate, formatted as `20xx-yy` (default: `2023-24`). |
+| `--target`         | `str`  | The target expected points to use in the simulation. Options: `'fpl_xP'`, `'xP'` (default: `'xP'`). |
+| `--wildcard`       | `str`  | Strategy for the Wildcard chip. Options: `'double_gw'`, `'asap'`, `'wait'` (default: `'double_gw'`). |
+| `--free_hit`       | `str`  | Strategy for the Free Hit chip. Options: `'double_gw'`, `'blank_gw'` (default: `'blank_gw'`). |
+| `--bench_boost`    | `str`  | Strategy for the Bench Boost chip. Options: `'double_gw'`, `'with_wildcard'` (default: `'double_gw'`). |
+| `--selection_strat`| `str`  | Strategy to calculate player fitness. Options: `'simple'`, `'weighted'` (default: `'double_gw'`). |
 
 </br>
 
