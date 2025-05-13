@@ -50,12 +50,11 @@ class LSTMModel:
     else:
       raise Exception('Invalid LSTM model selected')
 
-    x = Dropout(self.dropout)(x)  # Moderate dropout
+    x = Dropout(self.dropout)(x)
 
     output_layer = Dense(1, activation='linear', name=f"{self.position}_output")(x)
     model = Model(inputs=input_layer, outputs=output_layer)
 
-    # Compile Model with a Lower Learning Rate
     model.compile(optimizer=Adam(learning_rate=self.learning_rate), loss='mean_squared_error', metrics=['mae'])
 
     return model
