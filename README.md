@@ -2,6 +2,8 @@
 
 Project aimed at automating Fantasy Premier League (FPL) team selection using machine learning techniques. It focuses on optimizing player selection and transfers based on historical data, player performance metrics, and predictive models. The goal is to enhance decision-making and maximize points in FPL with minimal manual intervention.
 
+This project primarily uses the [Historical FPL Data Collection](https://github.com/vaastav/Fantasy-Premier-League) by [vaastav](https://github.com/vaastav), which provides FPL data across multiple seasons.
+
 </br>
 
 # Key Libraries
