@@ -187,8 +187,10 @@ class TeamMatcher:
 
     raise Exception(f"Team could not be found for key {key} with type {key_type} in season {season}")
 
-  """Returns a list of teams that have an FPL entry for the given season."""
   def get_season_teams(self, season):
+    """
+    Returns a list of teams that have an FPL entry for the given season.
+    """
     return {team: data for team, data in self.team_dict.items() if season in data.get("FPL", {})}
 
   def save_dict_to_json(self):

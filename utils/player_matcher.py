@@ -17,9 +17,7 @@ class PlayerMatcher:
     self.FILENAME = 'player_ids.json'
     self.player_dict = self.load_dict_from_json()
 
-    # TODO: Maybe include saves?
     self.COLUMNS = ["team", "name", "goals", "assists", "id"]
-    # self.COLUMNS = ["season", "team", "name", "nation", "pos", "age", "goals", "assists"]
 
   def get_fpl_players(self, season):
     # Fetch FPL team names
@@ -87,9 +85,9 @@ class PlayerMatcher:
 
     # Merge stats for players who played in multiple teams in a season
     data = data.groupby(["id", "name", "position"]).agg({
-      "team": lambda x: ";".join(sorted(set(x))),  # Merge unique team names
-      "goals": "sum",  # Sum goals across teams
-      "assists": "sum"  # Sum assists across teams
+      "team": lambda x: ";".join(sorted(set(x))),
+      "goals": "sum", 
+      "assists": "sum"
     }).reset_index()
 
     return data
@@ -161,7 +159,9 @@ class PlayerMatcher:
         }
 
   def find_existing_player(self, name, season):
-    """Finds the closest existing player name in player_dict by checking stored names and past FPL season names."""
+    """
+    Finds the closest existing player name in player_dict by checking stored names and past FPL season names.
+    """
     existing_names = list(self.player_dict.keys())
 
     # Also check all FPL names across seasons

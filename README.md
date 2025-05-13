@@ -4,12 +4,24 @@ Project aimed at automating Fantasy Premier League (FPL) team selection using ma
 
 </br>
 
+# Key Libraries
+
+This project relies on several libraries to streamline data processing, visualization, and machine learning tasks. These include:
+
+- **numpy** – numerical operations and array manipulation  
+- **pandas** – data manipulation and analysis  
+- **matplotlib** – data visualization  
+- **seaborn** – statistical data visualization built on matplotlib  
+- **scikit-learn** – machine learning utilities and models  
+- **tensorflow** – deep learning framework  
+- **soccerdata** – accessing football data from multiple sources (not actively used)
+- **thefuzz** – string matching and fuzzy search
 
 # Key Classes
 
 ## Model Class - Description  
 
-The `Model` class is the core of the **AutomatedFPLPlayer** project, responsible for training and predicting Fantasy Premier League (FPL) player performance using various machine learning models. It supports multiple regression models, including **Random Forest, AdaBoost, Gradient Boosting, XGBoost, and LSTM (single-layer & multi-layer)**.  
+The `Model` class is the core of the **AutomatedFPLPlayer** project, responsible for training and predicting Fantasy Premier League (FPL) player performance using various machine learning models. It supports multiple regression models, including **Random Forest, AdaBoost, Gradient Boosting, XGBoost, and LSTM**.  
 
 The `Model` class supports several command-line arguments to customize its behavior:  
 
@@ -17,28 +29,32 @@ The `Model` class supports several command-line arguments to customize its behav
 |---------------|--------|-------------|
 | `--steps` | `int` | Number of time steps for the data window (default: `5`). Controls how many previous gameweeks are considered for predictions. |
 | `--season` | `str` | The season to simulate, formatted as `20xx-yy` (default: `2023-24`). |
-| `--prev_season` | `flag` | If enabled, includes data from the previous season for better long-term trend analysis. |
+<!-- | `--prev_season` | `flag` | If enabled, includes data from the previous season for better long-term trend analysis. | -->
 | `--season_aggs` | `flag` | If enabled, includes the season aggregates up to each row. |
-| `--fbref` | `flag` | If enabled, uses FBref data instead of FPL data. |
+| `--teams` | `flag` | If enabled, includes team metrics. |
+<!-- | `--fbref` | `flag` | If enabled, uses FBref data instead of FPL data. | -->
 | `--model` | `str` | Specifies the model type to use. Options: `random_forest`, `adaboost`, `gradient_boost`, `xgboost`, `lstm`, `ml_lstm`. |
 | `--no_train` | `flag` | If set, skips training and loads a pre-trained model instead. |
 | `--no_cache` | `flag` | If set, re-fetches the data rather than using the cached files. |
+| `--top_features` | `int` | If set, selects the top n features based on permuatation importance. |
+| `--gw_decay` | `int` | Override the default gw decay. |
 
 Predictions are automatically saved in the predictions folder
 
-## Evaluate
+## Model Evaluation
 
-The `Evaluate` class assesses the performance of trained models by comparing predicted player points with actual FPL data. It calculates various error metrics, groups evaluations based on player characteristics (e.g., points and cost), and exports results for further analysis.  
+The `model_eval` class assesses the performance of trained models by comparing predicted player points with actual FPL data. It calculates various error metrics, groups evaluations based on player characteristics (e.g., points and cost), and exports results for further analysis.  
 
-The `Evaluate` class supports several command-line arguments to customize its evaluation process:  
+Supports several command-line arguments to customize its evaluation process:  
 
 | Argument       | Type   | Description  |
 |---------------|--------|-------------|
 | `--season` | `str` | The season to evaluate, formatted as `20xx-yy` (default: `2023-24`). |
 | `--steps` | `int` | Number of time steps used in training (default: `5`). Must match the model's configuration. |
-| `--prev_season` | `flag` | If enabled, includes data from the previous season in evaluation. |
+<!-- | `--prev_season` | `flag` | If enabled, includes data from the previous season in evaluation. | -->
 | `--season_aggs` | `flag` | If enabled, includes the season aggregates up to each row. |
-| `--fbref` | `flag` | If enabled, uses FBref data instead of FPL data. |
+| `--teams` | `flag` | If enabled, includes team metrics. |
+<!-- | `--fbref` | `flag` | If enabled, uses FBref data instead of FPL data. | -->
 | `--model` | `str` | Specifies the model type to evaluate. Options: `random_forest`, `adaboost`, `gradient_boost`, `xg_boost`, `lstm`, `ml_lstm`. |
 
 All evaluations must have an already existing prediction
@@ -54,13 +70,30 @@ The `Simulation` class supports several command-line arguments to customize the 
 | Argument       | Type   | Description  |
 |---------------|--------|-------------|
 | `--season` | `str` | The season to simulate, formatted as `20xx-yy` (default: `2023-24`). |
-| `--triple_captain` | `str` | Strategy for the Triple Captain chip. Options: `'double_gw'`, `'blank_gw'` (default: `'double_gw'`). |
-| `--wildcard` | `str` | Strategy for the Wildcard chip. Options: `'double_gw'`, `'blank_gw'`, `'use_asap'`, `'wait'` (default: `'double_gw'`). |
+| `--target` | `str` | The target expected points to use in the simulation Options: `'fpl_xP'`, `'xP'` (default: `'xP'`). |
+<!-- | `--triple_captain` | `str` | Strategy for the Triple Captain chip. Options: `'double_gw'`, `'blank_gw'` (default: `'double_gw'`). | -->
+| `--wildcard` | `str` | Strategy for the Wildcard chip. Options: `'double_gw'`, `'asap'`, `'wait'` (default: `'double_gw'`). |
 | `--free_hit` | `str` | Strategy for the Free Hit chip. Options: `'double_gw'`, `'blank_gw'` (default: `'blank_gw'`). |
-| `--bench_boost` | `str` | Strategy for the Bench Boost chip. Options: `'double_gw'`, `'blank_gw'` (default: `'double_gw'`). |
-| `--max_gw` | `int` | The maximum gameweek to simulate (default: `38`). |
+| `--bench_boost` | `str` | Strategy for the Bench Boost chip. Options: `'double_gw'`, `'with_wildcard'` (default: `'double_gw'`). |
+| `--selection_strat` | `str` | Strategy to calculate player fitness: `'simple'`, `'weighted'` (default: `'double_gw'`). |
+<!-- | `--max_gw` | `int` | The maximum gameweek to simulate (default: `38`). | -->
 
 </br>
+
+## Simulation Evaluation
+
+The `simulation_eval` class assesses the performance of Season Simulations across multiple iterations. After all simulations are ran plots are generates and saved.
+
+Supports several command-line arguments to customize its evaluation process:  
+
+| Argument       | Type   | Description  |
+|---------------|--------|-------------|
+| `--season` | `str` | The season to evaluate, formatted as `20xx-yy` (default: `2023-24`). |
+| `--selection_strat` | `str` | Strategy to calculate player fitness: `'simple'`, `'weighted'` (default: `'double_gw'`). |
+| `--iterations` | `int` | The amount of iterations to test with (default: 50). |
+| `--load_saved` | `bool` | If simulations have been evaluated before, it loads them from the cached folder. |
+
+All evaluations must have an already existing prediction
 
 # Utils
 
@@ -72,7 +105,7 @@ The `Team` class is primarily used within the `Simulation` module.
 
 ## Team Matcher
 
-The `TeamMatcher` class is responsible for mapping Fantasy Premier League (FPL) team names to external datasets such as **Club Elo** and **FBref**. It uses matching techniques to align team names across different sources, ensuring consistency in data integration.
+The `TeamMatcher` class is responsible for mapping Fantasy Premier League (FPL) team names to external datasets such as **FBref**. It uses matching techniques to align team names across different sources, ensuring consistency in data integration.
 
 ## Player Matcher
 

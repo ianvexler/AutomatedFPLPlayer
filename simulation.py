@@ -621,9 +621,9 @@ if __name__=='__main__':
     help="Strategy for the Bench Boost chip. Options: 'double_gw', 'with_wildcard'."
   )
 
-  transfers_strategies=['simple', 'weighted']
+  selection_strategies=['simple', 'weighted']
   parser.add_argument(
-    "--transfers", type=str, choices=transfers_strategies, default='simple',
+    "--selection_strat", type=str, choices=selection_strategies, default='simple',
     help="Strategy to calculate the fitness of transfer candidates. Options: 'simple', 'weighted'"
   )
 

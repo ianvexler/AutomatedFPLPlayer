@@ -24,6 +24,9 @@ class DataLoader:
     self.CACHE_DIR = directory
 
   def get_season_data(self, season):
+    """
+    Returns the full season data for each player in a season from Vaastav
+    """
     data_path = self._get_cache_path(f"season_{season}")
     
     # Load if it already exists
@@ -59,6 +62,10 @@ class DataLoader:
     include_season_aggs=False,
     include_teams=False
   ):
+    """
+    Gets the gw data from each player for every gw.
+    Allows for many additional features to be included and pre-processed
+    """
     file_name = f"steps_{time_steps}_prev_season_{include_prev_season}_fbref_{include_fbref}_season_aggs_{include_season_aggs}_teams_{include_teams}"
     data_path = self._get_cache_path(f"merged_gw_{season}_{file_name}")
     
@@ -118,6 +125,9 @@ class DataLoader:
     return merged_data
     
   def get_fbref_gw_data(self, season):
+    """
+    Gets the FBref data for every player for every fixture 
+    """
     fbref = FBref(season)
     match_logs_df = fbref.get_player_match_logs()
     
@@ -127,6 +137,9 @@ class DataLoader:
     return match_logs_df
 
   def _add_fbref_gw_data_to_gw_data(self, gw_data, fbref_data, season):
+    """
+    Merges FBref data with GW FPL data
+    """
     merged_data = []
 
     for _, player_data in gw_data.iterrows():
@@ -159,6 +172,9 @@ class DataLoader:
     return pd.DataFrame(merged_data)
 
   def _add_teams_data_to_gw_data(self, gw_data, teams_data):
+    """
+    Adds team contexts to every gw data row
+    """
     team_data = teams_data.rename(columns=lambda x: f"team_{x}")
     opponent_data = teams_data.rename(columns=lambda x: f"opponent_team_{x}")
 
@@ -194,6 +210,9 @@ class DataLoader:
     return gw_data
 
   def _add_season_data_to_gw_data(self, gw_data, season_data):
+    """
+    Adds previous season data to the gw data for each player
+    """
     # season_data = season_data[self.feature_selector.SEASON_FEATURES]
     season_data = season_data.rename(columns=lambda x: f"prev_season_{x}")
     
@@ -206,8 +225,10 @@ class DataLoader:
 
     return gw_data
 
-  # Adds season aggregates up to each GW
   def _add_aggs_data_to_gw_data(self, gw_data):
+    """
+    Adds season aggregates up to to every row in GW data
+    """
     agg_funcs = ['mean', 'sum']
 
     # Iterate through each player's row in gw_data
@@ -239,6 +260,11 @@ class DataLoader:
     return gw_data    
 
   def _format_previous_season_gw_data(self, gw_data, prev_season, current_season, time_steps):
+    """
+    In case where data is from previous season format it to match the current
+    
+    This replaces Team ids from the previous season with those of the current
+    """
     relegated_teams = {}
     max_gw = gw_data['GW'].max()
 
@@ -281,6 +307,9 @@ class DataLoader:
 
 
   def get_fixtures(self, season):
+    """
+    Returns a list of all the fixtures in FPL in a season
+    """
     data_path = self._get_cache_path(f"fixtures_{season}")
     
     # Load if it already exists
@@ -294,6 +323,9 @@ class DataLoader:
     return data
 
   def get_teams_data(self, season):
+    """
+    Gets all the team FPL data for a season
+    """
     data_path = self._get_cache_path(f"teams_data_{season}")
 
     # Load if it already exists
@@ -333,6 +365,9 @@ class DataLoader:
     return data
   
   def get_gw_predictions(self, season):
+    """
+    Gets the best manually selected prediction data
+    """
     data_loader = Predictions(season)
     df = data_loader.get_gw_predictions()
 

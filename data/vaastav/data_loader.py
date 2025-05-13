@@ -15,13 +15,11 @@ class DataLoader():
     self.team_matcher = TeamMatcher()
 
   ### FULL SEASON ###
-  """
-  Gets and formats the data for a full season
 
-  Returns:
-    Data frame containing a season's data
-  """
   def get_full_season_data(self):
+    """
+    Gets and formats the data for a full season
+    """
     raw_data = self.fetch_players_raw()
     
     data = self.sanitize_season_data(raw_data)
@@ -79,16 +77,10 @@ class DataLoader():
   
     return gw_data
 
-  """
-  Sanitizes the gw data by filtering the relevant columns provided by the GW_COLS constants.
-
-  Params:
-    data_df: DataFrame with the raw data
-
-  Returns:
-    pd.DataFrame: Sanitized DataFrame of data.
-  """
   def sanitize_gw_data(self, data_df):
+    """
+    Sanitizes the gw data by filtering the relevant columns provided by the GW_COLS constants.
+    """
     # Ensure data_df is in DataFrame format (if not already)
     if not isinstance(data_df, pd.DataFrame):
       data_df = pd.DataFrame(data_df[1:], columns=data_df[0]) # Adjust if raw data isn't already a DataFrame

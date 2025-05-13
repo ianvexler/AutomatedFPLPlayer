@@ -241,7 +241,7 @@ if __name__ == "__main__":
   parser.add_argument("--season", type=str, default="2023-24")
   transfers_strategies=['simple', 'weighted']
   parser.add_argument(
-    "--transfers", type=str, choices=transfers_strategies, default='simple',
+    "--selection_strat", type=str, choices=transfers_strategies, default='simple',
     help="Strategy to calculate the fitness of transfer candidates. Options: 'simple', 'weighted'"
   )
   parser.add_argument("--iterations", type=int, default=100)
@@ -251,7 +251,7 @@ if __name__ == "__main__":
   simulation_evaluation = SimulationEvaluation(
     season=args.season,
     iterations=args.iterations,
-    transfers_strategy=args.transfers,
+    transfers_strategy=args.selection_strat,
     load_saved=args.load_saved
   )
   simulation_evaluation.evaluate()
