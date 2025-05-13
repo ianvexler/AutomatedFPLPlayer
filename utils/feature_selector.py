@@ -21,7 +21,7 @@ class FeatureSelector:
     ]
     self.TEAM_FEATURES = [f"{prefix}_{feature}" for prefix in ['team', 'opponent_team'] for feature in base_team_features]
 
-    self.ADDITIONAL_FEATURES = ['was_home', 'cost']
+    self.ADDITIONAL_FEATURES = ['was_home', 'cost', 'selected']
 
     self.CUSTOM_FEATURES = ['gw_decay']
 
@@ -138,6 +138,7 @@ class FeatureSelector:
   def position_top_features(self, position, top_n):
     match position:
       case 'GK':
+        return ['total_points', 'saves', 'goals_conceded', 'mean_clean_sheets', 'mean_total_points', 'selected', 'cost', 'mean_saves', 'team_strength_defence_home', 'team_strength_attack_away', 'mean_goals_conceded', 'team_strength_overall_home', 'team_strength_defence_away', 'opponent_team_strength', 'team_strength', 'team_strength_overall_away', 'opponent_team_strength_overall_away', 'was_home', 'opponent_team_strength_attack_away', 'opponent_team_strength_attack_home', 'opponent_team_strength_defence_away', 'gw_decay', 'opponent_team_strength_defence_home', 'penalties_saved', 'opponent_team_strength_overall_home', 'mean_penalties_saved', 'clean_sheets', 'team_strength_attack_home'][:top_n]
         return ['total_points', 'performance_ga', 'performance_saves', 
           'performance_psxg', 'minutes', 'mean_total_points', 'mean_clean_sheets', 
           'mean_saves', 'mean_goals_conceded', 'team_strength_attack_away', 'cost', 
@@ -150,6 +151,7 @@ class FeatureSelector:
           'performance_cs'][:top_n]
       
       case 'DEF':
+        return ['minutes', 'total_points', 'mean_total_points', 'cost', 'team_strength_attack_away', 'team_strength_overall_home', 'mean_minutes', 'goals_conceded', 'selected', 'team_strength_overall_away', 'mean_clean_sheets', 'was_home', 'gw_decay', 'goals_scored', 'team_strength_defence_home', 'team_strength_attack_home', 'mean_goals_conceded', 'opponent_team_strength_attack_home', 'team_strength_defence_away', 'opponent_team_strength_overall_home', 'opponent_team_strength_overall_away', 'opponent_team_strength_attack_away', 'opponent_team_strength_defence_home', 'clean_sheets', 'opponent_team_strength', 'mean_assists', 'assists', 'team_strength', 'opponent_team_strength_defence_away', 'mean_goals_scored'][:top_n]
         return ['total_points', 'performance_blocks', 'sca_sca', 'performance_int', 'performance_tkl', 
           'mean_total_points', 'team_strength_attack_away', 'cost', 'carries_prgc', 'was_home', 'team_strength_overall_home', 
           'team_strength_defence_away', 'mean_minutes', 'team_strength_overall_away', 'opponent_team_strength_attack_home', 
@@ -159,6 +161,8 @@ class FeatureSelector:
           'opponent_team_strength_defence_away', 'expected_xag'][:top_n]
 
       case 'MID': 
+        return ['minutes', 'total_points', 'selected', 'cost', 'mean_total_points', 'mean_goals_scored', 'team_strength_defence_away', 'opponent_team_strength_attack_away', 'team_strength', 'gw_decay', 'opponent_team_strength_overall_away', 'was_home', 'mean_assists', 'team_strength_defence_home', 'team_strength_overall_away', 'team_strength_attack_away', 'goals_scored', 'team_strength_overall_home', 'opponent_team_strength', 'opponent_team_strength_defence_away', 'mean_minutes', 'opponent_team_strength_defence_home', 'assists', 'team_strength_attack_home', 'opponent_team_strength_attack_home', 'opponent_team_strength_overall_home'][:top_n]
+
         return ['total_points', 'passes_cmp%', 'sca_sca', 'carries_prgc', 'cost', 'mean_total_points', 
           'take-ons_att', 'carries_carries', 'mean_goals_scored', 'take-ons_succ', 'mean_minutes', 
           'opponent_team_strength_attack_away', 'mean_assists', 'team_strength_defence_away', 'passes_prgp', 
@@ -168,6 +172,8 @@ class FeatureSelector:
           'gw_decay', 'opponent_team_strength_defence_home'][:top_n]
       
       case 'FWD':
+        return ['minutes', 'total_points', 'mean_total_points', 'selected', 'mean_goals_scored', 'cost', 'team_strength_defence_home', 'mean_minutes', 'mean_assists', 'opponent_team_strength_attack_away', 'team_strength', 'was_home', 'team_strength_attack_home', 'gw_decay', 'team_strength_attack_away', 'team_strength_defence_away', 'opponent_team_strength_attack_home', 'team_strength_overall_home', 'opponent_team_strength_overall_away', 'assists', 'goals_scored', 'opponent_team_strength_overall_home', 'opponent_team_strength_defence_away', 'opponent_team_strength_defence_home', 'opponent_team_strength', 'team_strength_overall_away'][:top_n]
+
         return ['total_points', 'expected_xg', 'sca_sca', 'mean_total_points', 'take-ons_att', 
           'expected_npxg', 'performance_sh', 'performance_sot', 'cost', 'mean_goals_scored', 
           'performance_gls', 'mean_assists', 'team_strength_defence_home', 'carries_prgc', 'take-ons_succ', 

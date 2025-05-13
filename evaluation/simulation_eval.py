@@ -4,192 +4,254 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import argparse
 import pandas as pd
-from utils.model_types import ModelType
 from utils.chips import Chip
 from data.data_loader import DataLoader
 from simulation import Simulation
 import matplotlib.pyplot as plt
-
-from evaluation.simulation.transfers_eval import TransfersEvaluation
-
-HISTORY_TYPES = ['transfers', 'points', 'chips', 'diversity', 'budget']
+import seaborn as sns
+import os
+import json
+import pickle
+import random
+import csv
+import statistics
+import numpy as np
 
 class SimulationEvaluation:
   def __init__(
     self, 
-    season,
-    model=None, 
-    chip_strategy=None,
-    transfers_strategy=None,
-    iterations=50,
-    evaluations=[]
+    season, 
+    iterations=100, 
+    transfers_strategy='weighted',
+    load_saved=False
   ):
     self.season = season
-    self.model = model
-    self.chip_strategy = chip_strategy
+    self.ITERATIONS = iterations
+    self.load_saved = load_saved
     self.transfers_strategy = transfers_strategy
-    self.evaluations = evaluations
 
+    self.data_loader = DataLoader()
     self.gw_data = self.data_loader.get_gw_predictions(season)
 
-    self.ITERATIONS = iterations
+    self.labels = ['xP', 'fpl_xP']
+    # self.labels = ['xP']
 
-  def _run_simulation(self):
+    self.DIRECTORY = f'plots/simulation'
+    os.makedirs(self.DIRECTORY, exist_ok=True)
+
+  def _run_simulation(self, target):
+    best_strategy = {
+      Chip.TRIPLE_CAPTAIN: 'conservative',
+      Chip.WILDCARD: 'wait',
+      Chip.FREE_HIT: 'double_gw',
+      Chip.BENCH_BOOST: 'with_wildcard'
+    }
+
     simulation = Simulation(
       season=self.season,
-      model=self.model,
-      chip_strategy=self.chip_strategy,
+      chip_strategy=best_strategy,
+      target=target,
       transfers_strategy=self.transfers_strategy,
-      debug=True
+      debug=False
     )
-    
+
     total_points, sim_histories = simulation.simulate_season()
-    return total_points, sim_histories
+    return total_points, sim_histories, best_strategy
 
   def evaluate(self):
-    histories = { key: [] for key in HISTORY_TYPES }
-
-    best_sim_points = 0
-    best_sim_histories = None
+    random.seed(42)
     
-    for i in range(self.ITERATIONS):
-      print(f"Running simulation {i + 1}\n")
+    result_dirs = [
+      Path(f"data/cached/simulation/xP_weighted_{self.season}"),
+      Path(f"data/cached/simulation/fpl_xP_weighted_{self.season}")
+    ]
 
-      sim_points, sim_histories = self._run_simulation()
-      print("--------")
+    results_list = []
 
-      for key in HISTORY_TYPES:
-        histories[key].append(sim_histories[key])
+    for idx, result_dir in enumerate(result_dirs):
+      result_dir.mkdir(parents=True, exist_ok=True)
 
-      if best_sim_points < sim_points:
-        best_sim_points = sim_points
-        best_sim_histories = sim_histories
+      if self.load_saved:
+        with open(result_dir / "simulation_evaluation_metrics.pkl", "rb") as f:
+          evaluation_metrics = pickle.load(f)
+      else:
+        target = self.labels[idx]
+        
+        all_sim_points = []
+        all_sim_histories = []
+        all_chip_strategies = []
+        best_sim_points = 0
+        best_sim_histories = None
+        best_sim_chip_strategy = None
 
-    if 'transfers' in self.evaluations:
-      evaluation = self._evaluate_transfers(
-        histories['transfers'], 
-        best_sim_histories['transfers']
-      )
+        for i in range(self.ITERATIONS):
+          print(f"[{target}] Iteration {i+1}")
+          sim_points, sim_histories, chip_strategy = self._run_simulation(target)
+          all_sim_points.append(sim_points)
+          all_sim_histories.append(sim_histories)
+          all_chip_strategies.append(chip_strategy)
 
-    if 'points' in self.evaluations:
-      evaluation = self._evaluate_points(
-        histories['points'], 
-        best_sim_histories['points']
-      )
+          if sim_points > best_sim_points:
+            best_sim_points = sim_points
+            best_sim_histories = sim_histories
+            best_sim_chip_strategy = chip_strategy
 
-    if 'chips' in self.evaluations:
-      evaluation = self._evaluate_chips(
-        histories['chips'], 
-        best_sim_histories['chips']
-      )
+        evaluation_metrics = {
+          'best_sim_histories': best_sim_histories,
+          'best_sim_points': best_sim_points,
+          'best_sim_chip_strategy': best_sim_chip_strategy,
+          'all_sim_points': all_sim_points,
+          'all_sim_histories': all_sim_histories,
+          'all_chip_strategies': all_chip_strategies
+        }
 
-    if 'diversity' in self.evaluations:
-      evaluation = self._evaluate_diversity(
-        histories['diversity'], 
-        best_sim_histories['diversity']
-      )
+        with open(result_dir / f"simulation_evaluation_metrics.pkl", "wb") as f:
+          pickle.dump(evaluation_metrics, f)
 
-    if 'budget' in self.evaluations:
-      evaluation = self._evaluate_budget(
-        histories['budget'], 
-        best_sim_histories['budget']
-      )
+      results = self._evaluate_simulation(evaluation_metrics)
+      results_list.append(results)
 
-  def _evaluate_transfers(self, histories, best_histories):
-    transfers_eval = TransfersEvaluation(self.gw_data, self.transfers_strategy)
-    return transfers_eval.evaluate(histories, best_histories)
+    self._plot_comparison_distributions([r['final_points_distribution'] for r in results_list])
+    self._plot_comparison_weekly(
+      [r['cumulative_avg_points'] for r in results_list],
+      [r['cumulative_best_points'] for r in results_list]
+    )
+    self._plot_comparison_weekly_points(
+      [r['points_per_gw'] for r in results_list],
+      [r['best_points_per_gw'] for r in results_list]
+    )
 
-  def _evaluate_points(self):
-    print('here')
+  def _evaluate_simulation(self, evaluation_metrics):
+    histories = evaluation_metrics['all_sim_histories']
+    best_points = evaluation_metrics['best_sim_points']
+    best_sim_histories = evaluation_metrics['best_sim_histories']
+    all_sim_points = evaluation_metrics['all_sim_points']
+
+    points_histories = [h.get("points", {}) for h in histories]
+    gw_order = sorted(points_histories[0].keys())
+
+    average_points_per_gw = []
+    std_dev_per_gw = []
+    cumulative_avg_points = []
+    best_points_per_gw = []
+    cumulative_best_points = []
+    cum_avg = 0
+    cum_best = 0
+
+    for gw in gw_order:
+      gw_values = [h.get(gw, 0) for h in points_histories]
+      avg = sum(gw_values) / len(gw_values)
+      std = pd.Series(gw_values).std()
+      best_gw_points = best_sim_histories.get("points", {}).get(gw, 0)
+
+      # print(f"GW{gw}: {avg}")
+      average_points_per_gw.append(avg)
+      std_dev_per_gw.append(std)
+
+      cum_avg += avg
+      cum_best += best_gw_points
+
+      cumulative_avg_points.append(cum_avg)
+      best_points_per_gw.append(best_gw_points)
+      cumulative_best_points.append(cum_best)
+
+    final_totals = [sum(sim.values()) for sim in points_histories]
+
+    summary = {
+      'best_sim_points': best_points,
+      'avg_sim_points': sum(all_sim_points) / len(all_sim_points),
+      'stddev_sim_points': statistics.stdev([float(x) for x in all_sim_points]) if len(all_sim_points) > 1 else 0
+    }
+
+    print(summary)
+
+    return {
+      'summary': summary,
+      'points_per_gw': average_points_per_gw,
+      'best_points_per_gw': best_points_per_gw,
+      'cumulative_avg_points': cumulative_avg_points,
+      'cumulative_best_points': cumulative_best_points,
+      'stddev_per_gw': std_dev_per_gw,
+      'final_points_distribution': final_totals,
+      'raw_points': points_histories
+    }
+
+  def _plot_comparison_distributions(self, all_distributions, bins=20):
+    plt.figure(figsize=(10, 6))
   
-  def _evaluate_chips(self):
-    print('here')
-  
-  def _evaluate_diversity(self):
-    print('here')
+    for i, dist in enumerate(all_distributions):
+      plt.hist(
+        dist, 
+        bins=bins, 
+        alpha=0.6,
+        label=f"{self.labels[i]}", 
+        # density=True,  # to match KDE style in scale
+        edgecolor='black'
+      )
 
-  def _evaluate_budget(self):
-    print('here')
+    plt.title("Comparison of Final Points Distributions", fontsize=12)
+    plt.xlabel("Total Final Points", fontsize=10)
+    plt.ylabel("Frequency", fontsize=10)
+    plt.xticks(fontsize=10)
+    plt.yticks(fontsize=10)
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(f"{self.DIRECTORY}/comparison_distribution.png")
+    plt.show()
 
-  def _get_gw_data(self, gw):
-    return self.gw_data[self.gw_data['GW'] == gw]
+  def _plot_comparison_weekly(self, cumulative_points_list, cumulative_best_list):
+    gw_range = list(range(1, len(cumulative_points_list[0]) + 1))
+    plt.figure(figsize=(12, 6))
+    for i, cumulative_points in enumerate(cumulative_points_list):
+      plt.plot(gw_range, cumulative_points, label=f"{self.labels[i]} Avg", marker='o')
+    for i, best_points in enumerate(cumulative_best_list):
+      plt.plot(gw_range, best_points, label=f"{self.labels[i]} Best", linestyle='--', marker='x')
+    plt.title("Cumulative Points Comparison (Average vs Best)", fontsize=12)
+    plt.xlabel("Gameweek", fontsize=10)
+    plt.ylabel("Cumulative Points", fontsize=10)
+    plt.xticks(fontsize=10)
+    plt.yticks(fontsize=10)
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(f"{self.DIRECTORY}/cumulative_comparison.png")
+    plt.show()
+
+  def _plot_comparison_weekly_points(self, avg_points_list, best_points_list):
+    gw_range = list(range(1, len(avg_points_list[0]) + 1))
+    plt.figure(figsize=(12, 6))
+    for i, avg_points in enumerate(avg_points_list):
+      plt.plot(gw_range, avg_points, label=f"{self.labels[i]} Avg", marker='o')
+    plt.title("Weekly Points Comparison", fontsize=12)
+    plt.xlabel("Gameweek", fontsize=10)
+    plt.ylabel("Points", fontsize=10)
+    plt.xticks(fontsize=10)
+    plt.yticks(fontsize=10)
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig(f"{self.DIRECTORY}/weekly_comparison.png")
+    plt.show()
+
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Run the model with optional chip strategies.")
 
-  parser.add_argument(
-    "--season", type=str, nargs="?", default="2023-24",
-    help="Season to simulate in the format 20xx-yy."
-  )
-
-  parser.add_argument(
-    '--model', type=str, help='The model to use', 
-    choices=[m.value for m in ModelType]
-  )
-
-  parser.add_argument(
-    '--iterations', type=int, help='Override number of iterations', 
-    default=50
-  )
-
-  # Chip strategy arguments with validation
-  valid_triple_captain_strategies = ["risky", "conservative"]
-  parser.add_argument(
-    "--triple_captain", type=str, choices=valid_triple_captain_strategies, default="conservative",
-    help="Strategy for the Triple Captain chip. Options: 'risky', 'conservative'."
-  )
-  
-  # TODO: Maybe include double and blank gws?
-  valid_wildcard_strategies = ["asap", "wait"]
-  parser.add_argument(
-    "--wildcard", type=str, choices=valid_wildcard_strategies, default="wait",
-    help="Strategy for the Wildcard chip. Options: 'asap', 'wait'."
-  )
-  
-  valid_free_hit_strategies = ["double_gw", "blank_gw"]
-  parser.add_argument(
-    "--free_hit", type=str, choices=valid_free_hit_strategies, default="blank_gw",
-    help="Strategy for the Free Hit chip. Options: 'double_gw', 'blank_gw'."
-  )
-  
-  valid_bench_boost_strategies = ["double_gw", "with_wildcard"]
-  parser.add_argument(
-    "--bench_boost", type=str, choices=valid_bench_boost_strategies, default="double_gw",
-    help="Strategy for the Bench Boost chip. Options: 'double_gw', 'with_wildcard'."
-  )
-
+  parser.add_argument("--season", type=str, default="2023-24")
   transfers_strategies=['simple', 'weighted']
   parser.add_argument(
     "--transfers", type=str, choices=transfers_strategies, default='simple',
     help="Strategy to calculate the fitness of transfer candidates. Options: 'simple', 'weighted'"
   )
-
-  parser.add_argument(
-    "--types", type=str, choices=HISTORY_TYPES,
-    nargs="+", default=[], help="List of history types to evaluate"
-  )
-
+  parser.add_argument("--iterations", type=int, default=100)
+  parser.add_argument("--load_saved", action="store_true")
   args = parser.parse_args()
-
-  if args.model:
-    try:
-      model_type = ModelType(args.model)
-    except ValueError:
-      print(f"Error: Invalid model type '{args.model}'. Choose from {', '.join(m.value for m in ModelType)}")
-      exit(1)
-
-  chip_strategy = {
-    Chip.TRIPLE_CAPTAIN: args.triple_captain,
-    Chip.WILDCARD: args.wildcard,
-    Chip.FREE_HIT: args.free_hit,
-    Chip.BENCH_BOOST: args.bench_boost
-  }
 
   simulation_evaluation = SimulationEvaluation(
     season=args.season,
-    model=args.model,
-    chip_strategy=chip_strategy,
+    iterations=args.iterations,
     transfers_strategy=args.transfers,
-    iterations=args.iterations
+    load_saved=args.load_saved
   )
   simulation_evaluation.evaluate()

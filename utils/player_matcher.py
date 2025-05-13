@@ -236,7 +236,10 @@ class PlayerMatcher:
     matched_candidates["name_similarity"] = matched_candidates["name"].apply(lambda x: fuzz.token_sort_ratio(fb_name, x))
 
     # Sort: Prioritize higher name similarity, then closest goal/assist match
-    closest_match = matched_candidates.sort_values(by=["name_similarity", "goal_diff", "assist_diff"], ascending=[False, True, True]).iloc[0]
+    closest_match = matched_candidates.sort_values(
+      by=["name_similarity", "goal_diff", "assist_diff"], 
+      ascending=[False, True, True]
+    ).iloc[0]
     return closest_match
 
   def get_fpl_player(self, key, season, key_type='id'):

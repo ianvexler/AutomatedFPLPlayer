@@ -87,58 +87,6 @@ class LearningRateEvaluation:
     print("\nLearning Rate Evaluation Results:\n")
     print(tabulate(df, headers='keys', tablefmt='pretty', floatfmt=".4f"))
 
-    plot_dir = f"plots/learning_rate/{self.FILE_NAME}"
-    os.makedirs(plot_dir, exist_ok=True)
-
-    for pos in ['GK', 'DEF', 'MID', 'FWD']:
-      subset = df[df['position'] == pos]
-      plt.figure(figsize=(8, 5))
-      plt.plot(subset['learning_rate'], subset['val_rmse'], marker='o', label='RMSE')
-      plt.plot(subset['learning_rate'], subset['val_mae'], marker='s', linestyle='--', label='MAE')
-      plt.xlabel("Learning Rate")
-      plt.ylabel("Error")
-      plt.title(f"Validation Error vs Learning Rate - {pos}")
-      plt.legend()
-      plt.grid(True)
-      plt.tight_layout()
-      plt.savefig(f"{plot_dir}/learning_rate_performance_{pos.lower()}.png")
-      plt.close()
-
-    plt.figure(figsize=(10, 6))
-    for pos in ['GK', 'DEF', 'MID', 'FWD']:
-      subset = df[df['position'] == pos]
-      plt.plot(subset['learning_rate'], subset['val_rmse'], marker='o', label=f'{pos} RMSE')
-      plt.plot(subset['learning_rate'], subset['val_mae'], marker='s', linestyle='--', label=f'{pos} MAE')
-    plt.xlabel("Learning Rate")
-    plt.ylabel("Error")
-    plt.title("Validation Error vs Learning Rate (All Positions)")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(f"{plot_dir}/learning_rate_performance_all_positions.png")
-    plt.close()
-
-    pivot_rmse = df.pivot(index='position', columns='learning_rate', values='val_rmse')
-    pivot_mae = df.pivot(index='position', columns='learning_rate', values='val_mae')
-
-    plt.figure(figsize=(8, 5))
-    sns.heatmap(pivot_rmse, annot=True, fmt=".4f", cmap="YlGnBu")
-    plt.title("Validation RMSE (Learning Rate vs Position)")
-    plt.xlabel("Learning Rate")
-    plt.ylabel("Position")
-    plt.tight_layout()
-    plt.savefig(f"{plot_dir}/heatmap_rmse.png")
-    plt.close()
-
-    plt.figure(figsize=(8, 5))
-    sns.heatmap(pivot_mae, annot=True, fmt=".4f", cmap="YlOrBr")
-    plt.title("Validation MAE (Learning Rate vs Position)")
-    plt.xlabel("Learning Rate")
-    plt.ylabel("Position")
-    plt.tight_layout()
-    plt.savefig(f"{plot_dir}/heatmap_mae.png")
-    plt.close()
-
 if __name__=='__main__':
   parser = argparse.ArgumentParser(description='Run the model with optional training.')
   parser.add_argument('--steps', type=int, nargs='?', const=5, default=5, help='Time step for data window. Defaults to 7 if not provided or null.')

@@ -86,39 +86,6 @@ class UnitsEvaluation:
       print("\nModel Evaluation Results:\n")
       print(tabulate(df, headers='keys', tablefmt='pretty', floatfmt=".4f"))
 
-      os.makedirs(f"plots/lstm_units/{self.FILE_NAME}", exist_ok=True)
-
-      # Plotting performance for each position
-      for pos in ['GK', 'DEF', 'MID', 'FWD']:
-        subset = df[df['position'] == pos]
-        plt.plot(subset['units'], subset['val_rmse'], marker='o', label=f'{pos} RMSE')
-        plt.plot(subset['units'], subset['val_mae'], marker='s', linestyle='--', label=f'{pos} MAE')
-
-      plt.xlabel("LSTM Units")
-      plt.ylabel("Error")
-      plt.title("Validation Error vs LSTM Units (All Positions)")
-      plt.legend()
-      plt.grid(True)
-      plt.tight_layout()
-      plt.savefig(f"plots/lstm_units/{self.FILE_NAME}/lstm_unit_performance.png")
-      plt.show()
-
-      for pos in ['GK', 'DEF', 'MID', 'FWD']:
-        plt.figure(figsize=(8, 5))
-        subset = df[df['position'] == pos]
-        plt.plot(subset['units'], subset['val_rmse'], marker='o', label='RMSE')
-        plt.plot(subset['units'], subset['val_mae'], marker='s', linestyle='--', label='MAE')
-        plt.xlabel("LSTM Units")
-        plt.ylabel("Error")
-        plt.title(f"Validation Error vs LSTM Units - {pos}")
-        plt.legend()
-        plt.grid(True)
-        plt.tight_layout()
-
-        save_path = f"plots/lstm_units/{self.FILE_NAME}/unit_performance_{pos.lower()}.png"
-        plt.savefig(save_path)
-        plt.close()
-
   def _is_model_sequential(self):
     return self.model_type in { ModelType.LSTM, ModelType.ML_LSTM, ModelType.BI_LSTM }
 

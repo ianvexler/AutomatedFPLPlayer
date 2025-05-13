@@ -62,15 +62,24 @@ class FeatureEvaluation:
 
     for position in ['GK', 'DEF', 'MID', 'FWD']:
       X, y = training_data[position]
-    
+      
+      # Compute full importance dict once
+      importance_dict = self._get_permutation_importance(
+        position=position,
+        X=X,
+        y=y)
+
       for top_n in [10, 15, 20, 25, 30]:
-        important_features = self._get_permutation_importance(
+        top_features = sorted(importance_dict.items(), key=lambda x: x[1], reverse=True)[:top_n]
+        feature_names = [name for name, _ in top_features]
+        print(f"{position} Top {top_n}: {feature_names}")
+
+        self._plot_permutation_importance(
+          importance_dict,
           position=position,
-          X=X,
-          y=y,
-          top_n=top_n)
-        
-        print(f"{position}: {important_features}")
+          save_path=f"plots/permutation_importance/test2/{top_n}/{self.FILE_NAME}",
+          top_n=top_n
+        )
 
   def _permutation_importance_lstm(self, model, X_val, y_val, feature_names, scaler, n_repeats=5):
     y_val_original = y_val.flatten()
@@ -137,7 +146,7 @@ class FeatureEvaluation:
       plt.show()
 
 
-  def _get_permutation_importance(self, position, X, y, top_n=20):
+  def _get_permutation_importance(self, position, X, y):
     if self._is_model_sequential():
       y = self.model.scalers[position].inverse_transform(
         pd.DataFrame(y, columns=['target']), 'target'
@@ -176,13 +185,7 @@ class FeatureEvaluation:
         self.model.models[position], X, y, feature_names
       )
 
-    save_path = f"plots/permutation_importance/{top_n}/{self.FILE_NAME}"
-    self._plot_permutation_importance(importance_dict, position=position, save_path=save_path, top_n=top_n)
-
-    sorted_features = sorted(importance_dict.items(), key=lambda x: x[1], reverse=True)
-    top_features = [feature for feature, _ in sorted_features[:top_n]]
-
-    return top_features
+    return importance_dict
 
   def _is_model_sequential(self):
     return self.model_type in { ModelType.LSTM, ModelType.ML_LSTM, ModelType.BI_LSTM }

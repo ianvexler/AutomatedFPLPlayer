@@ -84,62 +84,6 @@ class DropoutEvaluation:
     print("\nDropout Evaluation Results:\n")
     print(tabulate(df, headers='keys', tablefmt='pretty', floatfmt=".4f"))
 
-    plot_dir = f"plots/dropout/{self.FILE_NAME}"
-    os.makedirs(plot_dir, exist_ok=True)
-
-    # Plot 1: Individual plots per position (already exists)
-    for pos in ['GK', 'DEF', 'MID', 'FWD']:
-      subset = df[df['position'] == pos]
-      plt.figure(figsize=(8, 5))
-      plt.plot(subset['dropout'], subset['val_rmse'], marker='o', label='RMSE')
-      plt.plot(subset['dropout'], subset['val_mae'], marker='s', linestyle='--', label='MAE')
-      plt.xlabel("Dropout Rate")
-      plt.ylabel("Error")
-      plt.title(f"Validation Error vs Dropout Rate - {pos}")
-      plt.legend()
-      plt.grid(True)
-      plt.tight_layout()
-      save_path = f"{plot_dir}/dropout_performance_{pos.lower()}.png"
-      plt.savefig(save_path)
-      plt.close()
-
-    # Plot 2: Combined plot for all positions
-    plt.figure(figsize=(10, 6))
-    for pos in ['GK', 'DEF', 'MID', 'FWD']:
-      subset = df[df['position'] == pos]
-      plt.plot(subset['dropout'], subset['val_rmse'], marker='o', label=f'{pos} RMSE')
-      plt.plot(subset['dropout'], subset['val_mae'], marker='s', linestyle='--', label=f'{pos} MAE')
-    plt.xlabel("Dropout Rate")
-    plt.ylabel("Error")
-    plt.title("Validation Error vs Dropout Rate (All Positions)")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(f"{plot_dir}/dropout_performance_all_positions.png")
-    plt.close()
-
-    # Plot 3: Heatmap-style summary
-    pivot_rmse = df.pivot(index='position', columns='dropout', values='val_rmse')
-    pivot_mae = df.pivot(index='position', columns='dropout', values='val_mae')
-
-    plt.figure(figsize=(8, 5))
-    sns.heatmap(pivot_rmse, annot=True, fmt=".4f", cmap="YlGnBu")
-    plt.title("Validation RMSE (Dropout Rate vs Position)")
-    plt.xlabel("Dropout Rate")
-    plt.ylabel("Position")
-    plt.tight_layout()
-    plt.savefig(f"{plot_dir}/heatmap_rmse.png")
-    plt.close()
-
-    plt.figure(figsize=(8, 5))
-    sns.heatmap(pivot_mae, annot=True, fmt=".4f", cmap="YlOrBr")
-    plt.title("Validation MAE (Dropout Rate vs Position)")
-    plt.xlabel("Dropout Rate")
-    plt.ylabel("Position")
-    plt.tight_layout()
-    plt.savefig(f"{plot_dir}/heatmap_mae.png")
-    plt.close()
-
 if __name__=='__main__':
   parser = argparse.ArgumentParser(description='Run the model with optional training.')
   parser.add_argument('--steps', type=int, nargs='?', const=5, default=5, help='Time step for data window. Defaults to 7 if not provided or null.')

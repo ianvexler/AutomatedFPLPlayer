@@ -15,21 +15,21 @@ class TeamManager:
     season, 
     teams_data, 
     fixtures_data, 
-    transfers_strategy='simple',
+    selection_strategy='weighted',
     target='xP'
   ):
     self.season = season
     self.teams_data = teams_data
     self.fixtures_data = fixtures_data
 
-    self.transfers_strategy = transfers_strategy
+    self.selection_strategy = selection_strategy
 
     # Update to expected points
     self.TARGET = target
     self.OPTIMAL_TARGET = 'total_points'
     self.POSITIONS = ['GK', 'DEF', 'MID', 'FWD']
     
-    self.TRANSFER_THRESHOLD = 0.6
+    self.TRANSFER_THRESHOLD = 0.4
 
     # TODO: Experiment with differnet positions as captains
     self.CAPTAIN_POSITIONS = ['MID', 'FWD']
@@ -53,12 +53,28 @@ class TeamManager:
 
     self.data_loader = DataLoader(self.season)
         
-  # Selects the initial squad trying to optimize selection
   def get_best_squad(self, gw_data, budget, current_gw, optimal=False):
-    teams_form = self.calc_teams_form(current_gw)
+    """
+    Selects the initial squad trying to optimize selection.
+    Inspired in genetics algorithms, iterates through 50 different solutions
     
+    Params
+      gw_data: The data of players
+      budget: How much money can be spent on the team
+      current_gw: The current GW
+      optimal: For testing, can return the best possible squad
+
+    Returns
+      The best squad found and its cost
+    """
+    teams_form = self.calc_teams_form(current_gw)
+
     gw_data = gw_data.copy()
-    gw_data["fitness"] = gw_data.apply(lambda player: self._calc_player_fitness(gw_data, current_gw, teams_form, player), axis=1)
+
+    # Applies a fitness function to all players
+    gw_data["fitness"] = gw_data.apply(
+      lambda player: self._calc_player_fitness(gw_data, current_gw, teams_form, player), axis=1
+    )
 
     if gw_data.empty:
       return None, None
@@ -67,66 +83,74 @@ class TeamManager:
     best_squad_cost = 0
     best_squad_points = 0
 
-    for _ in range(50):
-      squad = {}
-      pos_budgets = {}
+    max_attempts = 100
+    successful_runs = 0
+    attempts = 0
 
-      squad_split = self._random_squad_split(gw_data)
-
-      for position in self.POSITIONS:
-        # Initializes dict with empty position
-        squad[position] = pd.DataFrame(columns=gw_data.columns)
-
-        # Initailizes budgets per position dict
-        pos_budgets[position] = budget * squad_split[position]
-
-      squad_cost = 0
-      squad_points = 0
-      squad_distribution = self.POS_DISTRIBUTION.copy()
-
-      while any(value > 0 for value in squad_distribution.values()):
-        # Get only keys with non-zero values
-        available_keys = [key for key, value in squad_distribution.items() if value > 0]
-        
-        if available_keys:
-          position = random.choice(available_keys)
-          squad_distribution[position] -= 1
-
-        # Get best player of random position selected
-        pos_min = self._pos_min_price(position)
-        pos_count = squad_distribution[position]
-
-        # How much can be spent in the next player
-        player_budget = pos_budgets[position] - (pos_min * pos_count)
-
-        target = self._get_target(optimal)
-        player = self._get_best_player(gw_data, position, player_budget, squad, target)
-
-        # Adds player to squad
-        if squad[position].empty:
-          squad[position] = pd.DataFrame([player])
-        else:
-          squad[position] = pd.concat([squad[position], pd.DataFrame([player])], ignore_index=True)
-
-        # Updates total budget available for position
-        pos_budgets[position] -= player['cost']
-        squad_cost += player['cost']
-        squad_points += player[target]
-
-      # TODO: Maybe also include team diversity?
-      # squad_points += self.calc_team_diversity(squad)
+    # Iterates through 50 possible solutions 
+    while successful_runs < 50 and attempts < max_attempts:
+      attempts += 1
       
-      # Check if squad is better than current best
-      if squad_points > best_squad_points:
-        best_squad_points = squad_points.round(2)
+      try:
+        squad = {}
+        pos_budgets = {}
 
-        best_squad = squad
-        best_squad_cost = squad_cost
+        # Gets a randomized budget allocation split for each position
+        squad_split = self._random_squad_split(gw_data)
+
+        # Assigns a budget to each position given the random split
+        for position in self.POSITIONS:
+          squad[position] = pd.DataFrame(columns=gw_data.columns)
+          pos_budgets[position] = budget * squad_split[position]
+
+        squad_cost = 0
+        squad_points = 0
+        squad_distribution = self.POS_DISTRIBUTION.copy()
+
+        # Iterates through every position according to the
+        # base distribution (how many players per position)
+        # until all positions are filled 
+        while any(value > 0 for value in squad_distribution.values()):
+          available_keys = [key for key, value in squad_distribution.items() if value > 0]
+          if available_keys:
+            position = random.choice(available_keys)
+            squad_distribution[position] -= 1
+
+          # Gets the budget available to be spent on the player
+          pos_min = self._pos_min_price(position)
+          pos_count = squad_distribution[position]
+          player_budget = pos_budgets[position] - (pos_min * pos_count)
+
+          # Gets best player available given budget and squad restrictions
+          target = self._get_target(optimal)
+          player = self._get_best_player(gw_data, position, player_budget, squad, target)
+
+          if squad[position].empty:
+            squad[position] = pd.DataFrame([player])
+          else:
+            squad[position] = pd.concat([squad[position], pd.DataFrame([player])], ignore_index=True)
+
+          # Take the cost of the player off the budget
+          pos_budgets[position] -= player['cost']
+          squad_cost += player['cost']
+          squad_points += player[target]
+
+        if squad_points > best_squad_points:
+          best_squad_points = squad_points.round(2)
+          best_squad = squad
+          best_squad_cost = squad_cost
+
+        successful_runs += 1
+
+      except Exception as e:
+        continue
 
     return best_squad, best_squad_cost
 
-  # Calculate squad fitness using squad
   def calc_squad_fitness(self, gw_data, squad, optimal=False):
+    """
+    Calculate squad fitness (points/expected points)
+    """
     total_points = 0
     target = self._get_target(optimal)
 
@@ -150,12 +174,12 @@ class TeamManager:
   ):
     """
     Computes a player's fitness score between 0 and 1 based on:
-    - Expected points (main driver)
-    - Normalized transfer trends
-    - Normalized value (points per cost)
+    - Expected points
+    - Transfer trends
+    - Fixture Difficulty
     
-    Returns:
-        float: Fitness score between 0 (worst) and 1 (best)
+    Returns
+      Fitness score between 0 (worst) and 1 (best)
     """
     player_id = player['id']
     cost = player['cost'] if player['cost'] > 0 else 1  # avoid divide by 0
@@ -170,7 +194,7 @@ class TeamManager:
     min_ep, max_ep = all_expected_points.min(), all_expected_points.max()
     norm_expected_points = (expected_points - min_ep) / (max_ep - min_ep) if max_ep > min_ep else 0
 
-    if self.transfers_strategy == 'simple':
+    if self.selection_strategy == 'simple':
       return norm_expected_points
 
     # Normalize transfer trend
@@ -190,7 +214,6 @@ class TeamManager:
 
     return round(fitness_score, 1)
 
-  # Calculates the form of the next 3 opponents
   def _calc_opponents_form(
     self, 
     teams_form, 
@@ -198,6 +221,13 @@ class TeamManager:
     current_gw,
     lambda_decay=0.02
   ):
+    """
+    Calculates a team's form based on its previous fixtures, their 
+    contexts and its upcoming games
+    
+    Returns
+      Normalised oponent form
+    """
     team_id = player['team']
     
     # Get your team's form
@@ -248,8 +278,9 @@ class TeamManager:
     relative_form_diff = avg_opponent_form - team_form
 
     # Normalize relative difficulty
-    # Compute min/max diffs across the league for normalization
     all_diffs = teams_form['form'].values[:, None] - teams_form['form'].values
+    
+    # Compute min/max diffs across the league
     min_diff = np.min(all_diffs)
     max_diff = np.max(all_diffs)
 
@@ -263,9 +294,12 @@ class TeamManager:
   def _get_team_from_id(self, team_id):
     return self.teams_data[self.teams_data['id'] == team_id]
 
-  # Returns a list of ids of the next 3 oponents for a team
   def _get_team_next_opponents(self, team_id, gw):
-    # Next fixtures for team
+    """
+    Returns a list of ids of the next 3 oponents for a team
+    """
+    
+    # Next fixtures for a team
     future_team_fixtures = self.fixtures_data[
       (self.fixtures_data['team_h'] == team_id) |
       (self.fixtures_data['team_a'] == team_id)
@@ -286,8 +320,10 @@ class TeamManager:
 
     return opponents
 
-  # Returns all the teams which already have 3 players selected
   def _get_teams_capped(self, gw_data, current_team):
+    """
+    Returns all the teams which already have 3 players selected
+    """
     team_count = {}
     
     for pos, df in current_team.items():
@@ -306,36 +342,50 @@ class TeamManager:
     teams_capped = [key for key, value in team_count.items() if value == 3]
     return teams_capped
 
-  # Returns the best player available given postion and budget
-  # Returns id, cost
   def _get_best_player(self, gw_data, position, budget, current_squad, target):
-    available_players = self._get_filtered_players(gw_data, position, budget, current_squad)
+    """
+    Gets the best player available given postion and budget
     
-    # TODO: Handle double GW
+    Returns
+      Player id and cost
+    """
+    available_players = self._get_filtered_players(gw_data, position, budget, current_squad)
+  
     # Group by player ID and sum their total points (handling double gameweeks)
-    grouped_players = available_players.groupby('id', as_index=False).agg({
-      'fitness': 'first',
-      self.TARGET: 'sum',
-      self.OPTIMAL_TARGET: 'sum',
-      'cost': 'first',
-      'name': 'first',
-      'position': 'first',
-      'team': 'first'
-    })
-
-    if self.transfers_strategy == 'simple' or target == self.OPTIMAL_TARGET:
-      best_target = target
+    if self.TARGET == 'xP':
+      grouped_players = available_players.groupby('id', as_index=False).agg({
+        'fitness': 'mean',
+        self.TARGET: 'sum',
+        self.OPTIMAL_TARGET: 'sum',
+        'cost': 'first',
+        'name': 'first',
+        'position': 'first',
+        'team': 'first'
+      })
     else:
-      best_target = 'fitness'
+      grouped_players = available_players.groupby('id', as_index=False).agg({
+        'fitness': 'mean',
+        self.TARGET: 'first',
+        self.OPTIMAL_TARGET: 'sum',
+        'cost': 'first',
+        'name': 'first',
+        'position': 'first',
+        'team': 'first'
+      })
 
     # Sort players based on summed target values 
-    grouped_players = grouped_players.sort_values(by=[best_target], ascending=False)
+    grouped_players = grouped_players.sort_values(by=[target], ascending=False)
 
     # Select player with the highest combined points
     return grouped_players.iloc[0]
 
-  # TODO: Get players available given restrictions, budget and position
   def _get_filtered_players(self, gw_data, position, budget, current_team):
+    """
+    Get players available given restrictions, budget and position
+
+    Returns 
+      The GW data for those available players
+    """
     gw_data = gw_data.copy()
 
     selected_players_ids = current_team[position]['id'].tolist()
@@ -348,7 +398,6 @@ class TeamManager:
       (~gw_data['team'].isin(teams_capped))
     ].copy()
 
-  # Suggests transfers by replacing underperforming players with those predicted to improve.
   def suggest_transfers(
     self, 
     gw_data, 
@@ -357,6 +406,12 @@ class TeamManager:
     budget, 
     force_transfer
   ):
+    """
+    Suggests transfers by replacing underperforming players with those predicted to improve.
+    
+    Returns
+      Sorted list of suitable transfers
+    """
     gw_data = gw_data.copy()
     teams_form = self.calc_teams_form(current_gw)
 
@@ -425,16 +480,12 @@ class TeamManager:
 
     return player_in['fitness'] - player_out['fitness'] >= threshold
 
-  # Update to use prices based on data
   def _pos_min_price(self, position):
     """
     Returns the minimum price for a player in a given position.
 
-    Parameters:
-      - position (str): The position of the player ('GK', 'DEF', 'MID', 'FWD').
-
     Returns:
-      - float: The minimum price for a player in the position.
+      The minimum price for a player in the position.
     """
     if position == 'GK' or position == 'DEF':
       return 40
@@ -444,6 +495,10 @@ class TeamManager:
       print(f'Invalid position: {position}')
 
   def _random_squad_split(self, gw_data, total_budget=1000):
+    """
+    Generates a random squad split
+    This is how much budget percentage should be allocated per position
+    """
     min_prices = (
       gw_data
       .groupby('position')['cost']
@@ -501,6 +556,12 @@ class TeamManager:
     return rounded
 
   def pick_team(self, selected_squad, gw_data, optimal=False, triple_captain_strat=None):
+    """
+    Picks the best XI from a given squad
+    
+    Returns
+      The best XI
+    """
     target = self._get_target(optimal)
 
     best_team = None
@@ -530,6 +591,26 @@ class TeamManager:
         
         # Gets the predicted GW data for all players in position
         pos_players = gw_data[gw_data['id'].isin(player_ids)]
+        
+        if self.TARGET == 'xP':
+          pos_players = pos_players.groupby('id', as_index=False).agg({
+            self.TARGET: 'sum',
+            self.OPTIMAL_TARGET: 'sum',
+            'cost': 'first',
+            'name': 'first',
+            'position': 'first',
+            'team': 'first'
+          })
+        else:
+          pos_players = pos_players.groupby('id', as_index=False).agg({
+            self.TARGET: 'first',
+            self.OPTIMAL_TARGET: 'sum',
+            'cost': 'first',
+            'name': 'first',
+            'position': 'first',
+            'team': 'first'
+          })
+
         pos_players = pos_players.sort_values(by=target, ascending=False)
         
         # Select the players with highest expected points
@@ -561,9 +642,13 @@ class TeamManager:
 
     return best_team
 
-  # Select the player with the highest TARGET value as captain from the selected team
-  # Returns the id of the selected captain
   def select_captains(self, gw_data, team, optimal):
+    """
+    Select the player with the highest TARGET value as captain from the selected team
+    
+    Returns
+      The id of the selected captain
+    """
     current_team = team.copy()
     
     # Get all valid captain choices
@@ -586,6 +671,18 @@ class TeamManager:
     return captain, vice_captain
 
   def calc_team_points(self, gw_data, selected_team, triple_captain=False, bench_boost=False):
+    """
+    Calculates the total points obtained by a team in a GW
+
+    Params
+      gw_data: The data for a GW
+      selected_team: The XI selected for the GW
+      triple_captain: Boolean if triple captain chip is used
+      bench_boost: Boolean if bench boost chip is used
+    
+    Returns
+      Total points obtained
+    """
     total_points = 0
     captain_multiplier = 3 if triple_captain else 2
 
@@ -620,7 +717,7 @@ class TeamManager:
     Based on Gullham's bin method
 
     Returns:
-        float: Diversity score (0 means no diversity, 1 means fully diverse).
+      Diversity score (0 means no diversity, 1 means fully diverse).
     """
 
     player_costs = [
@@ -640,6 +737,10 @@ class TeamManager:
     return diversity_score
 
   def calc_teams_form(self, gw, time_steps=5, lambda_decay=0.02):
+    """
+    Calculates the team form based on previous opponents and
+    lambda decay of a fixture
+    """
     teams_form = {
       'id': [],
       'form': []
@@ -710,6 +811,13 @@ class TeamManager:
     return pd.DataFrame.from_dict(teams_form)
 
   def _team_after_subs(self, gw_data, team):
+    """
+    Performs subs to a team if players do not fixture
+    Adheres to position distribution restrictions
+
+    Returns
+      The final team in a GW
+    """
     available_bench = team['bench']
     new_bench = pd.DataFrame()
     updated_team = {}
@@ -759,6 +867,9 @@ class TeamManager:
     return updated_team
 
   def _can_sub(self, position, team, sub):
+    """
+    Ensures positions have a minimum amount of players
+    """
     if position == 'GK' and sub['position'] == 'GK':
       return True
     elif position == 'DEF' and (len(team[position]) > 3 or sub['position'] == 'DEF'):
@@ -771,6 +882,9 @@ class TeamManager:
     return False
 
   def _check_player_performed(self, player):
+    """
+    Checks if player fixtured in a game (played any minutes)
+    """
     minutes = player['minutes']
     player_points = player[self.OPTIMAL_TARGET]
     
@@ -789,6 +903,9 @@ class TeamManager:
     return player_data
 
   def _get_missing_player(self, player):
+    """
+    Assign 0s to player who doesnt have GW data
+    """
     missing_player = player.to_dict()
     missing_player.update({
       'fitness': 0,

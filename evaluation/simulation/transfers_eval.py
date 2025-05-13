@@ -26,7 +26,7 @@ class TransfersEvaluation:
     self.gw_data = self.data_loader.get_gw_predictions(season)
 
     self.strategies = ['simple', 'weighted']
-    self.DIRECTORY = f'plots/transfers'
+    self.DIRECTORY = f'plots/transfers/test'
     os.makedirs(self.DIRECTORY, exist_ok=True)
 
   def _run_simulation(self, strategy):
@@ -97,15 +97,22 @@ class TransfersEvaluation:
           }
           pickle.dump(evaluation_metrics, f)
 
-    self._plot_combined_transfer_impact(all_results)
-    self._plot_combined_cumulative_gains(all_results)
-    self._plot_average_points(all_results)
     self._plot_final_point_distributions(all_results)
     self._plot_points_boxplot(all_results)
-    self._plot_stddev_bands(all_results)
-    self._plot_combined_with_best(all_results)
     
+    self._print_summary_table(all_results)
     return all_results
+
+  def _print_summary_table(self, all_results):
+    print("\nTransfers - Summary Comparison")
+    print(f"{'Strategy':<15} {'Avg Points':>12} {'Std Dev':>10} {'Best Points':>12}")
+    for strategy, result in all_results.items():
+      final_points = [float(p) for p in result['final_points_distribution']]
+      avg = sum(final_points) / len(final_points)
+      std = pd.Series(final_points).std()
+      best = max(final_points)
+      label = 'xP' if strategy == 'simple' else 'Weighted'
+      print(f"{label:<15} {avg:>12.2f} {std:>10.2f} {best:>12.0f}")
 
   def _evaluate_transfers(self, histories, best_history, strategy, points_histories, best_gw_points):
     grouped_histories = {}
@@ -216,6 +223,8 @@ class TransfersEvaluation:
       'average_best_points_per_gw': average_best
     }
 
+    print(evaluation_summary)
+
     return {
       'weekly_evaluation': evaluation_results,
       'summary': evaluation_summary,
@@ -229,81 +238,6 @@ class TransfersEvaluation:
       'raw_points': points_histories
     }
 
-  def _plot_combined_transfer_impact(self, all_results):
-    plt.figure(figsize=(12, 6))
-    for strategy, result in all_results.items():
-      weeks = list(range(1, 39))
-      point_changes = [0] * 38
-      for gw in result['weekly_evaluation']:
-        gw_index = gw['gameweek'] - 1
-        if gw_index < 38:
-          point_changes[gw_index] = gw['average_point_change']
-      points = point_changes
-      plt.plot(weeks, points, marker='o', label=f"{'xP' if strategy == 'simple' else 'Player Fitness'} avg point change")
-    plt.axhline(0, color='grey', linestyle='--', linewidth=0.5)
-    plt.title('Average Point Change Per Gameweek (by Transfer Strategy)')
-    plt.xlabel('Gameweek')
-    plt.ylabel('Average Point Change')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(f"{self.DIRECTORY}/combined_avg_point_change_per_gw.png")
-    plt.show()
-
-  def _plot_combined_cumulative_gains(self, all_results):
-    plt.figure(figsize=(12, 6))
-    for strategy, result in all_results.items():
-      weeks = list(range(1, 39))
-      cumulative = result['cumulative_points']
-      plt.plot(weeks, cumulative, marker='o', label=f"{'xP' if strategy == 'simple' else 'Player Fitness'} avg cumulative")
-    plt.title('Cumulative Points Gained From Transfers (Averages Only)')
-    plt.xlabel('Gameweek')
-    plt.ylabel('Cumulative Points')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(f"{self.DIRECTORY}/avg_cumulative_gains_only.png")
-    plt.show()
-    plt.figure(figsize=(12, 6))
-    for strategy, result in all_results.items():
-      weeks = list(range(1, 39))
-      cumulative = result['cumulative_points']
-      plt.plot(weeks, cumulative, marker='o', label=f"{'xP' if strategy == 'simple' else 'Player Fitness'} cumulative")
-    plt.title('Cumulative Points Gained From Transfers (by Strategy)')
-    plt.xlabel('Gameweek')
-    plt.ylabel('Cumulative Points')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(f"{self.DIRECTORY}/combined_cumulative_gains.png")
-    plt.show()
-
-  def _plot_average_points(self, all_results):
-    plt.figure(figsize=(12, 6))
-    for strategy, result in all_results.items():
-      gameweeks = list(range(1, 39))
-      plt.plot(gameweeks, result['points_per_gw'], marker='o', label=f"{'xP' if strategy == 'simple' else 'Player Fitness'} avg")
-    plt.title('Average Points Per Gameweek by Strategy (Averages Only)')
-    plt.xlabel('Gameweek')
-    plt.ylabel('Points')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(f"{self.DIRECTORY}/avg_points_per_gw_only.png")
-    plt.show()
-    plt.figure(figsize=(12, 6))
-    for strategy, result in all_results.items():
-      gameweeks = list(range(1, 39))
-      plt.plot(gameweeks, result['points_per_gw'], marker='o', label=f"{'xP' if strategy == 'xP' else 'Player Fitness'} avg GW pts")
-    plt.title('Average Points Per Gameweek by Strategy')
-    plt.xlabel('Gameweek')
-    plt.ylabel('Points')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(f"{self.DIRECTORY}/average_points_per_gw.png")
-    plt.show()
-
   def _plot_final_point_distributions(self, all_results):
     plt.figure(figsize=(10, 6))
     for strategy, result in all_results.items():
@@ -311,11 +245,11 @@ class TransfersEvaluation:
         result['final_points_distribution'],
         bins=15,
         alpha=0.6,
-        label=f"{'xP' if strategy == 'simple' else 'Player Fitness'}",
+        label=f"{'xP' if strategy == 'simple' else 'Weighted'}",
         edgecolor='black'
       )
-    plt.title('Distribution of Final Total Points by Strategy')
-    plt.xlabel('Final Points After Full Season')
+    plt.title('Distribution of Final Total Points by Player Selection Strategy')
+    plt.xlabel('Total Final Points')
     plt.ylabel('Frequency')
     plt.legend()
     plt.grid(True)
@@ -330,72 +264,13 @@ class TransfersEvaluation:
       for total in result['final_points_distribution']:
         data.append({'Strategy': strategy, 'Final Points': total})
     df = pd.DataFrame(data)
-    df['Strategy'] = df['Strategy'].replace({'simple': 'xP', 'weighted': 'Player Fitness'})
+    df['Strategy'] = df['Strategy'].replace({'simple': 'xP', 'weighted': 'Weighted'})
     sns.boxplot(x='Strategy', y='Final Points', data=df)
-    plt.title('Final Points Distribution by Strategy (Boxplot)')
+    # Boxplot
+    plt.title('Final Points Distribution by Player Selection Strategy')
     plt.grid(True)
     plt.tight_layout()
     plt.savefig(f"{self.DIRECTORY}/boxplot_final_points.png")
-    plt.show()
-
-  def _plot_combined_with_best(self, all_results):
-    # Combined average + best cumulative plot
-    plt.figure(figsize=(12, 6))
-    for strategy, result in all_results.items():
-      weeks = list(range(1, 39))
-      avg = result['cumulative_points']
-      best = result['best_cumulative_points']
-      label_avg = f"{'xP' if strategy == 'simple' else 'Player Fitness'} avg"
-      label_best = f"{'xP' if strategy == 'simple' else 'Player Fitness'} best"
-      plt.plot(weeks, avg, label=label_avg, marker='o')
-      plt.plot(weeks, best, label=label_best, linestyle='--')
-    plt.title('Cumulative Points: Average vs Best Transfers')
-    plt.xlabel('Gameweek')
-    plt.ylabel('Cumulative Points')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(f"{self.DIRECTORY}/cumulative_avg_vs_best.png")
-    plt.show()
-
-    # Combined average + best weekly impact plot
-    plt.figure(figsize=(12, 6))
-    for strategy, result in all_results.items():
-      weeks = list(range(1, 39))
-      avg = result['avg_point_changes']
-      best = result['best_point_changes']
-      label_avg = f"{'xP' if strategy == 'simple' else 'Player Fitness'} avg"
-      label_best = f"{'xP' if strategy == 'simple' else 'Player Fitness'} best"
-      plt.plot(weeks, avg, label=label_avg, marker='o')
-      plt.plot(weeks, best, label=label_best, linestyle='--')
-    plt.title('Weekly Transfer Impact: Average vs Best Transfers')
-    plt.xlabel('Gameweek')
-    plt.ylabel('Point Change')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(f"{self.DIRECTORY}/impact_avg_vs_best.png")
-    plt.show()
-
-  def _plot_stddev_bands(self, all_results):
-    plt.figure(figsize=(12, 6))
-    for strategy, result in all_results.items():
-      gameweeks = list(range(1, 39))
-      avg = result['points_per_gw']
-      std = result['stddev_per_gw']
-      plt.plot(gameweeks, avg, label=f"{'xP' if strategy == 'simple' else 'Player Fitness'} avg")
-      plt.fill_between(gameweeks,
-                       [a - s for a, s in zip(avg, std)],
-                       [a + s for a, s in zip(avg, std)],
-                       alpha=0.2, label=f"{'xP' if strategy == 'simple' else 'Player Fitness'} ± std")
-    plt.title('Average Points Per GW with Std Deviation Bands')
-    plt.xlabel('Gameweek')
-    plt.ylabel('Points')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(f"{self.DIRECTORY}/avg_with_stddev_bands.png")
-    plt.show()
     plt.show()
 
 if __name__ == "__main__":

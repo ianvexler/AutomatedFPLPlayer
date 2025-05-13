@@ -71,7 +71,7 @@ class Model:
 
     gw_decay_str = str(self.gw_lamda_decay).replace('.', '_')
     self.FILE_NAME = f"steps_{self.time_steps}_prev_season_{self.include_prev_season}_fbref_{self.include_fbref}_season_aggs_{self.include_season_aggs}_teams_{self.include_teams}_gw_decay_{gw_decay_str}_top_features_{self.top_features}"
-    self.DIRECTORY = f"{self.model_type.value}/test/{self.FILE_NAME}"
+    self.DIRECTORY = f"{self.model_type.value}/{self.FILE_NAME}"
       
   def _set_model(self, position):
     match self.model_type.value:
@@ -117,6 +117,12 @@ class Model:
     self.players_data = players_data
 
   def train(self):
+    """
+    Trains the model by getting all player sequences from the last n season
+    
+    Returns
+      Histories to be used in evaluation
+    """
     training_data = self._get_training_data()
   
     pos_training_data = {}
@@ -133,6 +139,7 @@ class Model:
         raise ValueError(f"Found NaN values in training data for {position}")
       
       if self._is_model_sequential():
+        # Apply callbacks 
         early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
         lr_schedule = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1)
 
@@ -185,8 +192,8 @@ class Model:
         required_columns = all_data[0].columns
         missing_columns = set(required_columns) - set(season_data.columns)
 
+        # Add missing columns if necessary
         if missing_columns:
-          # print(f"Missing columns in {prev_season}: {missing_columns}")
           season_data = season_data.reindex(columns=required_columns, fill_value=0)
 
       if not include_prev_gws:
@@ -207,6 +214,9 @@ class Model:
       raise ValueError("No valid training data could be loaded.\n")
 
   def _get_position_features(self, position):
+    """
+    Loads features from feature_selector based on configuration
+    """
     return self.feature_selector.get_features_for_position(
       position, 
       include_prev_season=self.include_prev_season, 
@@ -216,17 +226,22 @@ class Model:
       top_n=self.top_features)
 
   def _prepare_training_sequences(self, training_data, position):
+    """
+    Gets training player sequences
+    """
     cache_dir = "data/cached"
     os.makedirs(cache_dir, exist_ok=True)
     
     cache_filename = os.path.join(cache_dir, f"{self.season}_{position}_{self.FILE_NAME}.pkl")
 
+    # Check if sequences have already being generated and cached
     if os.path.exists(cache_filename) and (not self.no_cache):
       print(f"Loading cached sequences for {position} from {cache_filename}")
       with open(cache_filename, "rb") as f:
         data = pickle.load(f)
         X, y = data["X"], data["y"]
 
+      # Fit scaler if model is sequential
       if self._is_model_sequential():
         position_gw_data = training_data[training_data['position'] == position]
         features = self._get_position_features(position)
@@ -238,12 +253,15 @@ class Model:
       position_gw_data = training_data[training_data['position'] == position]
       features = self._get_position_features(position)
 
+      # Fit scaler if model is sequential
       if self._is_model_sequential():
         self._fit_scaler(position_gw_data, features, position)
 
+      # Iterate through all player data
       for player_id, player_data in position_gw_data.groupby('id'):
         season_kickoffs = player_data[player_data['GW'] >= 1]['kickoff_time'].tolist()
 
+        # Iterate through every game for each player
         for kickoff_time in season_kickoffs:
           sequence = self._get_player_sequence(player_data, position, kickoff_time)
 
@@ -256,6 +274,7 @@ class Model:
           target_row = player_data[player_data['kickoff_time'] == kickoff_time].iloc[0]
           y_target = target_row[self.target]
 
+          # If model sequential scale date
           if self._is_model_sequential():
             y_target = self.scalers[position].transform(y_target, 'total_points', target=True)
 
@@ -265,6 +284,7 @@ class Model:
       X = np.array(X, dtype=np.float32)
       y = np.array(y, dtype=np.float32)
 
+      # Save sequences for future use
       with open(cache_filename, "wb") as f:
         pickle.dump({"X": X, "y": y}, f)
         print(f"Saved sequence cache for {position} to {cache_filename}")
@@ -284,6 +304,13 @@ class Model:
     return self.gw_data[self.gw_data['position'] == position]
 
   def predict_season(self):
+    """
+    Runs predictions for the entire season across all gameweeks.
+
+    For each gameweek:
+    - Loads and filters the relevant data up to that gameweek.
+    - Predicts individual player performances for each fixture.
+    """
     print(f"Started Season Prediction")
 
     self._load_data()
@@ -291,6 +318,7 @@ class Model:
     # Initialize a dictionary to accumulate predictions for each player
     player_aggregates = {}
 
+    # Group games by fixtures and iterate through them
     for gw, gw_group in self.fixtures.groupby('GW'):
       current_gw = gw
       current_data = self.gw_data[self.gw_data['GW'] <= current_gw]
@@ -309,7 +337,7 @@ class Model:
           (current_data['kickoff_time'] == kickoff_time)
         ]
 
-        # Those player's player perfomances
+        # Get data previous to game being predicted
         players_data = current_data[
           current_data['id'].isin(players_gw_data['id'].unique()) &
           (current_data['kickoff_time'] < kickoff_time)
@@ -348,10 +376,15 @@ class Model:
     return predictions_df
 
   def _predict_players_game(self, players_data, kickoff_time):
+    """
+    Generates expected points for all players accross all 
+    positions in a fixture
+    """
     predictions = {}
 
     position_groups = players_data.groupby('position')
     
+    # Iterates through all positions
     for position, position_data in position_groups:
       player_ids = position_data['id'].unique()
       player_sequences = []
@@ -389,6 +422,10 @@ class Model:
     return predictions
 
   def _predict_performances(self, data, position):
+    """
+    Generates expected points for all players in a fixture 
+    for specific position
+    """
     predictions = self.models[position].predict(data)
 
     prediction_df = pd.DataFrame(predictions, columns=[self.target])
@@ -399,8 +436,13 @@ class Model:
 
     return np.round(np.array(predictions).flatten(), 2)
 
-  # To be applied to every sequence
   def _add_gw_decay(self, player_data, kickoff_time):
+    """
+    Value applied to each sequence that assigns a significance
+    to each gameweek depending on how much time has passed
+
+    Based on the concept of half-life
+    """
     lambda_decay = self.gw_lamda_decay
 
     player_data = player_data.copy()
@@ -411,6 +453,12 @@ class Model:
     return player_data
 
   def _get_player_sequence(self, player_data, position, kickoff_time):
+    """
+    Generates sequences for a player.
+
+    Given its data and a specific kickoff_time, it returns a 2d list
+    of all n previous games for a player
+    """
     player_data = self._add_gw_decay(player_data, kickoff_time)
     all_player_data = player_data.copy()
 
@@ -449,9 +497,12 @@ class Model:
     if current_length < self.time_steps:
       # Pad with zeros at the beginning (pre-padding) to match the required length
       padding = np.zeros((self.time_steps - current_length, n_features), dtype=np.float32)
-      sequence = np.vstack((padding, sequence))  # Stack the padding at the start
+      
+      # Stack the padding at the start
+      sequence = np.vstack((padding, sequence))  
 
-    return sequence  # Always (time_steps, n_features)
+    # Always (time_steps, n_features)
+    return sequence
 
   def _get_player_position(self, player_id):
     position = self.players_data[self.players_data['id'] == player_id].iloc[0]['position']
