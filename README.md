@@ -17,7 +17,6 @@ This project relies on several libraries to streamline data processing, visualiz
 - **scikit-learn** – machine learning utilities and models  
 - **tensorflow** – deep learning framework  
 - **soccerdata** – accessing football data from multiple sources (not actively used)
-- **thefuzz** – string matching and fuzzy search
 
 # Key Classes
 
